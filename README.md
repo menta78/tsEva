@@ -5,3 +5,6 @@ This MATLAB toolbox contains an implementation of the Transformed-Stationary (TS
 The toolbox is free of external dependency.
 
 A version working on MATLAB R2014b is available at the branch 0.1_R2014b of this project.
+
+## references ##
+Mentaschi L, Vousdoukas M, Voukouvalas E, Sartini L, Feyen L, Besio G and Alfieri L. Non-stationary Extreme Value Analysis: a simplified approach for Earth science applications. Submitted to JOURNAL OF ADVANCES IN MODELING EARTH SYSTEMS; 2016
