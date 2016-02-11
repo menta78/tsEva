@@ -30,10 +30,10 @@ hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData
     'ylabel', 'Lvl (m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp);
 disp('  saving the series plot');
 saveas(hndl{1}, 'seriesTrendOnly.png');    
-disp('  plotting and saving the 3D GEV graph');
-hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlabel', 'Lvl (m)', 'axisfontsize', axisFontSize3d);
-title('GEV 3D', 'fontsize', titleFontSize);
-saveas(hndl{1}, 'GEV3DTrendOnly.png', 'png');
+% disp('  plotting and saving the 3D GEV graph');
+% hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlabel', 'Lvl (m)', 'axisfontsize', axisFontSize3d);
+% title('GEV 3D', 'fontsize', titleFontSize);
+% saveas(hndl{1}, 'GEV3DTrendOnly.png', 'png');
 disp('  plotting and saving the 2D GEV graph');
 hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
 title('GEV', 'fontsize', titleFontSize);
