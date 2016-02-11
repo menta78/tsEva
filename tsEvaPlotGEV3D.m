@@ -23,7 +23,6 @@ function phandles = plotGEV3D( X, timeStamps, epsilon, sigma, mu, varargin )
   L = length(timeStamps);
   minTS = timeStamps(1);
   maxTS = timeStamps(end);
-  %npdf = (year(maxTS) - year(minTS) + 1)*args.nPlottedTimesByYear;
   npdf = ceil( ((maxTS - minTS)/avgYearLength)*args.nPlottedTimesByYear );
   navg = ceil(L/npdf);
 
