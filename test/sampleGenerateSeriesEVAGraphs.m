@@ -18,8 +18,8 @@ titleFontSize = 30;
 years = (1980:2:2015)';
 months = ones(size(years));
 days = ones(size(years));
-tickTmStmp = cat(2, years, months, days);
-xtk = datenum(dtns);
+dtns = cat(2, years, months, days);
+tickTmStmp = datenum(dtns);
 
 wr = linspace(min(extremesRange), max(extremesRange), 1501);
 
@@ -27,7 +27,7 @@ disp('trend only statistics');
 [nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trend');
 disp('  plotting the series');
 hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData,...
-    'ylabel', 'Lvl (m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', xtk);
+    'ylabel', 'Lvl (m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp);
 disp('  saving the series plot');
 saveas(hndl{1}, 'seriesTrendOnly.png');    
 disp('  plotting and saving the 3D GEV graph');
@@ -35,17 +35,17 @@ hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlab
 title('GEV 3D', 'fontsize', titleFontSize);
 saveas(hndl{1}, 'GEV3DTrendOnly.png', 'png');
 disp('  plotting and saving the 2D GEV graph');
-hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', xtk);
+hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
 title('GEV', 'fontsize', titleFontSize);
 saveas(hndl{1}, 'GEV2DTrendOnly.png', 'png');
 disp('  plotting and saving the 2D GPD graph');
-hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', xtk);
+hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
 title('GPD', 'fontsize', titleFontSize);
 saveas(hndl{1}, 'GPD2DTrendOnly.png', 'png');
 
 
 disp('plotting and saving stationary series');
-hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'dateformat', 'yy', 'xtick', xtk);
+hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'dateformat', 'yy', 'xtick', tickTmStmp);
 saveas(hndl{1}, 'statSeriesTrendOnly.png', 'png');
 
 disp('seasonal statistics');
