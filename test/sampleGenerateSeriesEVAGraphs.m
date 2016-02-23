@@ -7,6 +7,8 @@ seasonalExtrRange = [.1 1.1];
 seriesDescr = 'Hebrides';
 
 timeWindow = 365.25*6; % 6 years
+minPeakDistanceInDays = 3;
+
 minTS = min(timeAndSeries(:,1));
 maxTS = max(timeAndSeries(:,1));
 axisFontSize = 20;
@@ -24,7 +26,7 @@ tickTmStmp = datenum(dtns);
 wr = linspace(min(extremesRange), max(extremesRange), 1501);
 
 disp('trend only statistics');
-[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trend');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trend', 'minPeakDistanceInDays', minPeakDistanceInDays);
 disp('  plotting the series');
 hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData,...
     'ylabel', 'Lvl (m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp);

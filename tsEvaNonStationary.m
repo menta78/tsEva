@@ -1,25 +1,29 @@
 function [nonStationaryEvaParams, stationaryTransformData] = tsEvaNonStationary( timeAndSeries, timeWindow, varargin )
 %% sample calls
-% nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow, 'pcts',[95])
-%     samples POT data using a fixed 95 percentile threshold
-% nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow, 'desiredeventsperyear', '30')
+% nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow, 'pcts',[95], 'minPeakDistance', 72)
+%     samples POT data using a fixed 95 percentile threshold, with peaks at
+%     a minimum distance of 
+% nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow, 'desiredeventsperyear', 6)
 %     samples POT data looking for a threshold so that we have an average
-%     of 30 events every year.
+%     of 6 events every year.
 % nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow)
 %     samples POT data looking for a threshold so that we have an average
 %     of 5 events every year.
 %% %%%%%%%%%%%%%
 
 args.transfType = 'trend';
-args.minPeakDistance = 72;
+args.minPeakDistanceInDays = -1;
 args = tsEasyParseNamedArgs(varargin, args);
-minPeakDistance = args.minPeakDistance;
+minPeakDistanceInDays = args.minPeakDistanceInDays;
 transfType = args.transfType;
 if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'seasonalAdditive') )
     error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, seasonalAdditive)');
 end
 if strcmpi(transfType, 'seasonalAdditive')
     error('nonStationaryEvaJRCApproach: transfType==seasonalAdditive is not yet supported')
+end
+if minPeakDistanceInDays == -1
+    error('label parameter ''minPeakDistanceInDays'' must be set')
 end
     
 
@@ -36,6 +40,9 @@ elseif strcmpi(transfType, 'seasonal')
     potEventsPerYear = 12;
 end
 ms = cat(2, trasfData.timeStamps, trasfData.stationarySeries);
+%dt = trasfData.timeStamps(2) - trasfData.timeStamps(1);
+dt = tsEvaGetTimeStep(trasfData.timeStamps);
+minPeakDistance = minPeakDistanceInDays/dt;
 
 %% estimating the non stationary GEV parameters
 fprintf('\n');

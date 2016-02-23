@@ -3,7 +3,7 @@ function [POTdata,Rlargest_data]=tsGetPOTAndRlargest(ms,pcts,desiredEventsPerYea
 % Gets POT using an automatic threshold such that the mean number of events per year is equal to desiredEventsPerYear
 % 
 % INPUTS:
-% ms  data in two columns sdate and values
+% ms  data in two columns sdate and values. IT IS ASSUMED
 % pcts    vestor of percentiles tested
 % desiredEventsPerYear    mean number of events per year
 % 
@@ -13,9 +13,15 @@ function [POTdata,Rlargest_data]=tsGetPOTAndRlargest(ms,pcts,desiredEventsPerYea
 % get number of years
 % nyears=(nanmax(ms(:,1))-nanmin(ms(:,1)))/365;
 
-args.minPeakDistance = 72; % assuming hourly data
+args.minPeakDistanceInDays = -1;
 args = tsEasyParseNamedArgs(varargin, args);
-minPeakDistance = args.minPeakDistance;
+minPeakDistanceInDays = args.minPeakDistanceInDays;
+if minPeakDistanceInDays == -1
+    error('label parameter ''minPeakDistanceInDays'' must be set')
+end
+
+dt = tsEvaGetTimeStep(ms(:,1));
+minPeakDistance = minPeakDistanceInDays/dt;
 
 nyears=nanmin(diff(ms(:,1)))*length(ms(~isnan(ms(:,2)),1))/365;
 
