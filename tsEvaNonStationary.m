@@ -46,7 +46,7 @@ minPeakDistance = minPeakDistanceInDays/dt;
 
 %% estimating the non stationary GEV parameters
 fprintf('\n');
-disp('Executing the stationary eva')
+disp('Executing stationary eva')
 pointData = tsEvaSampleData(ms, 'meanEventsPerYear', potEventsPerYear, varargin{:});
 evaAlphaCI = .68; % in a gaussian approximation alphaCI~68% corresponds to 1 sigma confidence
 [~, eva] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima);

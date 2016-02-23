@@ -25,7 +25,7 @@ tickTmStmp = datenum(dtns);
 
 wr = linspace(min(extremesRange), max(extremesRange), 1501);
 
-disp('trend only statistics');
+disp('trend only statistics (transformation + eva + backtransformation)');
 [nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trend', 'minPeakDistanceInDays', minPeakDistanceInDays);
 disp('  plotting the series');
 hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData,...
