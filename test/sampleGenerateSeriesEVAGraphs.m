@@ -51,7 +51,7 @@ hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'd
 saveas(hndl{1}, 'statSeriesTrendOnly.png', 'png');
 
 disp('seasonal statistics');
-[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'seasonal');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'seasonal', 'minPeakDistanceInDays', minPeakDistanceInDays);
 
 wr = linspace(min(seasonalExtrRange), max(seasonalExtrRange), 1501);
 

@@ -132,7 +132,7 @@ if length(EVdata)<imethod
     EVdata(imethod).method=methodname;
     EVdata(imethod).values=rlvls;
     EVdata(imethod).parameters=paramEstsall;
-    EVdata(imethod).paramCIs = flip(paramCIs, 2);
+    EVdata(imethod).paramCIs = flipdim(paramCIs, 2);
 end
 
 % 

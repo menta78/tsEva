@@ -59,7 +59,7 @@ for ipp=1:length(pcts)
 end
 
 % evaluating the error on the threshold
-diffNPerYear = nanmean(diff(flip(numperyear)));
+diffNPerYear = nanmean(diff(flipud(numperyear)));
 if diffNPerYear == 0
   diffNPerYear = 1;
 end
