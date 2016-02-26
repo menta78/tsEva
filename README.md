@@ -8,4 +8,4 @@ A version working on MATLAB R2014b is available at the branch 0.1_R2014b of this
 The subdirectory "test" in the toolbox contains a sample script which illustrates the features of the toolbox.
 
 ## References ##
-Mentaschi L, Vousdoukas M, Voukouvalas E, Sartini L, Feyen L, Besio G and Alfieri L. Non-stationary Extreme Value Analysis: a simplified approach for Earth science applications. Submitted to Hydrology and Earth System Sciences (HESS); 2016
+[Mentaschi, L., Vousdoukas, M., Voukouvalas, E., Sartini, L., Feyen, L., Besio, G., and Alfieri, L.: Non-stationary Extreme Value Analysis: a simplified approach for Earth science applications, Hydrol. Earth Syst. Sci. Discuss., doi:10.5194/hess-2016-65, in review, 2016](http://www.hydrol-earth-syst-sci-discuss.net/hess-2016-65/)
