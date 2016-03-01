@@ -51,9 +51,9 @@ timeStamps = statTransfData.timeStamps;
 disp(['  plotting return levels for time ' datestr(timeStamps(timeIndex))]);
 disp('  ... for GEV the sample is small and the confidence interval is broad');
 hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', [.5 1.5]);
-saveas(hndl{1}, 'GEVReturnLevels.png', 'png');
+saveas(hndl{1}, 'GEV_ReturnLevels.png', 'png');
 hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', [.5 1.5]);
-saveas(hndl{1}, 'GPDReturnLevels.png', 'png');
+saveas(hndl{1}, 'GPD_ReturnLevels.png', 'png');
 
 
 disp('plotting and saving stationary series');
