@@ -15,6 +15,8 @@ function nonStatEvaParamsEnsemble = tsEnsembleEvaParams( nonStatEvaParamsArray )
       ensep(2).method = 'GPDstat';
       ensep(2).parameters = nsep(2).parameters;
       ensep(2).paramErr = nsep(2).paramErr;
+      ensep(2).timeDelta = nsep(2).timeDelta;
+      ensep(2).timeDeltaYears = nsep(2).timeDeltaYears;
     else
       ensep(1).parameters.epsilon = ensep(1).parameters.epsilon + nsep(1).parameters.epsilon;
       ensep(1).parameters.sigma = ensep(1).parameters.sigma + nsep(1).parameters.sigma;
