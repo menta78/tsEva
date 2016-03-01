@@ -19,8 +19,13 @@ returnPeriods = logspace(log10(minReturnPeriodYears), log10(maxReturnPeriodYears
 
 supRLCI = returnLevels + 2*retrunLevelsErrs;
 infRLCI = returnLevels - 2*retrunLevelsErrs;
-maxRL = max(supRLCI);
-minRL = min(infRLCI);
+if ~isempty(args.ylim)
+  maxRL = max(args.ylim);
+  minRL = min(args.ylim);
+else
+  maxRL = max(supRLCI);
+  minRL = min(infRLCI);
+end
 
 f = figure;
 phandles{1} = f;
@@ -37,11 +42,7 @@ phandles{4} = plot(returnPeriods, supRLCI, 'color', args.confidenceBarColor, 'li
 phandles{5} = plot(returnPeriods, infRLCI, 'color', args.confidenceBarColor, 'linewidth', 2);
 set(gca, 'Xscale', 'log');
 
-if args.ylim
-    ylim(args.ylim);
-else
-    ylim([minRL maxRL]);
-end
+ylim([minRL maxRL]);
 xlim([minReturnPeriodYears, maxReturnPeriodYears]);
 
 grid on;

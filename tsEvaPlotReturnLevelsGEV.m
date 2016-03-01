@@ -8,6 +8,7 @@ args.confidenceBarColor = [34 139 34]/255; % dark green
 args.returnLevelColor = 'k';
 args.xlabel = 'return period (years)';
 args.ylabel = 'return levels (m)';
+args.ylim = [];
 args.dtSampleYears = 1; % one year
 args = tsEasyParseNamedArgs(varargin, args);
 minReturnPeriodYears = args.minReturnPeriodYears;
@@ -20,8 +21,13 @@ retrunPeriodsInDts = returnPeriodsInYears/args.dtSampleYears;
 
 supRLCI = returnLevels + 2*retrunLevelsErrs;
 infRLCI = returnLevels - 2*retrunLevelsErrs;
-maxRL = max(supRLCI);
-minRL = min(infRLCI);
+if ~isempty(args.ylim)
+  maxRL = max(args.ylim);
+  minRL = min(args.ylim);
+else
+  maxRL = max(supRLCI);
+  minRL = min(infRLCI);
+end
 
 f = figure;
 phandles{1} = f;
