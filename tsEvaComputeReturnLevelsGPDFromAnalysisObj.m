@@ -1,12 +1,22 @@
-function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStationaryEvaParams, returnPeriodsInYears, timeIndex )
+function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStationaryEvaParams, returnPeriodsInYears, varargin )
+args.timeIndex = -1;
+args = tsEasyParseNamedArgs(varargin, args);
+timeIndex = args.timeIndex;
 
 epsilon = nonStationaryEvaParams(2).parameters.epsilon;
-sigma = nonStationaryEvaParams(2).parameters.sigma(timeIndex);
-threshold = nonStationaryEvaParams(2).parameters.threshold(timeIndex);
 epsilonStdErr = nonStationaryEvaParams(2).paramErr.epsilonErr;
-sigmaStdErr = nonStationaryEvaParams(2).paramErr.sigmaErr(timeIndex);
-thresholdStdErr = nonStationaryEvaParams(2).paramErr.thresholdErr(timeIndex);
-percentile = nonStationaryEvaParams(2).paramErr.percentile;
-dtSample = nonStationaryEvaParams(2).timeDeltaYears;
+percentile = nonStationaryEvaParams(2).parameters.percentile;
+dtSample = nonStationaryEvaParams(2).parameters.timeDeltaYears;
+if timeIndex > 0
+  sigma = nonStationaryEvaParams(2).parameters.sigma(timeIndex);
+  threshold = nonStationaryEvaParams(2).parameters.threshold(timeIndex);
+  sigmaStdErr = nonStationaryEvaParams(2).paramErr.sigmaErr(timeIndex);
+  thresholdStdErr = nonStationaryEvaParams(2).paramErr.thresholdErr(timeIndex);
+else
+  sigma = nonStationaryEvaParams(2).parameters.sigma;
+  threshold = nonStationaryEvaParams(2).parameters.threshold;
+  sigmaStdErr = nonStationaryEvaParams(2).paramErr.sigmaErr;
+  thresholdStdErr = nonStationaryEvaParams(2).paramErr.thresholdErr;
+end
 
 [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr, dtSample, returnPeriodsInYears );

@@ -13,25 +13,34 @@ function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGEV( epsilon,
   
 % reference: Stuart Coles 2001, pag 49.
   yp = -log(1 - 1./returnPeriods);
+  
+% uniforming dimensions of yp, sigma, mu
+  npars = length(sigma);
+  nt = length(returnPeriodsInYears);
+  yp = yp(ones(1,npars),:);
+  sigma_ = sigma(:,ones(1,nt));
+  sigmaStdErr_ = sigmaStdErr(:,ones(1,nt));
+  mu_ = mu(:,ones(1,nt));
+  muStdErr_ = muStdErr(:,ones(1,nt));
   if epsilon ~= 0
       %% estimating the return levels
-      returnLevels = mu - sigma./epsilon.*( 1 - yp.^(-epsilon) );
+      returnLevels = mu_ - sigma_./epsilon.*( 1 - yp.^(-epsilon) );
       %% estimating the error
       % estimating the differential of returnLevels to the parameters
       dxm_mu = 1;
       dxm_sigma = 1/epsilon * (1 - yp.^(-epsilon));
-      dxm_epsilon = sigma/epsilon^2 * ( 1 - yp.^(-epsilon) ) - sigma/epsilon * log(yp).*yp.^(-epsilon);
+      dxm_epsilon = sigma_./epsilon.^2 .* ( 1 - yp.^(-epsilon) ) - sigma_./epsilon .* log(yp).*yp.^(-epsilon);
       
-      returnLevelsErr = (  (dxm_mu*muStdErr).^2  +  (dxm_sigma*sigmaStdErr).^2  +  (dxm_epsilon*epsilonStdErr).^2  ).^.5;
+      returnLevelsErr = (  (dxm_mu.*muStdErr_).^2  +  (dxm_sigma.*sigmaStdErr_).^2  +  (dxm_epsilon.*epsilonStdErr).^2  ).^.5;
       %%
   else
-      returnLevels = mu - sigma.*log(yp);
+      returnLevels = mu_ - sigma_.*log(yp);
       %% estimating the error
       % estimating the differential of returnLevels to the parameters
       dxm_u = 1;
       dxm_sigma = log(yp);
       
-      returnLevelsErr = (  (dxm_u*thresholdStdErr).^2  +  (dxm_sigma*sigmaStdErr).^2  ).^.5;
+      returnLevelsErr = (  (dxm_u.*muStdErr_).^2  +  (dxm_sigma.*sigmaStdErr_).^2  ).^.5;
       %%
   end
 end
