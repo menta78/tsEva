@@ -1,4 +1,4 @@
-function [nonStationaryEvaParams, stationaryTransformData] = tsEvaNonStationary( timeAndSeries, timeWindow, varargin )
+function [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonStationary( timeAndSeries, timeWindow, varargin )
 %% sample calls
 % nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow, 'pcts',[95], 'minPeakDistance', 72)
 %     samples POT data using a fixed 95 percentile threshold, with peaks at
@@ -25,7 +25,10 @@ end
 if minPeakDistanceInDays == -1
     error('label parameter ''minPeakDistanceInDays'' must be set')
 end
-    
+   
+nonStationaryEvaParams = [];
+stationaryTransformData = [];
+isValid = false;
 
 timeStamps = timeAndSeries(:, 1);
 series = timeAndSeries(:, 2);
@@ -49,7 +52,10 @@ fprintf('\n');
 disp('Executing stationary eva')
 pointData = tsEvaSampleData(ms, 'meanEventsPerYear', potEventsPerYear, varargin{:});
 evaAlphaCI = .68; % in a gaussian approximation alphaCI~68% corresponds to 1 sigma confidence
-[~, eva] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima);
+[~, eva, isValid] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima);
+if ~isValid
+  return;
+end
 eva(2).thresholdError = pointData.POT.thresholdError;
 fprintf('\n');
 
@@ -135,6 +141,7 @@ potObj.stationaryParams = eva(2);
 potObj.objs = [];
 
 %% setting output objects
+clear nonStationaryEvaParams;
 nonStationaryEvaParams(1) = gevObj;
 nonStationaryEvaParams(2) = potObj;
 

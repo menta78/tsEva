@@ -1,4 +1,4 @@
-function [EVmeta,EVdata]=tsEVstatistics(pointData, varargin)
+function [EVmeta,EVdata,isValid]=tsEVstatistics(pointData, varargin)
 % Evangelos Voukouvalas, Michalis Vousdoukas 2015
 % gevMaxima can be annual or monthly. annual by default
 
@@ -13,6 +13,8 @@ args.gevMaxima = 'annual';
 args = tsEasyParseNamedArgs(varargin, args);
 gevMaxima = args.gevMaxima;
 alphaCI = args.alphaCI;
+
+isValid = true;
 
 %% Basic data
 
@@ -34,6 +36,7 @@ imethod=1;
 methodname='GEVstat';
 
 paramEsts=nan(npoints,3);
+paramCIs=nan*ones(2,3);
 rlvls=nan(npoints,length(Tr));
 
 criterio=zeros(npoints,1);
@@ -73,6 +76,7 @@ if length(EVdata)<imethod
         else 
 
             disp('Skipping...')
+            isValid = false;
 
         end
 
@@ -92,6 +96,7 @@ imethod=2;
 methodname='GPDstat';
 
 paramEstsall=nan(npoints,6);
+paramCIs=nan*ones(2,2);
 rlvls=nan(npoints,length(Tr));
 
 if length(EVdata)<imethod
@@ -126,6 +131,7 @@ if length(EVdata)<imethod
             disp(getReport(err));
             paramEstsall(ik,:)=[0 0 0 0 0 0];
             rlvls(ik,:) = zeros(1, length(Tr));
+            isValid = false;
         end
     end
 
