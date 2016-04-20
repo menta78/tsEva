@@ -34,7 +34,7 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
   subsrs = series(minindx:maxindx);
   probObj = initPercentiles(subsrs, percentM, percent, percentP);
 
-  for ii = 1:l
+  for ii = 2:l
     minindx = max(ii - dx, 1);
     maxindx = min(ii + dx, l);
     if minindx > 1
