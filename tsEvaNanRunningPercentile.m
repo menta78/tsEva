@@ -27,73 +27,73 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
   rnprcnt = zeros([length(series), 1])*nan;
   dx = ceil(windowSize/2);
   l = length(series);
+  
+  %% initializing probObj
+  minindx = 1;
+  maxindx = min(1 + dx, l);
+  subsrs = series(minindx:maxindx);
+  probObj = initPercentiles(subsrs, percentM, percent, percentP);
 
-  probObj.isNull = true;
   for ii = 1:l
     minindx = max(ii - dx, 1);
     maxindx = min(ii + dx, l);
-    if probObj.isNull
+    if minindx > 1
+      sprev = series(minindx - 1);
+
+      %% removing element and reviewing probability
+      if ~isnan(sprev)
+        Nold = probObj.N;
+        Nnew = probObj.N - 1;
+
+        nle = sprev < probObj.tM;
+        probObj.probM = (probObj.probM * Nold - nle) / Nnew;
+        probObj.percentM = probObj.probM * 100;
+
+        nle = sprev < probObj.t;
+        probObj.prob = (probObj.prob * Nold - nle) / Nnew;
+        probObj.percent = probObj.prob * 100;
+
+        nle = sprev < probObj.tP;
+        probObj.probP = (probObj.probP * Nold - nle) / Nnew;
+        probObj.percentP = probObj.probP * 100;
+
+        probObj.N = Nnew;
+      end
+
+    end
+
+    if maxindx < l
+      snext = series(maxindx + 1);
+
+      %% adding element and reviewing probability        
+      if ~isnan(snext)
+        Nold = probObj.N;
+        Nnew = probObj.N + 1;
+
+        nle = snext < probObj.tM;
+        probObj.probM = (probObj.probM * Nold + nle) / Nnew;
+        probObj.percentM = probObj.probM * 100;
+
+        nle = snext < probObj.t;
+        probObj.prob = (probObj.prob * Nold + nle) / Nnew;
+        probObj.percent = probObj.prob * 100;
+
+        nle = snext < probObj.tP;
+        probObj.probP = (probObj.probP * Nold + nle) / Nnew;
+        probObj.percentP = probObj.probP * 100;
+
+        probObj.N = Nnew;
+      end
+
+    end
+
+    cout1 = probObj.percentM > percent;
+    cout2 = probObj.percentP < percent;
+    outOfInterval = cout1 || cout2;
+    if outOfInterval
+      %disp('reinit');
       subsrs = series(minindx:maxindx);
       probObj = initPercentiles(subsrs, percentM, percent, percentP);
-    else
-      if minindx > 1
-        sprev = series(minindx - 1);
-        
-        %% removing element and reviewing probability
-        if ~isnan(sprev)
-          Nold = probObj.N;
-          Nnew = probObj.N - 1;
-
-          nle = sprev < probObj.tM;
-          probObj.probM = (probObj.probM * Nold - nle) / Nnew;
-          probObj.percentM = probObj.probM * 100;
-
-          nle = sprev < probObj.t;
-          probObj.prob = (probObj.prob * Nold - nle) / Nnew;
-          probObj.percent = probObj.prob * 100;
-
-          nle = sprev < probObj.tP;
-          probObj.probP = (probObj.probP * Nold - nle) / Nnew;
-          probObj.percentP = probObj.probP * 100;
-          
-          probObj.N = Nnew;
-        end
-        
-      end
-
-      if maxindx < l
-        snext = series(maxindx + 1);
-        
-        %% adding element and reviewing probability        
-        if ~isnan(snext)
-          Nold = probObj.N;
-          Nnew = probObj.N + 1;
-
-          nle = snext < probObj.tM;
-          probObj.probM = (probObj.probM * Nold + nle) / Nnew;
-          probObj.percentM = probObj.probM * 100;
-
-          nle = snext < probObj.t;
-          probObj.prob = (probObj.prob * Nold + nle) / Nnew;
-          probObj.percent = probObj.prob * 100;
-
-          nle = snext < probObj.tP;
-          probObj.probP = (probObj.probP * Nold + nle) / Nnew;
-          probObj.percentP = probObj.probP * 100;
-
-          probObj.N = Nnew;
-        end
-
-      end
-
-      cout1 = probObj.percentM > percent;
-      cout2 = probObj.percentP < percent;
-      outOfInterval = cout1 || cout2;
-      if outOfInterval
-        %disp('reinit');
-        subsrs = series(minindx:maxindx);
-        probObj = initPercentiles(subsrs, percentM, percent, percentP);
-      end
     end
 
     if probObj.N > nLowLimit
@@ -133,8 +133,6 @@ end
 
 function probObj = initPercentiles(subsrs, percentM, percent, percentP)
 %  coder.inline('always');
-  probObj.isNull = false;
-
   probObj.percentM = percentM;
   probObj.percent = percent;
   probObj.percentP = percentP;
