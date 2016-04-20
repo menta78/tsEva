@@ -41,7 +41,8 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
       sprev = series(minindx - 1);
 
       %% removing element and reviewing probability
-      if ~isnan(sprev)
+      sprevNotNan = ~isnan(sprev);
+      if sprevNotNan
         Nold = probObj.N;
         Nnew = probObj.N - 1;
 
@@ -65,8 +66,9 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
     if maxindx < l
       snext = series(maxindx + 1);
 
-      %% adding element and reviewing probability        
-      if ~isnan(snext)
+      %% adding element and reviewing probability    
+      snextNotNan = ~isnan(snext);
+      if snextNotNan
         Nold = probObj.N;
         Nnew = probObj.N + 1;
 
