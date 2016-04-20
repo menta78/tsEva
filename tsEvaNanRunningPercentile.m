@@ -1,4 +1,32 @@
 function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, varargin )
+% tsEvaNanRunningPercentile:
+% computes a runnig percentile for a given series,
+% using a window with a size given by windowSize.
+%
+% Input parameters:
+% series: input series.
+% windowSize: size of the window for the running percentile. Cannot be < 1000
+% percent: percent level to which the percentile is compute.
+% label parameters:
+%    percentDelta: delta for the computation of a percentile interval
+%                  around the requested percentage. If for example
+%                  percent==90 and percentDelta==1, then the 89th, 90th and
+%                  91st percentiles are computed. Default value: 1 if
+%                  windowSize > 2000, 2 if 2000 > windowsize > 1000. 
+%    nLowLimit: minimum number of non nan elements for a window for
+%               percentile computation.
+%    smoothoutput: perform a smoothing of the result by a running mean.
+%
+% Output parameters:
+% rnprcnt: approximated running percentile.
+%
+% How it works:
+% let's suppose that percent == 90.
+% For the first window we compute the right percentile using matlab
+% function prctile, for percentages 89, 90, 91.
+% Then for each step, we update these percentages on the basis
+% of the basis of the quitting values and incoming values,
+% and interpolate an approximated percentile for the requested percentage.
 
   if windowSize > 2000
     args.percentDelta = 1.;
