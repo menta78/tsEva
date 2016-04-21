@@ -1,4 +1,4 @@
-function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, varargin )
+function [ rnprcnt, stdError ] = tsEvaNanRunningPercentile( series, windowSize, percent, varargin )
 % tsEvaNanRunningPercentile:
 % computes a runnig percentile for a given series,
 % using a window with a size given by windowSize.
@@ -15,7 +15,6 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
 %                  windowSize > 2000, 2 if 2000 > windowsize > 1000. 
 %    nLowLimit: minimum number of non nan elements for a window for
 %               percentile computation.
-%    smoothoutput: perform a smoothing of the result by a running mean.
 %
 % Output parameters:
 % rnprcnt: approximated running percentile.
@@ -36,11 +35,9 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
     error('window size cannot be less than 1000');
   end
   args.nLowLimit = 1000;
-  args.smoothoutput = true;
   args = tsEasyParseNamedArgs(varargin, args);
   percentDelta = args.percentDelta;
   nLowLimit = args.nLowLimit;
-  smoothoutput = args.smoothoutput;
 
   percentP = percent + percentDelta;
   if percentP > 100
@@ -52,7 +49,7 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
     error(['min percent: ' num2str(percentDelta)]);
   end
 
-  rnprcnt = zeros([length(series), 1])*nan;
+  rnprcnt0 = zeros([length(series), 1])*nan;
   dx = ceil(windowSize/2);
   l = length(series);
   
@@ -61,6 +58,7 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
   maxindx = min(1 + dx, l);
   subsrs = series(minindx:maxindx);
   probObj = initPercentiles(subsrs, percentM, percent, percentP);
+  rnprcnt0(1) = probObj.t;
 
   for ii = 2:l
     minindx = max(ii - dx, 1);
@@ -147,17 +145,16 @@ function [ rnprcnt ] = tsEvaNanRunningPercentile( series, windowSize, percent, v
       end
       %%
   
-      rnprcnt(ii) = prcntii;
+      rnprcnt0(ii) = prcntii;
     else
       probObj.isNull = true;
       %rnprcnt(ii) = nan; rnprcnt is already initialized to nan
     end
   end
 
-  if smoothoutput
-    % smoothing
-    rnprcnt = tsEvaNanRunningMean(rnprcnt, windowSize);
-  end
+  % smoothing output
+  rnprcnt = tsEvaNanRunningMean(rnprcnt0, windowSize);
+  stdError = nanstd(rnprcnt0 - rnprcnt);
 end
 
 

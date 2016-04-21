@@ -39,7 +39,7 @@ for ipp=1:length(pcts)
 
     disp(['Finding optimal threshold ' num2str(100*ipp/length(pcts)) '%...']);
 
-    thrsdt=prctile(ms(:,2),pcts(ipp)); % threshold is the 99.9th percentile of the timeseries;
+    thrsdt=prctile(ms(:,2),pcts(ipp));
     thrsdts(ipp) = thrsdt;
 
     [pks,locs] = findpeaks(ms(:,2),'MinPeakDistance',minPeakDistance,'MinPeakHeight',thrsdt);

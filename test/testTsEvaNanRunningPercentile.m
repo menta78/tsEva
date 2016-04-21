@@ -9,4 +9,43 @@ timeStamps = timeAndSeries(:,1);
 series = timeAndSeries(:,2);
 
 [ trendSeries, filledTimeStamps, filledSeries, nRunMn ] = tsEvaRunningMeanTrend( timeStamps, series, timeWindow);
-[ rnprcnt ] = tsEvaNanRunningPercentile( filledSeries, nRunMn, percent );
+plot(filledTimeStamps, filledSeries);
+hold on;
+
+percent = 80;
+tic;
+[ rnprcnt, err ] = tsEvaNanRunningPercentile( filledSeries, nRunMn, percent );
+toc;
+disp(['error = ' num2str(err/nanmean(rnprcnt)*100) ' %']);
+plot(filledTimeStamps, rnprcnt);
+
+percent = 90;
+tic;
+[ rnprcnt, err ] = tsEvaNanRunningPercentile( filledSeries, nRunMn, percent );
+toc;
+disp(['error = ' num2str(err/nanmean(rnprcnt)*100) ' %']);
+plot(filledTimeStamps, rnprcnt);
+
+percent = 95;
+tic;
+[ rnprcnt, err ] = tsEvaNanRunningPercentile( filledSeries, nRunMn, percent );
+toc;
+disp(['error = ' num2str(err/nanmean(rnprcnt)*100) ' %']);
+plot(filledTimeStamps, rnprcnt);
+
+percent = 98;
+tic;
+[ rnprcnt, err ] = tsEvaNanRunningPercentile( filledSeries, nRunMn, percent );
+toc;
+disp(['error = ' num2str(err/nanmean(rnprcnt)*100) ' %']);
+plot(filledTimeStamps, rnprcnt);
+
+percent = 99;
+tic;
+[ rnprcnt, err ] = tsEvaNanRunningPercentile( filledSeries, nRunMn, percent );
+toc;
+disp(['error = ' num2str(err/nanmean(rnprcnt)*100) ' %']);
+plot(filledTimeStamps, rnprcnt);
+
+datetick('x');
+xlim([min(filledTimeStamps), max(filledTimeStamps)]);

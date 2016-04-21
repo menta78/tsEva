@@ -1,26 +1,47 @@
 function [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonStationary( timeAndSeries, timeWindow, varargin )
+% tsEvaNonStationary:
+% performs the TS EVA analysis as described by Mentaschi et al 2016.
+%
+% input parameters:
+%   timeAndSeries: array with shape nx2, with the time stamps in the first
+%            column and the values in the second.
+%   timeWindow: time window for the transformation expressed in days.
+%
+%   (some) label parameters:
+%         transfType: can assume values 
+%                    1) 'trend': long term variability. The trend is computed 
+%                            with a running mean, the ci with the running standard deviation.
+%                    2) 'seasonal': long term + seasonal variability. The trend is computed 
+%                            with a running mean, the ci with the running
+%                            standard deviation.
+%                    3) 'trendCIPercentile': long term variability. The trend is computed 
+%                            with a running mean, the ci with the running xx percentile.
+%                            Using this option the argument ciPercentile is
+%                            mandatory.
+% 
+%
 %% sample calls
-% nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow, 'pcts',[95], 'minPeakDistance', 72)
+% nonStatEvaParams = tsEvaNonStationary(ms, timeWindow, 'pcts',[95], 'minPeakDistanceInDays', 3)
 %     samples POT data using a fixed 95 percentile threshold, with peaks at
-%     a minimum distance of 
-% nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow, 'desiredeventsperyear', 6)
+%     a minimum distance of 3 days, looking for a threshold so that we have an average
+%     of 5 events every year.
+% nonStatEvaParams = tsEvaNonStationary(ms, timeWindow, 'minPeakDistanceInDays', 3, 'desiredeventsperyear', 6)
 %     samples POT data looking for a threshold so that we have an average
 %     of 6 events every year.
-% nonStatEvaParams = nonStationaryEvaJRCApproach(ms, timeWindow)
-%     samples POT data looking for a threshold so that we have an average
-%     of 5 events every year.
+% nonStatEvaParams = tsEvaNonStationary(ms, timeWindow, 'minPeakDistanceInDays', 3, 'trasftype', 'trendCIPercentile', 'ciPercentile', 99)
+%     for the transformation uses instead of the moving standard deviation,
+%     the moving 99th percentile.
 %% %%%%%%%%%%%%%
 
 args.transfType = 'trend';
 args.minPeakDistanceInDays = -1;
+args.ciPercentile = NaN;
 args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
+ciPercentile = args.ciPercentile;
 transfType = args.transfType;
-if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'seasonalAdditive') )
-    error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, seasonalAdditive)');
-end
-if strcmpi(transfType, 'seasonalAdditive')
-    error('nonStationaryEvaJRCApproach: transfType==seasonalAdditive is not yet supported')
+if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') )
+    error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
 end
 if minPeakDistanceInDays == -1
     error('label parameter ''minPeakDistanceInDays'' must be set')
@@ -28,19 +49,25 @@ end
    
 nonStationaryEvaParams = [];
 stationaryTransformData = [];
-isValid = false;
 
 timeStamps = timeAndSeries(:, 1);
 series = timeAndSeries(:, 2);
 
 if strcmpi(transfType, 'trend')
-    trasfData = tsEvaTransformSeriesToStationaryTrendOnly( timeStamps, series, timeWindow );
-    gevMaxima = 'annual';
-    potEventsPerYear = 5;
+  trasfData = tsEvaTransformSeriesToStationaryTrendOnly( timeStamps, series, timeWindow );
+  gevMaxima = 'annual';
+  potEventsPerYear = 5;
 elseif strcmpi(transfType, 'seasonal')
-    trasfData = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow );
-    gevMaxima = 'monthly';
-    potEventsPerYear = 12;
+  trasfData = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow );
+  gevMaxima = 'monthly';
+  potEventsPerYear = 12;
+elseif strcmpi(transfType, 'trendCIPercentile') 
+  if isnan(ciPercentile)
+    error('For trendCIPercentile transformation the label parameter ''cipercentile'' is mandatory');
+  end
+  trasfData = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
+  gevMaxima = 'annual';
+  potEventsPerYear = 5;
 end
 ms = cat(2, trasfData.timeStamps, trasfData.stationarySeries);
 %dt = trasfData.timeStamps(2) - trasfData.timeStamps(1);
