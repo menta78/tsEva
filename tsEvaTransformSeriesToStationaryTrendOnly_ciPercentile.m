@@ -4,7 +4,7 @@ disp('computing the trend ...');
 [trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaRunningMeanTrend(timeStamps, series, timeWindow);
 statSeries = filledSeries - trendSeries;
 
-disp(['computing the slowly varying ' num2str(percentile) 'th ...']);
+disp(['computing the slowly varying ' num2str(percentile) 'th percentile ...']);
 [percentileSeries, stdErr] = tsEvaNanRunningPercentile(statSeries, nRunMn, percentile, varargin{:});
 meanPerc = nanmean(percentileSeries);
 %normalizing to standard deviation (just to be able to make acceptable graphs with the scripts of this library)
