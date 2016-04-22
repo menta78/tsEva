@@ -54,10 +54,12 @@ timeStamps = timeAndSeries(:, 1);
 series = timeAndSeries(:, 2);
 
 if strcmpi(transfType, 'trend')
+  disp('evalueting long term variations of extremes');
   trasfData = tsEvaTransformSeriesToStationaryTrendOnly( timeStamps, series, timeWindow );
   gevMaxima = 'annual';
   potEventsPerYear = 5;
 elseif strcmpi(transfType, 'seasonal')
+  disp('evalueting long term an seasonal variations of extremes');
   trasfData = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow );
   gevMaxima = 'monthly';
   potEventsPerYear = 12;
@@ -65,6 +67,7 @@ elseif strcmpi(transfType, 'trendCIPercentile')
   if isnan(ciPercentile)
     error('For trendCIPercentile transformation the label parameter ''cipercentile'' is mandatory');
   end
+  disp(['evalueting long term variations of extremes using the ' num2str(ciPercentile) 'th percentile']);
   trasfData = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
   gevMaxima = 'annual';
   potEventsPerYear = 5;
