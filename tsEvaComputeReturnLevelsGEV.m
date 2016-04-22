@@ -1,22 +1,19 @@
-function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGEV( epsilon, sigma, mu, epsilonStdErr, sigmaStdErr, muStdErr, returnPeriodsInYears, varargin )
-  args.maxType = 'monthly';
-  args = tsEasyParseNamedArgs(varargin, args);
-  
-  if strcmpi(args.maxType, 'monthly')
-      returnPeriods = returnPeriodsInYears*12;
-  elseif strcmpi(args.maxType, 'yearly')
-      returnPeriods = returnPeriodsInYears;
-  else
-      error('computeReturnLevelsGEV: unsupported maxtype. The only supported values are monthly and yearly');
-  end
-      
+function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGEV( epsilon, sigma, mu, epsilonStdErr, sigmaStdErr, muStdErr, returnPeriodsInDts, varargin )
+% tsEvaComputeReturnLevelsGEV:
+% returns the return levels given the gev parameters and their standard
+% error.
+% The parameter returnPeriodsInDts contains the return period expressed in
+% a time unit that corresponds to the size of the time segments where we
+% are evaluating the maxima. For example, if we are working on yearly
+% maxima, returnPeriodsInDts must be expressed in years. If we are working
+% on monthly maxima returnPeriodsInDts must be expressed in months.
   
 % reference: Stuart Coles 2001, pag 49.
-  yp = -log(1 - 1./returnPeriods);
+  yp = -log(1 - 1./returnPeriodsInDts);
   
 % uniforming dimensions of yp, sigma, mu
   npars = length(sigma);
-  nt = length(returnPeriodsInYears);
+  nt = length(returnPeriodsInDts);
   yp = yp(ones(1,npars),:);
   sigma_ = sigma(:,ones(1,nt));
   sigmaStdErr_ = sigmaStdErr(:,ones(1,nt));
