@@ -8,6 +8,10 @@ function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGEV( epsilon,
 % maxima, returnPeriodsInDts must be expressed in years. If we are working
 % on monthly maxima returnPeriodsInDts must be expressed in months.
   
+  returnPeriodsInDtsSize = size(returnPeriodsInDts);
+  if returnPeriodsInDtsSize(1) > 1
+    returnPeriodsInDts = returnPeriodsInDts';
+  end
 % reference: Stuart Coles 2001, pag 49.
   yp = -log(1 - 1./returnPeriodsInDts);
   
