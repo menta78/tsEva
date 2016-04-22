@@ -115,6 +115,13 @@ errMuGevNS = (  (muGevX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*
 gevParams.epsilon = epsilonGevNS;
 gevParams.sigma = sigmaGevNS;
 gevParams.mu = muGevNS;
+if strcmpi(gevMaxima, 'annual')
+  gevParams.timeDelta = 365.25;
+  gevParams.timeDeltaYears = 1;
+elseif strcmpi(gevMaxima, 'monthly')
+  gevParams.timeDelta = 365.25/12.;
+  gevParams.timeDeltaYears = 1/12.;
+end
 gevParamStdErr.epsilonErr = errEpsilonGevNS;
 gevParamStdErr.sigmaErr = errSigmaGevNS;
 gevParamStdErr.muErr = errMuGevNS;

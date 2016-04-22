@@ -12,6 +12,8 @@ epsilonStdErr = nonStationaryEvaParams(2).paramErr.epsilonErr;
 sigmaStdErr = nonStationaryEvaParams(2).paramErr.sigmaErr(timeIndex);
 thresholdStdErr = nonStationaryEvaParams(2).paramErr.thresholdErr(timeIndex);
 
-[phandles, returnPeriods, returnLevels, retrunLevelsErrs] = tsEvaPlotReturnLevelsGPD(epsilon, sigma, threshold, dtSampleYears, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr, varargin{:});
+[phandles, returnPeriods, returnLevels, retrunLevelsErrs] = tsEvaPlotReturnLevelsGPD...
+  (epsilon, sigma, threshold, dtSampleYears, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr,...
+   'dtSampleYears', dtSampleYears, varargin{:});
 end
 
