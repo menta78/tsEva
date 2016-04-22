@@ -8,7 +8,7 @@ disp(['computing the slowly varying ' num2str(percentile) 'th percentile ...']);
 [percentileSeries, stdErr] = tsEvaNanRunningPercentile(statSeries, nRunMn, percentile, varargin{:});
 meanPerc = nanmean(percentileSeries);
 %normalizing to standard deviation (just to be able to make acceptable graphs with the scripts of this library)
-stdDev = std(statSeries);
+stdDev = nanstd(statSeries);
 stdDevSeries = percentileSeries/meanPerc*stdDev;
 stdDevError = stdErr/meanPerc*stdDev;
 
