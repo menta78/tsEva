@@ -4,7 +4,7 @@ This MATLAB toolbox contains an implementation of the Transformed-Stationary (TS
 
 This toolbox is free of external dependencies, and contains calls for both the statistical analysis and the graphical rendering of the results.
 
-A version working on MATLAB R2014b is available at the branch 0.1_R2014b of this project, and can be downloaded [here](https://bitbucket.org/menta78/tseva/get/0.1_R2014b.zip).
+A version working on MATLAB R2014b is available at the branch 0.1_R2014b of this project, and can be downloaded [here](https://github.com/menta78/tsEva/archive/0.1_R2014b.zip).
 Subdirectory "test" in the toolbox contains sample scripts (sampleGenerateSeriesEVAGraphs.m and sampleGenerateSeriesEVAGraphs_ciPercentile.m) which illustrate the features of the toolbox.
 
 ## References ##
