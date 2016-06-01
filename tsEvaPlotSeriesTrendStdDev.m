@@ -17,6 +17,7 @@ args.dateformat = 'yyyy';
 args.figPosition = [0, 0, 1300, 700] + 10;
 args.verticalRange = [];
 args.xtick = [];
+
 args = tsEasyParseNamedArgs(varargin, args);
 
 minTS = datenum([args.minYear, 1, 1]);
