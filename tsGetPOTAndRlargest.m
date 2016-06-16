@@ -28,7 +28,7 @@ nyears=nanmin(diff(ms(:,1)))*length(ms(~isnan(ms(:,2)),1))/365;
 if length(pcts) == 1
     % testing at least 2 percentages, to be able to compute the error on
     % the percentage.
-    pcts = [pcts(1), pcts(1) - 3];
+    pcts = [pcts(1) - 3, pcts(1)];
 end
 
 numperyear=nan(length(pcts),1);
@@ -51,7 +51,7 @@ for ipp=1:length(pcts)
     nperYear=tsGetNumberPerYear(ms,locs);
     minnumperyear(ipp)=nanmin(nperYear);
 
-    if length(pks)/nyears<desiredEventsPerYear & nanmin(nperYear)<desiredEventsPerYear
+    if (ipp > 1) && (length(pks)/nyears<desiredEventsPerYear) && (nanmin(nperYear)<desiredEventsPerYear)
 
         break
 
