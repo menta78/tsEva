@@ -10,6 +10,7 @@ args.xlabel = 'return period (years)';
 args.ylabel = 'return levels (m)';
 args.ylim = [];
 args.dtSampleYears = 1; % one year
+args.ax = [];
 args = tsEasyParseNamedArgs(varargin, args);
 minReturnPeriodYears = args.minReturnPeriodYears;
 maxReturnPeriodYears = args.maxReturnPeriodYears;
@@ -29,9 +30,16 @@ else
   minRL = min(infRLCI);
 end
 
-f = figure;
-phandles{1} = f;
-f.Position = [0, 0, 1300, 700] + 10;
+if isempty(args.ax)
+  f = figure;
+  phandles{1} = f;
+  f.Position = [0, 0, 1300, 700] + 10;
+else
+  axes(args.ax);
+  phandles{1} = args.ax;
+  f = [];
+end
+
 h = area(returnPeriodsInYears, cat(1, infRLCI, supRLCI - infRLCI)', 'linestyle', 'none');
 h(1).FaceColor = [1,1,1];
 h(2).FaceColor = args.confidenceAreaColor;
@@ -54,7 +62,9 @@ set(gca, 'fontsize', 20);
 xlabel(args.xlabel, 'fontsize', 24);
 ylabel(args.ylabel, 'fontsize', 24);
 
-set(f, 'paperpositionmode', 'auto');
+if ~isempty(f)
+  set(f, 'paperpositionmode', 'auto');
+end
 
 end
 

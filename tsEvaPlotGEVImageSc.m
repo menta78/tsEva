@@ -9,8 +9,10 @@ function phandles = tsEvaPlotGEVImageSc( Y, timeStamps, epsilon, sigma, mu, vara
   args.axisFontSize = 22;
   args.labelFontSize = 28;
   args.colormap = flipud(hot(64));
+  args.plotColorbar = true;
   args.figPosition = [0, 0, 1450, 700] + 10;
   args.xtick = [];
+  args.ax = [];
   args = tsEasyParseNamedArgs(varargin, args);
 
   minTS = datenum([args.minYear, 1, 1]);
@@ -19,9 +21,15 @@ function phandles = tsEvaPlotGEVImageSc( Y, timeStamps, epsilon, sigma, mu, vara
   mu = mu( (timeStamps >= minTS) & (timeStamps <= maxTS) );
   timeStamps = timeStamps( (timeStamps >= minTS) & (timeStamps <= maxTS) );
   
-  f = figure;
-  phandles{1} = f;
-  f.Position = args.figPosition;
+  if isempty(args.ax)
+    f = figure;
+    phandles{1} = f;
+    f.Position = args.figPosition;
+  else
+    axes(args.ax);
+    phandles{1} = args.ax;
+    f = [];
+  end
   
   L = length(timeStamps);
   minTS = timeStamps(1);
@@ -66,13 +74,17 @@ function phandles = tsEvaPlotGEVImageSc( Y, timeStamps, epsilon, sigma, mu, vara
   end
   xlim([min(timeStamps_plot) max(timeStamps_plot)]);
   grid on;
-  clb = colorbar;
-  ylabel(clb, args.zlabel, 'fontsize', args.labelFontSize);
+  if args.plotColorbar
+    clb = colorbar;
+    ylabel(clb, args.zlabel, 'fontsize', args.labelFontSize);
+  end
 
   ylabel(args.ylabel, 'fontsize', args.labelFontSize);
   
   set(gca, 'fontsize', args.axisFontSize);
   
-  set(f, 'paperpositionmode', 'auto');
+  if ~isempty(f)
+    set(f, 'paperpositionmode', 'auto');
+  end
 end
 
