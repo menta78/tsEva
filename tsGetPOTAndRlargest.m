@@ -29,6 +29,10 @@ if length(pcts) == 1
     % testing at least 2 percentages, to be able to compute the error on
     % the percentage.
     pcts = [pcts(1) - 3, pcts(1)];
+    % if there is only one percentile that means that the user does not
+    % want to look for n peaks every year. Setting therefore
+    % desiredEventsPerYear to -1;
+    desiredEventsPerYear = -1;
 end
 
 numperyear=nan(length(pcts),1);
@@ -139,41 +143,44 @@ sdp=ms(locs,1);
 
 yearssp=yearssp+1;
 
-sdTable=nan(length(yearss),desiredEventsPerYear);
-valTable=nan(length(yearss),desiredEventsPerYear);
-indTable=nan(length(yearss),desiredEventsPerYear);
+if desiredEventsPerYear > -1
+  sdTable=nan(length(yearss),desiredEventsPerYear);
+  valTable=nan(length(yearss),desiredEventsPerYear);
+  indTable=nan(length(yearss),desiredEventsPerYear);
 
-for i=1:length(yearss)
-    
-    ii=dvecp(:,1)==yearss(i)-1;
-    
-    vals=pks(ii);
-    sds=sdp(ii);
-    
-    [v2,isort]=sort(vals,'descend');
-    
-    s2=sds(isort);
-    
-    inds=locs(isort);
-    
-    if length(inds)>=desiredEventsPerYear
-       
-        sdTable(i,:)=s2(1:desiredEventsPerYear);
-        valTable(i,:)=v2(1:desiredEventsPerYear);
-        indTable(i,:)=inds(1:desiredEventsPerYear);
+  for i=1:length(yearss)
 
-    end
+      ii=dvecp(:,1)==yearss(i)-1;
+
+      vals=pks(ii);
+      sds=sdp(ii);
+
+      [v2,isort]=sort(vals,'descend');
+
+      s2=sds(isort);
+
+      inds=locs(isort);
+
+      if length(inds)>=desiredEventsPerYear
+
+          sdTable(i,:)=s2(1:desiredEventsPerYear);
+          valTable(i,:)=v2(1:desiredEventsPerYear);
+          indTable(i,:)=inds(1:desiredEventsPerYear);
+
+      end
+  end
+
+  %% Export
+
+  Rlargest_data.threshold=thrsd;
+  Rlargest_data.percentile=pcts(indexp);
+  Rlargest_data.peaks=valTable;
+  Rlargest_data.ipeaks=sdTable;
+  Rlargest_data.sdpeaks=sdTable;
+else
+  Rlargest_data = [];
 end
-
-
-%% Export
-
-Rlargest_data.threshold=thrsd;
-Rlargest_data.percentile=pcts(indexp);
-Rlargest_data.peaks=valTable;
-Rlargest_data.ipeaks=sdTable;
-Rlargest_data.sdpeaks=sdTable;
-
+  
 catch exc
     dbstop at 148;
     disp(getReport(exc));

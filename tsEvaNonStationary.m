@@ -36,6 +36,7 @@ function [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonSt
 args.transfType = 'trend';
 args.minPeakDistanceInDays = -1;
 args.ciPercentile = NaN;
+args.potEventsPerYear = -1;
 args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
 ciPercentile = args.ciPercentile;
@@ -72,6 +73,9 @@ elseif strcmpi(transfType, 'trendCIPercentile')
   gevMaxima = 'annual';
   potEventsPerYear = 5;
 end
+if args.potEventsPerYear ~= -1
+  potEventsPerYear = args.potEventsPerYear;
+end
 ms = cat(2, trasfData.timeStamps, trasfData.stationarySeries);
 %dt = trasfData.timeStamps(2) - trasfData.timeStamps(1);
 dt = tsEvaGetTimeStep(trasfData.timeStamps);
@@ -91,45 +95,53 @@ fprintf('\n');
 
 % !!! Assuming a Gaussian approximation to compute the standard errors for
 % the GEV parameters
-epsilonGevX = eva(1).parameters(1);
-errEpsilonX = epsilonGevX - eva(1).paramCIs(1, 1);
-sigmaGevX = eva(1).parameters(2);
-errSigmaGevX = sigmaGevX - eva(1).paramCIs(1, 2);
-muGevX = eva(1).parameters(1, 3);
-errMuGevX = muGevX - eva(1).paramCIs(1, 3);
+if ~isempty(eva(1).parameters)
+  epsilonGevX = eva(1).parameters(1);
+  errEpsilonX = epsilonGevX - eva(1).paramCIs(1, 1);
+  sigmaGevX = eva(1).parameters(2);
+  errSigmaGevX = sigmaGevX - eva(1).paramCIs(1, 2);
+  muGevX = eva(1).parameters(1, 3);
+  errMuGevX = muGevX - eva(1).paramCIs(1, 3);
 
-fprintf('\n');
-disp('Transforming to non stationary eva ...')
-epsilonGevNS = epsilonGevX;
-errEpsilonGevNS = errEpsilonX;
-sigmaGevNS = trasfData.stdDevSeries*sigmaGevX;
-% propagating the errors on stdDevSeries and sigmaGevX to sigmaGevNs.
-% err(sigmaNs) = sqrt{ [sigmaX*err(stdDev)]^2 + [stdDev*err(sigmaX)]^2 }
-% the error on sigmaGevNs is time dependant.
-errSigmaGevNS = (  (sigmaGevX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*errSigmaGevX).^2  ).^.5;
-muGevNS = trasfData.stdDevSeries*muGevX + trasfData.trendSeries;
-% propagating the errors on stdDevSeries, trendSeries and sigmaGevX to muGevNS.
-% err(muNs) = sqrt{ [muX*err(stdDev)]^2 + [stdDev*err(muX)]^2 + err(trend)^2 }
-% the error on muGevNS is time dependant.
-errMuGevNS = (  (muGevX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*errMuGevX).^2   +  trasfData.trendError^2  ).^.5;
-gevParams.epsilon = epsilonGevNS;
-gevParams.sigma = sigmaGevNS;
-gevParams.mu = muGevNS;
-if strcmpi(gevMaxima, 'annual')
-  gevParams.timeDelta = 365.25;
-  gevParams.timeDeltaYears = 1;
-elseif strcmpi(gevMaxima, 'monthly')
-  gevParams.timeDelta = 365.25/12.;
-  gevParams.timeDeltaYears = 1/12.;
+  fprintf('\n');
+  disp('Transforming to non stationary eva ...')
+  epsilonGevNS = epsilonGevX;
+  errEpsilonGevNS = errEpsilonX;
+  sigmaGevNS = trasfData.stdDevSeries*sigmaGevX;
+  % propagating the errors on stdDevSeries and sigmaGevX to sigmaGevNs.
+  % err(sigmaNs) = sqrt{ [sigmaX*err(stdDev)]^2 + [stdDev*err(sigmaX)]^2 }
+  % the error on sigmaGevNs is time dependant.
+  errSigmaGevNS = (  (sigmaGevX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*errSigmaGevX).^2  ).^.5;
+  muGevNS = trasfData.stdDevSeries*muGevX + trasfData.trendSeries;
+  % propagating the errors on stdDevSeries, trendSeries and sigmaGevX to muGevNS.
+  % err(muNs) = sqrt{ [muX*err(stdDev)]^2 + [stdDev*err(muX)]^2 + err(trend)^2 }
+  % the error on muGevNS is time dependant.
+  errMuGevNS = (  (muGevX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*errMuGevX).^2   +  trasfData.trendError^2  ).^.5;
+  gevParams.epsilon = epsilonGevNS;
+  gevParams.sigma = sigmaGevNS;
+  gevParams.mu = muGevNS;
+  if strcmpi(gevMaxima, 'annual')
+    gevParams.timeDelta = 365.25;
+    gevParams.timeDeltaYears = 1;
+  elseif strcmpi(gevMaxima, 'monthly')
+    gevParams.timeDelta = 365.25/12.;
+    gevParams.timeDeltaYears = 1/12.;
+  end
+  gevParamStdErr.epsilonErr = errEpsilonGevNS;
+  gevParamStdErr.sigmaErr = errSigmaGevNS;
+  gevParamStdErr.muErr = errMuGevNS;
+  gevObj.method = eva(1).method;
+  gevObj.parameters = gevParams;
+  gevObj.paramErr = gevParamStdErr;
+  gevObj.stationaryParams = eva(1);
+  gevObj.objs.monthlyMaxIndexes = pointData.monthlyMaxIndexes;
+else
+  gevObj.method = eva(1).method;
+  gevObj.parameters = [];
+  gevObj.paramErr = [];
+  gevObj.stationaryParams = [];
+  gevObj.objs.monthlyMaxIndexes = [];
 end
-gevParamStdErr.epsilonErr = errEpsilonGevNS;
-gevParamStdErr.sigmaErr = errSigmaGevNS;
-gevParamStdErr.muErr = errMuGevNS;
-gevObj.method = eva(1).method;
-gevObj.parameters = gevParams;
-gevObj.paramErr = gevParamStdErr;
-gevObj.stationaryParams = eva(1);
-gevObj.objs.monthlyMaxIndexes = pointData.monthlyMaxIndexes;
 
 %% estimating the non stationary GPD parameters
 % !!! Assuming a Gaussian approximation to compute the standard errors for
