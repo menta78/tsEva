@@ -8,4 +8,4 @@ A version working on MATLAB R2014b is available at the branch 0.1_R2014b of this
 Subdirectory "test" in the toolbox contains sample scripts (sampleGenerateSeriesEVAGraphs.m and sampleGenerateSeriesEVAGraphs_ciPercentile.m) which illustrate the features of the toolbox.
 
 ## References ##
-[Mentaschi, L., Vousdoukas, M., Voukouvalas, E., Sartini, L., Feyen, L., Besio, G., and Alfieri, L.: Non-stationary Extreme Value Analysis: a simplified approach for Earth science applications, Hydrol. Earth Syst. Sci. Discuss., doi:10.5194/hess-2016-65, in review, 2016](http://www.hydrol-earth-syst-sci-discuss.net/hess-2016-65/)
+[Mentaschi, L., Vousdoukas, M., Voukouvalas, E., Sartini, L., Feyen, L., Besio, G., and Alfieri, L.: The transformed-stationary approach: a generic and simplified methodology for non-stationary extreme value analysis, Hydrol. Earth Syst. Sci., 20,3527-3547, doi:10.5194/hess-20-3527-2016, 2016](http://www.hydrol-earth-syst-sci.net/20/3527/2016/)
