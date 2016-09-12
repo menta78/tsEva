@@ -1,3 +1,6 @@
+function testTsEvaNanRunningPercentile
+% this function tests the function for computing of the running percentile
+
 addpath('../');
 
 load('timeAndSeriesHebrides.mat');

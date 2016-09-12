@@ -1,3 +1,12 @@
+%%
+% this sample script illustrates how to execute the tsEva to estimate the
+% long term variations of the extremes, using a moving percentile to
+% estimate the amplitude of the series, instead of the moving standard
+% deviation. This approach models better the variations of the extremes
+% than the one based on the standard deviation, but is subject to stronger
+% uncertainty.
+%%
+
 addpath('../');
 
 load('timeAndSeriesHebrides.mat');

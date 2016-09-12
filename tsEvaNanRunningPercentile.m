@@ -24,7 +24,7 @@ function [ rnprcnt, stdError ] = tsEvaNanRunningPercentile( series, windowSize, 
 % For the first window we compute the right percentile using matlab
 % function prctile, for percentages 89, 90, 91.
 % Then for each step, we update these percentages on the basis
-% of the basis of the quitting values and incoming values,
+% of the quitting values and incoming values,
 % and interpolate an approximated percentile for the requested percentage.
 
   if windowSize > 2000
