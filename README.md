@@ -1,1 +1,1 @@
-THIS PROJECT MOVED TO GITHUB. The new adress is https://github.com/menta78/tsEva/
+THIS PROJECT MOVED TO GITHUB. The new adress is https://github.com/menta78/tsEva/ .
