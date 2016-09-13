@@ -1,11 +1,11 @@
 function sampleSPISeries
 
 %%
-% SPI series is a series for which peaks are distant at least 5 month one
-% from the others. Therefore the concept of "annual maxima" is meaningless, 
+% SPI series is a series where peaks are distant at least 5 month one
+% from the other. Therefore the concept of "annual maxima" is meaningless, 
 % as it is the concept of "5 peaks over threshold per year".
 % It is possible to set the algorithm to examine just one percentile for
-% the POT, and doing just the GPD analysis. This example shows how.
+% the POT, and doing just the GPD analysis and not the GEV one. This example shows how.
 %%
 
 addpath('../');
