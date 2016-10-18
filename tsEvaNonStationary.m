@@ -41,7 +41,7 @@ args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
 ciPercentile = args.ciPercentile;
 transfType = args.transfType;
-if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') )
+if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') )
     error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
 end
 if minPeakDistanceInDays == -1
@@ -72,6 +72,14 @@ elseif strcmpi(transfType, 'trendCIPercentile')
   trasfData = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
   gevMaxima = 'annual';
   potEventsPerYear = 5;
+elseif strcmpi(transfType, 'seasonalCIPercentile') 
+  if isnan(ciPercentile)
+    error('For seasonalCIPercentile transformation the label parameter ''cipercentile'' is mandatory');
+  end
+  disp(['evalueting long term variations of extremes using the ' num2str(ciPercentile) 'th percentile']);
+  trasfData = tsEvaTransformSeriesToStatSeasonal_ciPercentile( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
+  gevMaxima = 'monthly';
+  potEventsPerYear = 12;
 end
 if args.potEventsPerYear ~= -1
   potEventsPerYear = args.potEventsPerYear;
