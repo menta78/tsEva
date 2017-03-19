@@ -31,10 +31,12 @@ function [ rnprcnt, stdError ] = tsEvaNanRunningPercentile( series, windowSize, 
     args.percentDelta = 1.;
   elseif windowSize > 1000
     args.percentDelta = 2.;
+  elseif windowSize > 100
+    args.percentDelta = 5.;
   else
-    error('window size cannot be less than 1000');
+    error('The window size, that is the size of each sample, cannot be less than 100');
   end
-  args.nLowLimit = 1000;
+  args.nLowLimit = 100;
   args = tsEasyParseNamedArgs(varargin, args);
   percentDelta = args.percentDelta;
   nLowLimit = args.nLowLimit;
