@@ -1,3 +1,8 @@
+%%
+% this sample script illustrates how to execute the tsEva to estimate the
+% long term and seasonal variations of the extremes.
+%%
+
 addpath('../');
 
 load('timeAndSeriesHebrides.mat');

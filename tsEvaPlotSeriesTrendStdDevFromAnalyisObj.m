@@ -7,8 +7,13 @@ timestamps = stationaryTransformData.timeStamps;
 series = stationaryTransformData.nonStatSeries;
 trend = stationaryTransformData.trendSeries;
 stdDev = stationaryTransformData.stdDevSeries;
+if isfield(stationaryTransformData, 'statsTimeStamps')
+  statsTimeStamps = stationaryTransformData.statsTimeStamps;
+else
+  statsTimeStamps = timestamps;
+end
 
-phandles = tsEvaPlotSeriesTrendStdDev(timestamps, series, trend, stdDev, varargin{:});
+phandles = tsEvaPlotSeriesTrendStdDev(timestamps, series, trend, stdDev, 'statsTimeStamps', statsTimeStamps, varargin{:});
 
 if plotPercentile ~= -1
   prcntile = tsEvaNanRunningPercentile(series, stationaryTransformData.runningStatsMulteplicity, plotPercentile);

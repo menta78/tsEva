@@ -16,15 +16,17 @@ args.legendLocation = 'northwest';
 args.dateformat = 'yyyy';
 args.figPosition = [0, 0, 1300, 700] + 10;
 args.verticalRange = [];
+args.statsTimeStamps = timeStamps;
 args.xtick = [];
 
 args = tsEasyParseNamedArgs(varargin, args);
 
+statsTimeStamps = args.statsTimeStamps;
 minTS = datenum([args.minYear, 1, 1]);
 maxTS = datenum([args.maxYear, 1, 1]);
 series = series( (timeStamps >= minTS) & (timeStamps <= maxTS) );
-trend = trend( (timeStamps >= minTS) & (timeStamps <= maxTS) );
-stdDev = stdDev( (timeStamps >= minTS) & (timeStamps <= maxTS) );
+trend = trend( (statsTimeStamps >= minTS) & (statsTimeStamps <= maxTS) );
+stdDev = stdDev( (statsTimeStamps >= minTS) & (statsTimeStamps <= maxTS) );
 timeStamps = timeStamps( (timeStamps >= minTS) & (timeStamps <= maxTS) );
 
 upCI = trend + stdDev;

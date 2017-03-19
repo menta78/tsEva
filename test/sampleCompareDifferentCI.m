@@ -1,5 +1,15 @@
 function sampleCompareDifferentCI( varargin )
 
+  %%
+  % This example illustrates the fact that the time-varying amplitude of
+  % the signal, necessary for the estimation of the extremes using the ts
+  % approach, can be extimated by means of a moving standard deviation or
+  % or by means of a moving percentile.
+  % The approach using the moving percentile models better the variations of the extremes
+  % than the approach based on the standard deviation, but is subject to stronger
+  % uncertainty.
+  %%
+
   args.timeWindow = 30*365.25; % 30 years
   args.timeAndSeries = [];
   args.minPeakDistanceInDays = 3;
