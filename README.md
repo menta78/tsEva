@@ -18,6 +18,8 @@ The script estimates the non stationary GEV and GPD, and plots the results. The 
 * test/sampleGenerateSeriesEVAGraphs_ciPercentile.m: this script analyzes the same time series as the previous script, but estimates the time-varying confidence interval using a moving 98.5 percentile, instead of a moving standard deviation.
 **Using the moving percentile instead of the moving standard deviation is useful because the moving percentile is more sensitive to changes of the extremes**.
 
+* test/sampleSPISeries.m: this script analyzes a time series of projected SPI (Standardized Precipitation Index).
+In this series the peaks are distant at least 5 months one from the others. Therefore the concept of annual maxima is meaningless, and the sole GPD approach is applied.
 
 
 ## References ##
