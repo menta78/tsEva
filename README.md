@@ -7,7 +7,7 @@ This toolbox is free of external dependencies, and contains calls for both the s
 A version working on MATLAB R2014b is available at the branch 0.1_R2014b of this project, and can be downloaded [here](https://github.com/menta78/tsEva/archive/0.1_R2014b.zip).
 
 
-# How to start #
+## How to start ##
 
 Subdirectory "test" contains sample scripts that illustrate the features of the toolbox. The main sample scripts are:
 
@@ -22,7 +22,7 @@ The whole analysis is then repeated including the estimation of the seasonal ext
 The drawback is that the confidence interval tends to be broader.
 
 * test/sampleSPISeries.m: this script analyzes a time series of projected SPI (Standardized Precipitation Index).
-In this series the peaks are distant at least 5 months one from the others. 
+In this series the peaks are distant at least 5 months one from the other. 
 Therefore the concept of annual maxima is meaningless, and the sole GPD approach is applied. 
 The minimum time window for the detection of non-stationarity is 50 years (the whole time horizon of the time series is 130 years).
 
