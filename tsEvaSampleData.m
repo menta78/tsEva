@@ -8,7 +8,7 @@ function pointData = tsEvaSampleData(ms, varargin)
   meanEventsPerYear = args.meanEventsPerYear;
   potPercentiles = args.potPercentiles;
 
-  [POTData,rLargestData]=tsGetPOTAndRlargest(ms, potPercentiles, meanEventsPerYear, varargin{:});
+  [POTData]=tsGetPOT(ms, potPercentiles, meanEventsPerYear, varargin{:});
 
   vals=prctile(ms(:,2), pctsDesired);
   percentiles.precentiles=pctsDesired;
@@ -16,7 +16,6 @@ function pointData = tsEvaSampleData(ms, varargin)
   
   pointData.completeSeries = ms;
   pointData.POT = POTData;
-  pointData.Rlargest = rLargestData;
   
   [pointData.annualMax, pointData.annualMaxTimeStamp, pointData.annualMaxIndexes] = tsEvaComputeAnnualMaxima(ms);
   [pointData.monthlyMax, pointData.monthlyMaxTimeStamp, pointData.monthlyMaxIndexes] = tsEvaComputeMonthlyMaxima(ms);
