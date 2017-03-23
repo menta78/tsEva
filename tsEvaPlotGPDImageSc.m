@@ -1,6 +1,9 @@
 function phandles = tsEvaPlotGPDImageSc( Y, timeStamps, epsilon, sigma, threshold, varargin )
   avgYearLength = 365.2425;
-  args.nPlottedTimesByYear = 360;
+  nyears = (max(timeStamps) - min(timeStamps))/avgYearLength;
+  nelmPerYear = length(timeStamps)/nyears;
+  
+  args.nPlottedTimesByYear = min(360, round(nelmPerYear));
   args.ylabel = 'levels (m)';
   args.zlabel = 'pdf';
   args.minYear = -7000;
