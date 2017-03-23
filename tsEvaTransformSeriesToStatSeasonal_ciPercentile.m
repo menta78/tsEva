@@ -15,8 +15,7 @@ function [trasfData] = tsEvaTransformSeriesToStatSeasonal_ciPercentile( timeStam
 seasonalityTimeWindow = 2*30.4; % 2 months
 
 disp('computing trend ...');
-[trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaRunningMeanTrend(timeStamps, series, timeWindow);
-statSeries = filledSeries - trendSeries;
+[statSeries, trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaDetrendTimeSeries(timeStamps, series, timeWindow, varargin{:});
 disp('computing trend seasonality ...');
 trendSeasonality = tsEstimateAverageSeasonality(filledTimeStamps, statSeries);
 statSeries = statSeries - trendSeasonality;

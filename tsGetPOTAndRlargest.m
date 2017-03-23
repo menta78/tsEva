@@ -76,8 +76,10 @@ try
    
 if ~isempty(indexp)
     thrsd = prctile(ms(:,2),pcts(indexp)); % threshold is the 99.9th percentile of the timeseries;
+    pct = pcts(indexp);
 else
     thrsd = 0;
+    pct = 0;
 end
 
 % figure(1)
@@ -91,7 +93,7 @@ end
 
 POTdata.threshold=thrsd;
 POTdata.thresholdError = thresholdError;
-POTdata.percentile=pcts(indexp);
+POTdata.percentile=pct;
 POTdata.peaks=pks;
 POTdata.ipeaks=locs;
 POTdata.sdpeaks=ms(locs,1);
@@ -182,6 +184,5 @@ else
 end
   
 catch exc
-    dbstop at 148;
-    disp(getReport(exc));
+  disp(getReport(exc));
 end

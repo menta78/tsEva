@@ -37,10 +37,12 @@ args.transfType = 'trend';
 args.minPeakDistanceInDays = -1;
 args.ciPercentile = NaN;
 args.potEventsPerYear = -1;
+args.extremeLowThreshold = -inf;
 args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
 ciPercentile = args.ciPercentile;
 transfType = args.transfType;
+extremeLowThreshold = args.extremeLowThreshold;
 if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') )
     error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
 end
@@ -56,12 +58,12 @@ series = timeAndSeries(:, 2);
 
 if strcmpi(transfType, 'trend')
   disp('evalueting long term variations of extremes');
-  trasfData = tsEvaTransformSeriesToStationaryTrendOnly( timeStamps, series, timeWindow );
+  trasfData = tsEvaTransformSeriesToStationaryTrendOnly( timeStamps, series, timeWindow, varargin{:} );
   gevMaxima = 'annual';
   potEventsPerYear = 5;
 elseif strcmpi(transfType, 'seasonal')
   disp('evalueting long term an seasonal variations of extremes');
-  trasfData = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow );
+  trasfData = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow, varargin{:}  );
   gevMaxima = 'monthly';
   potEventsPerYear = 12;
 elseif strcmpi(transfType, 'trendCIPercentile') 

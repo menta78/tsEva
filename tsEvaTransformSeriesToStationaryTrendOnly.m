@@ -1,8 +1,7 @@
-function [trasfData] = tsEvaTransformSeriesToStationaryTrendOnly( timeStamps, series, timeWindow )
+function [trasfData] = tsEvaTransformSeriesToStationaryTrendOnly( timeStamps, series, timeWindow, varargin )
 
 disp('computing the trend ...');
-[trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaRunningMeanTrend(timeStamps, series, timeWindow);
-statSeries = filledSeries - trendSeries;
+[statSeries, trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaDetrendTimeSeries(timeStamps, series, timeWindow, varargin{:});
 
 disp('computing the slowly varying standard deviation ...');
 varianceSeries = tsEvaNanRunningVariance(statSeries, nRunMn);

@@ -1,4 +1,4 @@
-function [trasfData] = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow )
+function [trasfData] = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow, varargin )
 % this function decomposes the series into a season-dependent trend and a
 % season-dependent standard deviation.
 % The season-dependent standard deviation is given by a seasonal factor
@@ -15,8 +15,7 @@ function [trasfData] = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality
 seasonalityTimeWindow = 2*30.4; % 2 months
 
 disp('computing trend ...');
-[trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaRunningMeanTrend(timeStamps, series, timeWindow);
-statSeries = filledSeries - trendSeries;
+[statSeries, trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaDetrendTimeSeries(timeStamps, series, timeWindow, varargin{:});
 disp('computing trend seasonality ...');
 trendSeasonality = tsEstimateAverageSeasonality(filledTimeStamps, statSeries);
 statSeries = statSeries - trendSeasonality;

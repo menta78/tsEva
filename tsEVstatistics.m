@@ -4,6 +4,7 @@ function [EVmeta,EVdata,isValid]=tsEVstatistics(pointData, varargin)
 
 % in a gaussian approximation alphaCI~68% corresponds to 1 sigma confidence
 % interval
+
 defvals={[],[],.68};
 minvars=1;
 EVdata = [];
@@ -22,14 +23,7 @@ isValid = true;
 Tr=[5,10,20,50,100,200,500,1000];
 
 EVmeta.Tr=Tr;
-try
-  EVmeta.lon=pointData.lon;
-  EVmeta.lat=pointData.lat;
-catch
-  disp('lon lat not found. Cannot set them to metadata.');
-end
 
-npoints = 1;
 [nyears]=size(pointData.annualMax);
 
 %% stationary GEV
@@ -37,50 +31,43 @@ npoints = 1;
 imethod=1;
 methodname='GEVstat';
 
-paramEsts=nan(npoints,3);
+paramEsts=nan(1,3);
 paramCIs=nan*ones(2,3);
-rlvls=nan(npoints,length(Tr));
+rlvls=nan(1,length(Tr));
 
-criterio=zeros(npoints,1);
+criterio=0;
 
 if ~isempty(pointData.annualMax)
-  for jj=1:npoints;
+  if strcmpi(gevMaxima, 'annual')
+    tmpmat=pointData.annualMax(:);
+  elseif strcmpi(gevMaxima, 'monthly')
+    tmpmat=pointData.monthlyMax(:);
+  else
+    error(['tsEVstatistics: invalid gevMaxima type: ' gevMaxima]);
+  end
 
-    disp(['GEV - ' num2str(jj/npoints*100) '%'])
+  iIN=~isnan(tmpmat);
 
-    if strcmpi(gevMaxima, 'annual')
-      tmpmat=pointData.annualMax(jj,:);
-    elseif strcmpi(gevMaxima, 'monthly')
-      tmpmat=pointData.monthlyMax(jj,:);
-    else
-      error(['tsEVstatistics: invalid gevMaxima type: ' gevMaxima]);
-    end
+  if sum(iIN)>=minGEVSample
 
-    iIN=~isnan(tmpmat);
+    criterio=1;
 
-    if sum(iIN)>=minGEVSample
+    tmp=tmpmat(iIN);
 
-      criterio(jj)=1;
+    [paramEsts(1,1:3),paramCIs]=gevfit(tmp, alphaCI);
+    % paramEsts(jj,1): shape param
+    % paramEsts(jj,2): scale param
+    % paramEsts(jj,3): location param
 
-      tmp=tmpmat(iIN);
+    % the second parameter returned by gevfit is the 95% confidence
+    % interval
 
-      [paramEsts(jj,1:3),paramCIs]=gevfit(tmp, alphaCI);
-      % paramEsts(jj,1): shape param
-      % paramEsts(jj,2): scale param
-      % paramEsts(jj,3): location param
+    rlvls(1,:) = gevinv(1-1./Tr,paramEsts(1,1),paramEsts(1,2),paramEsts(1,3));
 
-      % the second parameter returned by gevfit is the 95% confidence
-      % interval
+  else 
 
-      rlvls(jj,:) = gevinv(1-1./Tr,paramEsts(jj,1),paramEsts(jj,2),paramEsts(jj,3));
-
-    else 
-
-      disp('Skipping...')
-      isValid = false;
-
-    end
-
+    disp('Skipping...')
+    isValid = false;
 
   end
 
@@ -94,7 +81,7 @@ else
   EVdata(imethod).values = [];
   EVdata(imethod).parameters = [];
   EVdata(imethod).paramCIs = [];
-  criterio = ones(npoints,1);
+  criterio = 1;
 end
 
 %% stationary GPD
@@ -102,66 +89,61 @@ end
 imethod=2;
 methodname='GPDstat';
 
-paramEstsall=nan(npoints,6);
+paramEstsall=nan(1,6);
 paramCIs=nan*ones(2,2);
-rlvls=nan(npoints,length(Tr));
+rlvls=nan(1,length(Tr));
 
 if length(EVdata)<imethod
 
-    for ik=1:npoints
+try
+  ik = 1;
+  if criterio(ik)==1
+    d1=pointData.POT(ik).peaks-pointData.POT(ik).threshold;
 
-        disp(['GPD - ' num2str(ik/npoints*100) '%'])
+    [paramEsts,paramCIs]=gpfit(d1, alphaCI);
+    % shape parameter
+    ksi=paramEsts(1);
+    % scale parameter
+    sgm=paramEsts(2);
 
-        try
-            if criterio(ik)==1
+    if ksi < -.5
+      % computing anyway the confidence interval (in a rough way)
+      probs = [alphaCI/2; 1-alphaCI/2];
+      [~, acov] = gplike([ksi sgm], d1);
+      se = sqrt(diag(acov))';
 
-                d1=pointData.POT(ik).peaks-pointData.POT(ik).threshold;
+      % Compute the CI for k using a normal distribution for khat.
+      kci = norminv(probs, ksi, se(1));
+      % VERY ROUGHT: minimizing the lower boundary of kci to -1
+      kci(kci < -1) = -1;
 
-                [paramEsts,paramCIs]=gpfit(d1, alphaCI);
-                % shape parameter
-                ksi=paramEsts(1);
-                % scale parameter
-                sgm=paramEsts(2);
-                
-                if ksi < -.5
-                  % computing anyway the confidence interval (in a rough way)
-                  probs = [alphaCI/2; 1-alphaCI/2];
-                  [~, acov] = gplike([ksi sgm], d1);
-                  se = sqrt(diag(acov))';
+      % Compute the CI for sigma using a normal approximation for
+      % log(sigmahat), and transform back to the original scale.
+      % se(log(sigmahat)) is se(sigmahat) / sigmahat.
+      lnsigci = norminv(probs, log(sgm), se(2)./sgm);
 
-                  % Compute the CI for k using a normal distribution for khat.
-                  kci = norminv(probs, ksi, se(1));
-                  % VERY ROUGHT: minimizing the lower boundary of kci to -1
-                  kci(kci < -1) = -1;
+      paramCIs = [kci exp(lnsigci)];
 
-                  % Compute the CI for sigma using a normal approximation for
-                  % log(sigmahat), and transform back to the original scale.
-                  % se(log(sigmahat)) is se(sigmahat) / sigmahat.
-                  lnsigci = norminv(probs, log(sgm), se(2)./sgm);
-
-                  paramCIs = [kci exp(lnsigci)];
-                  
-                end
-                
-                % paramCIs: 95% confidence interval
-
-
-                paramEstsall(ik,:)=[sgm ksi pointData.POT(ik).threshold length(d1) length(pointData.POT(ik).peaks) pointData.POT(ik).percentile];
-
-                rlvls(ik,:) = pointData.POT(ik).threshold+(sgm/ksi).*((((length(d1)/length(pointData.POT(ik).peaks))*(1./Tr)).^(-ksi))-1);
-
-                else 
-
-                disp('Skipping...')
-
-            end
-        catch err
-            disp(getReport(err));
-            paramEstsall(ik,:)=[0 0 0 0 0 0];
-            rlvls(ik,:) = zeros(1, length(Tr));
-            isValid = false;
-        end
     end
+
+    % paramCIs: 95% confidence interval
+
+
+    paramEstsall(ik,:)=[sgm ksi pointData.POT(ik).threshold length(d1) length(pointData.POT(ik).peaks) pointData.POT(ik).percentile];
+
+    rlvls(ik,:) = pointData.POT(ik).threshold+(sgm/ksi).*((((length(d1)/length(pointData.POT(ik).peaks))*(1./Tr)).^(-ksi))-1);
+
+  else 
+
+    disp('Skipping...')
+
+  end
+catch err
+    disp(getReport(err));
+    paramEstsall(ik,:)=[0 0 0 0 0 0];
+    rlvls(ik,:) = zeros(1, length(Tr));
+    isValid = false;
+end
 
     EVdata(imethod).method=methodname;
     EVdata(imethod).values=rlvls;

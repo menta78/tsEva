@@ -1,8 +1,7 @@
 function [trasfData] = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile( timeStamps, series, timeWindow, percentile, varargin )
 
 disp('computing the trend ...');
-[trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaRunningMeanTrend(timeStamps, series, timeWindow);
-statSeries = filledSeries - trendSeries;
+[statSeries, trendSeries, filledTimeStamps, filledSeries, nRunMn] = tsEvaDetrendTimeSeries(timeStamps, series, timeWindow, varargin{:});
 
 disp(['computing the slowly varying ' num2str(percentile) 'th percentile ...']);
 [percentileSeries, stdErr] = tsEvaNanRunningPercentile(statSeries, nRunMn, percentile, varargin{:});

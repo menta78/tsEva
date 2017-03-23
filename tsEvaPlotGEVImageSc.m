@@ -1,6 +1,9 @@
 function phandles = tsEvaPlotGEVImageSc( Y, timeStamps, epsilon, sigma, mu, varargin )
   avgYearLength = 365.2425;
-  args.nPlottedTimesByYear = 360;
+  nyears = (max(timeStamps) - min(timeStamps))/avgYearLength;
+  nelmPerYear = length(timeStamps)/nyears;
+  
+  args.nPlottedTimesByYear = min(360, round(nelmPerYear));
   args.ylabel = 'levels (m)';
   args.zlabel = 'pdf';
   args.minYear = -7000;
@@ -43,6 +46,7 @@ function phandles = tsEvaPlotGEVImageSc( Y, timeStamps, epsilon, sigma, mu, vara
   
   if length(epsilon) == 1
       epsilon0 = ones(npdf, 1)*epsilon;
+      %epsilon0 = epsilon;
   else
       epsilon_ = nan*ones(npdf*navg, 1);
       epsilon_(1:L) = epsilon(:);
@@ -52,11 +56,19 @@ function phandles = tsEvaPlotGEVImageSc( Y, timeStamps, epsilon, sigma, mu, vara
   
   sigma_ = interp1(timeStamps, sigma, timeStamps_plot);
   sigmaMtx = reshape(sigma_, navg, []);
-  sigma0 = nanmean(sigmaMtx)';
+  if size(sigmaMtx, 1) > 1
+    sigma0 = nanmean(sigmaMtx)';
+  else
+    sigma0 = sigmaMtx';
+  end
   
   mu_ = interp1(timeStamps, mu, timeStamps_plot);
   muMtx = reshape(mu_, navg, []);
-  mu0 = nanmean(muMtx)';
+  if size(muMtx, 1) > 1
+    mu0 = nanmean(muMtx)';
+  else
+    mu0 = muMtx';
+  end
   
   [~, epsilonMtx] = meshgrid(Y, epsilon0);
   [~, sigmaMtx] = meshgrid(Y, sigma0);

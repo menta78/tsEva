@@ -17,13 +17,8 @@ function pointData = tsEvaSampleData(ms, varargin)
   pointData.completeSeries = ms;
   pointData.POT = POTData;
   pointData.Rlargest = rLargestData;
-  if ~isempty(rLargestData)
-    pointData.annualMax = rLargestData.peaks(:,1)';
-    pointData.annualMaxTimeStamp = rLargestData.sdpeaks(:,1)';
-  else
-    pointData.annualMax = [];
-    pointData.annualMaxTimeStamp = [];
-  end
+  
+  [pointData.annualMax, pointData.annualMaxTimeStamp, pointData.annualMaxIndexes] = tsEvaComputeAnnualMaxima(ms);
   [pointData.monthlyMax, pointData.monthlyMaxTimeStamp, pointData.monthlyMaxIndexes] = tsEvaComputeMonthlyMaxima(ms);
   
   yrs = unique(tsYear(ms(:,1)));
