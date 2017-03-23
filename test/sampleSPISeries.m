@@ -1,7 +1,7 @@
 function sampleSPISeries
 
 %%
-% SPI series is a series where peaks are distant at least 5 month one
+% SPI (Standardized Precipitation Index) series is a series where peaks are distant at least 5 month one
 % from the other. Therefore the concept of "annual maxima" is meaningless, 
 % as it is the concept of "5 peaks over threshold per year".
 % It is possible to set the algorithm to examine just one percentile for

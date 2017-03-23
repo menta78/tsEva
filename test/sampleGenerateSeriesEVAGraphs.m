@@ -1,6 +1,9 @@
 %%
-% this sample script illustrates how to execute the tsEva to estimate the
-% long term and seasonal variations of the extremes.
+% test/sampleGenerateSeriesEVAGraphs.m: this script analyzes a time series of residual water levels modeled at the Hebrides islands on a time horizon of 30 years. 
+% The minimum time window for the detection of non-stationarity is 6 years (i.e. the time window below which the statistics of the series are considered stationary). 
+% The script estimates the non stationary GEV and GPD, and plots the results. The following plots are produced: 
+% the 2d plot of the non-stationary GEV and GPD, the 3d plot of the GEV, the return levels for both. 
+% The whole analysis is then repeated including the seasonal estimation of the extremes.
 %%
 
 addpath('../');
