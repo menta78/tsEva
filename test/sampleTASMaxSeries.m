@@ -1,9 +1,8 @@
-function sampleTASSeries
+function sampleTASMaxSeries
 
 %%
-% TAS is an indicator for heat wave developed by Alessandro Dosio at the JRC.
-% Series of TAS are annual series of maxima, therefore they are fit for a
-% GEV analysis, while a GPD analysis is meaningless.
+% A series of TAS (Temperature of Air Surface) yerly maxima is useful to understand how heat waves evolve (Alessandro Dosio, jrc).
+% It is a series of yearly maxima, therefore it is fit for a GEV analysis, while a GPD analysis is meaningless.
 %%
 
 addpath('../');
