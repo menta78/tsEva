@@ -116,17 +116,23 @@ if ~isempty(eva(1).parameters)
   fprintf('\n');
   disp('Transforming to non stationary eva ...')
   epsilonGevNS = epsilonGevX;
+  errEpsilonGevFit = errEpsilonX;
+  errEpsilonGevTransf = 0;
   errEpsilonGevNS = errEpsilonX;
   sigmaGevNS = trasfData.stdDevSeries*sigmaGevX;
   % propagating the errors on stdDevSeries and sigmaGevX to sigmaGevNs.
   % err(sigmaNs) = sqrt{ [sigmaX*err(stdDev)]^2 + [stdDev*err(sigmaX)]^2 }
   % the error on sigmaGevNs is time dependant.
-  errSigmaGevNS = (  (sigmaGevX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*errSigmaGevX).^2  ).^.5;
+  errSigmaGevFit = trasfData.stdDevSeries.*errSigmaGevX;
+  errSigmaGevTransf = sigmaGevX*trasfData.stdDevError;
+  errSigmaGevNS = (  errSigmaGevTransf.^2   +  errSigmaGevFit.^2  ).^.5;
   muGevNS = trasfData.stdDevSeries*muGevX + trasfData.trendSeries;
   % propagating the errors on stdDevSeries, trendSeries and sigmaGevX to muGevNS.
   % err(muNs) = sqrt{ [muX*err(stdDev)]^2 + [stdDev*err(muX)]^2 + err(trend)^2 }
   % the error on muGevNS is time dependant.
-  errMuGevNS = (  (muGevX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*errMuGevX).^2   +  trasfData.trendError^2  ).^.5;
+  errMuGevFit = trasfData.stdDevSeries.*errMuGevX;
+  errMuGevTransf = (  (muGevX*trasfData.stdDevError).^2 + trasfData.trendError^2  ).^.5;
+  errMuGevNS = (  errMuGevTransf.^2   +  errMuGevFit.^2  ).^.5;
   gevParams.epsilon = epsilonGevNS;
   gevParams.sigma = sigmaGevNS;
   gevParams.mu = muGevNS;
@@ -137,9 +143,19 @@ if ~isempty(eva(1).parameters)
     gevParams.timeDelta = 365.25/12.;
     gevParams.timeDeltaYears = 1/12.;
   end
+  
+  gevParamStdErr.epsilonErrFit = errEpsilonGevFit;
+  gevParamStdErr.epsilonErrTransf = errEpsilonGevTransf;
   gevParamStdErr.epsilonErr = errEpsilonGevNS;
+  
+  gevParamStdErr.sigmaErrFit = errSigmaGevFit;
+  gevParamStdErr.sigmaErrTransf = errSigmaGevTransf;
   gevParamStdErr.sigmaErr = errSigmaGevNS;
+  
+  gevParamStdErr.muErrFit = errMuGevFit;
+  gevParamStdErr.muErrTransf = errMuGevTransf;
   gevParamStdErr.muErr = errMuGevNS;
+  
   gevObj.method = eva(1).method;
   gevObj.parameters = gevParams;
   gevObj.paramErr = gevParamStdErr;
@@ -173,26 +189,42 @@ dtPeaks = minPeakDistance/2;
 dtPotX = (timeStamps(end) - timeStamps(1))/length(series)*dtPeaks;
 
 epsilonPotNS = epsilonPotX;
+errEpsilonPotFit = errEpsilonPotX;
+errEpsilonPotTransf = 0;
 errEpsilonPotNS = errEpsilonPotX;
 sigmaPotNS = sigmaPotX*trasfData.stdDevSeries;
 % propagating the errors on stdDevSeries and sigmaPotX to sigmaPotNs.
 % err(sigmaNs) = sqrt{ [sigmaX*err(stdDev)]^2 + [stdDev*err(sigmaX)]^2 }
 % the error on sigmaGevNs is time dependant.
-errSigmaPotNS = (  (sigmaPotX*trasfData.stdDevError).^2   +  (trasfData.stdDevSeries.*errSigmaPotX).^2  ).^.5;
+errSigmaPotFit = trasfData.stdDevSeries.*errSigmaPotX;
+errSigmaPotTransf = sigmaPotX*trasfData.stdDevError;
+errSigmaPotNS = (  errSigmaPotTransf.^2   +  errSigmaPotFit.^2  ).^.5;
 thresholdPotNS = thresholdPotX*trasfData.stdDevSeries + trasfData.trendSeries;
 % propagating the errors on stdDevSeries and trendSeries to thresholdPotNs.
 % err(thresholdPotNs) = sqrt{ [thresholdPotX*err(stdDev)]^2 + err(trend)^2 }
 % the error on thresholdPotNs is constant.
-thresholdErr = ( (trasfData.stdDevSeries*errThresholdPotX).^2 + (thresholdPotX*trasfData.stdDevError).^2  +  trasfData.trendError^2  ).^.5;
+thresholdErrFit = 0;
+thresholdErrTransf = ( (trasfData.stdDevSeries*errThresholdPotX).^2 + (thresholdPotX*trasfData.stdDevError).^2  +  trasfData.trendError^2  ).^.5;
+thresholdErr = thresholdErrTransf;
 potParams.epsilon = epsilonPotNS;
 potParams.sigma = sigmaPotNS;
 potParams.threshold = thresholdPotNS;
 potParams.percentile = percentilePotX;
 potParams.timeDelta = dtPotX;
 potParams.timeDeltaYears = dtPotX/365.2425;
+
+potParamStdErr.epsilonErrFit = errEpsilonPotFit;
+potParamStdErr.epsilonErrTransf = errEpsilonPotTransf;
 potParamStdErr.epsilonErr = errEpsilonPotNS;
+
+potParamStdErr.sigmaErrFit = errSigmaPotFit;
+potParamStdErr.sigmaErrTransf = errSigmaPotTransf;
 potParamStdErr.sigmaErr = errSigmaPotNS;
+
+potParamStdErr.thresholdErrFit = thresholdErrFit;
+potParamStdErr.thresholdErrTransf = thresholdErrTransf;
 potParamStdErr.thresholdErr = thresholdErr;
+
 potObj.method = eva(2).method;
 potObj.parameters = potParams;
 potObj.paramErr = potParamStdErr;
