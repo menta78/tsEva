@@ -144,16 +144,14 @@ if ~isempty(eva(1).parameters)
     gevParams.timeDeltaYears = 1/12.;
   end
   
-  gevParamStdErr.epsilonErrFit = errEpsilonGevFit;
-  gevParamStdErr.epsilonErrTransf = errEpsilonGevTransf;
   gevParamStdErr.epsilonErr = errEpsilonGevNS;
   
   gevParamStdErr.sigmaErrFit = errSigmaGevFit;
-  gevParamStdErr.sigmaErrTransf = errSigmaGevTransf;
+  gevParamStdErr.sigmaErrTransf = errSigmaGevTransf*ones(size(errSigmaGevNS));
   gevParamStdErr.sigmaErr = errSigmaGevNS;
   
   gevParamStdErr.muErrFit = errMuGevFit;
-  gevParamStdErr.muErrTransf = errMuGevTransf;
+  gevParamStdErr.muErrTransf = errMuGevTransf*ones(size(errMuGevNS));
   gevParamStdErr.muErr = errMuGevNS;
   
   gevObj.method = eva(1).method;
@@ -213,15 +211,13 @@ potParams.percentile = percentilePotX;
 potParams.timeDelta = dtPotX;
 potParams.timeDeltaYears = dtPotX/365.2425;
 
-potParamStdErr.epsilonErrFit = errEpsilonPotFit;
-potParamStdErr.epsilonErrTransf = errEpsilonPotTransf;
 potParamStdErr.epsilonErr = errEpsilonPotNS;
 
 potParamStdErr.sigmaErrFit = errSigmaPotFit;
-potParamStdErr.sigmaErrTransf = errSigmaPotTransf;
+potParamStdErr.sigmaErrTransf = errSigmaPotTransf*ones(size(errSigmaPotNS));
 potParamStdErr.sigmaErr = errSigmaPotNS;
 
-potParamStdErr.thresholdErrFit = thresholdErrFit;
+potParamStdErr.thresholdErrFit = thresholdErrFit*ones(size(thresholdErr));
 potParamStdErr.thresholdErrTransf = thresholdErrTransf;
 potParamStdErr.thresholdErr = thresholdErr;
 
