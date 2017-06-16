@@ -21,7 +21,7 @@ function [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonSt
 % 
 %
 %% sample calls
-% nonStatEvaParams = tsEvaNonStationary(ms, timeWindow, 'pcts',[95], 'minPeakDistanceInDays', 3)
+% nonStatEvaParams = tsEvaNonStationary(ms, timeWindow, 'potPercentiles',[95], 'minPeakDistanceInDays', 3)
 %     samples POT data using a fixed 95 percentile threshold, with peaks at
 %     a minimum distance of 3 days, looking for a threshold so that we have an average
 %     of 5 events every year.

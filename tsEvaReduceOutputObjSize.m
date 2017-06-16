@@ -20,6 +20,8 @@ function [ redNonStatEvaParams, redStatTransData ] = tsEvaReduceOutputObjSize( n
     redNonStatEvaParams(1).paramErr.sigmaErrFit = redNonStatEvaParams(1).paramErr.sigmaErrFit(tsIndxs);
     redNonStatEvaParams(1).paramErr.sigmaErrTransf = redNonStatEvaParams(1).paramErr.sigmaErrTransf(tsIndxs);
     redNonStatEvaParams(1).paramErr.sigmaErr = redNonStatEvaParams(1).paramErr.sigmaErr(tsIndxs);
+    redNonStatEvaParams(1).paramErr.muErrFit = redNonStatEvaParams(1).paramErr.muErrFit(tsIndxs);
+    redNonStatEvaParams(1).paramErr.muErrTransf = redNonStatEvaParams(1).paramErr.muErrTransf(tsIndxs);
     redNonStatEvaParams(1).paramErr.muErr = redNonStatEvaParams(1).paramErr.muErr(tsIndxs);
     redNonStatEvaParams(1).objs = [];
   end
@@ -29,6 +31,7 @@ function [ redNonStatEvaParams, redStatTransData ] = tsEvaReduceOutputObjSize( n
     redNonStatEvaParams(2).paramErr.sigmaErrFit = redNonStatEvaParams(2).paramErr.sigmaErrFit(tsIndxs);
     redNonStatEvaParams(2).paramErr.sigmaErrTransf = redNonStatEvaParams(2).paramErr.sigmaErrTransf(tsIndxs);
     redNonStatEvaParams(2).paramErr.sigmaErr = redNonStatEvaParams(2).paramErr.sigmaErr(tsIndxs);
+    redNonStatEvaParams(2).paramErr.thresholdErrFit = redNonStatEvaParams(2).paramErr.thresholdErrFit(tsIndxs);
     redNonStatEvaParams(2).paramErr.thresholdErrTransf = redNonStatEvaParams(2).paramErr.thresholdErrTransf(tsIndxs);
     redNonStatEvaParams(2).paramErr.thresholdErr = redNonStatEvaParams(2).paramErr.thresholdErr(tsIndxs);
     redNonStatEvaParams(2).objs = [];
