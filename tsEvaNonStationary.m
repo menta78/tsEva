@@ -181,9 +181,9 @@ thresholdExceedProbability = sum(nnSrs > thresholdPotX)/length(nnSrs); % should 
 percentilePotX = eva(2).parameters(6);
 % 72 is the minumum interval in time steps used by procedure
 % tsGetPOTAndRlargest, when it calls findpeaks.
-% If it finds 2 peaks at a distance of 72 hours, it means that there is
-% something in the middle
-dtPeaks = minPeakDistance/2;
+% If it finds 2 peaks at a distance of 72 hours, it means that dtPeaks = 72
+% hours
+dtPeaks = minPeakDistance;
 dtPotX = (timeStamps(end) - timeStamps(1))/length(series)*dtPeaks;
 
 epsilonPotNS = epsilonPotX;
