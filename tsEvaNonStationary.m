@@ -36,13 +36,11 @@ function [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonSt
 args.transfType = 'trend';
 args.minPeakDistanceInDays = -1;
 args.ciPercentile = NaN;
-args.potEventsPerYear = -1;
-args.extremeLowThreshold = -inf;
+args.potEventsPerYear = 5;
 args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
 ciPercentile = args.ciPercentile;
 transfType = args.transfType;
-extremeLowThreshold = args.extremeLowThreshold;
 if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') )
     error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
 end
@@ -91,7 +89,7 @@ ms = cat(2, trasfData.timeStamps, trasfData.stationarySeries);
 dt = tsEvaGetTimeStep(trasfData.timeStamps);
 minPeakDistance = minPeakDistanceInDays/dt;
 
-%% estimating the non stationary GEV parameters
+%% estimating the non stationary EVA parameters
 fprintf('\n');
 disp('Executing stationary eva')
 pointData = tsEvaSampleData(ms, 'meanEventsPerYear', potEventsPerYear, varargin{:});
@@ -116,8 +114,6 @@ if ~isempty(eva(1).parameters)
   fprintf('\n');
   disp('Transforming to non stationary eva ...')
   epsilonGevNS = epsilonGevX;
-  errEpsilonGevFit = errEpsilonX;
-  errEpsilonGevTransf = 0;
   errEpsilonGevNS = errEpsilonX;
   sigmaGevNS = trasfData.stdDevSeries*sigmaGevX;
   % propagating the errors on stdDevSeries and sigmaGevX to sigmaGevNs.
@@ -176,19 +172,13 @@ sigmaPotX = eva(2).parameters(1);
 errSigmaPotX = sigmaPotX - eva(2).paramCIs(1, 1);
 thresholdPotX = eva(2).parameters(3);
 errThresholdPotX = eva(2).thresholdError;
-nnSrs = trasfData.stationarySeries(~isnan(trasfData.stationarySeries));
-thresholdExceedProbability = sum(nnSrs > thresholdPotX)/length(nnSrs); % should be 1 - percentile
 percentilePotX = eva(2).parameters(6);
 % 72 is the minumum interval in time steps used by procedure
 % tsGetPOTAndRlargest, when it calls findpeaks.
-% If it finds 2 peaks at a distance of 72 hours, it means that dtPeaks = 72
-% hours
-dtPeaks = minPeakDistance;
+dtPeaks = minPeakDistance/2;
 dtPotX = (timeStamps(end) - timeStamps(1))/length(series)*dtPeaks;
 
 epsilonPotNS = epsilonPotX;
-errEpsilonPotFit = errEpsilonPotX;
-errEpsilonPotTransf = 0;
 errEpsilonPotNS = errEpsilonPotX;
 sigmaPotNS = sigmaPotX*trasfData.stdDevSeries;
 % propagating the errors on stdDevSeries and sigmaPotX to sigmaPotNs.
