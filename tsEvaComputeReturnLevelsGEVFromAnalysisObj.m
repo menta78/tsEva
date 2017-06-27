@@ -7,6 +7,7 @@ epsilon = nonStationaryEvaParams(1).parameters.epsilon;
 epsilonStdErr = nonStationaryEvaParams(1).paramErr.epsilonErr;
 epsilonStdErrFit = epsilonStdErr;
 epsilonStdErrTransf = 0;
+nonStationary = isfield(nonStationaryEvaParams(1).paramErr, 'sigmaErrTransf');
 if timeIndex > 0
   sigma = nonStationaryEvaParams(1).parameters.sigma(timeIndex);
   mu = nonStationaryEvaParams(1).parameters.mu(timeIndex);
@@ -19,15 +20,22 @@ if timeIndex > 0
 else
   sigma = nonStationaryEvaParams(1).parameters.sigma;
   mu = nonStationaryEvaParams(1).parameters.mu;
-  sigmaStdErrFit = nonStationaryEvaParams(1).paramErr.sigmaErrFit;
-  sigmaStdErrTransf = nonStationaryEvaParams(1).paramErr.sigmaErrTransf;
   sigmaStdErr = nonStationaryEvaParams(1).paramErr.sigmaErr;
   muStdErr = nonStationaryEvaParams(1).paramErr.muErr;
-  muStdErrFit = nonStationaryEvaParams(1).paramErr.muErrFit;
-  muStdErrTransf = nonStationaryEvaParams(1).paramErr.muErrTransf;
+  if nonStationary
+    sigmaStdErrFit = nonStationaryEvaParams(1).paramErr.sigmaErrFit;
+    sigmaStdErrTransf = nonStationaryEvaParams(1).paramErr.sigmaErrTransf;
+    muStdErrFit = nonStationaryEvaParams(1).paramErr.muErrFit;
+    muStdErrTransf = nonStationaryEvaParams(1).paramErr.muErrTransf;
+  end
 end
   
 [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGEV( epsilon, sigma, mu, epsilonStdErr, sigmaStdErr, muStdErr, returnPeriodsInYears, varargin{:} );
-[~, returnLevelsErrFit] = tsEvaComputeReturnLevelsGEV( epsilon, sigma, mu, epsilonStdErrFit, sigmaStdErrFit, muStdErrFit, returnPeriodsInYears, varargin{:} );
-[~, returnLevelsErrTransf] = tsEvaComputeReturnLevelsGEV( epsilon, sigma, mu, epsilonStdErrTransf, sigmaStdErrTransf, muStdErrTransf, returnPeriodsInYears, varargin{:} );
+if nonStationary
+  [~, returnLevelsErrFit] = tsEvaComputeReturnLevelsGEV( epsilon, sigma, mu, epsilonStdErrFit, sigmaStdErrFit, muStdErrFit, returnPeriodsInYears, varargin{:} );
+  [~, returnLevelsErrTransf] = tsEvaComputeReturnLevelsGEV( epsilon, sigma, mu, epsilonStdErrTransf, sigmaStdErrTransf, muStdErrTransf, returnPeriodsInYears, varargin{:} );
+else
+  returnLevelsErrFit = returnLevelsErr;
+  returnLevelsErrTransf = zeros(size(returnLevelsErr));
+end
 
