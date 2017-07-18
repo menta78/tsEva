@@ -3,10 +3,12 @@ function [ myRetPeriod, myRetPeriodError ] = tsGetReturnPeriodOfLevel( retPeriod
 % estimates the return period for a level myLevel, and the related error.
 
 args.lowerBoundTo0 = true;
-args.interpMethod = 'spline';
+%args.interpMethod = 'linear';
+args.logExtrap = true;
 args = tsEasyParseNamedArgs(varargin, args);
 lowerBoundTo0 = args.lowerBoundTo0;
-interpMethod = args.interpMethod;
+%interpMethod = args.interpMethod;
+logExtrap = args.logExtrap;
 
 bndTo0 = lowerBoundTo0 && retPeriod(1);
 if bndTo0 ~= 0
@@ -23,9 +25,14 @@ else
   rlHigh = retLevel_ + retLevError;
 end
 
-myRetPeriod = interp1(retLevel_, retPeriod_, myLevel, interpMethod, 'extrap');
-myRetPeriodSup = interp1(rlLow, retPeriod_, myLevel, interpMethod, 'extrap');
-myRetPeriodInf = interp1(rlHigh, retPeriod_, myLevel, interpMethod, 'extrap');
+% myRetPeriod = interp1(retLevel_, retPeriod_, myLevel, interpMethod, 'extrap');
+% myRetPeriodSup = interp1(rlLow, retPeriod_, myLevel, interpMethod, 'extrap');
+% myRetPeriodInf = interp1(rlHigh, retPeriod_, myLevel, interpMethod, 'extrap');
+% myRetPeriodError = (myRetPeriodSup - myRetPeriodInf)/2.;
+
+myRetPeriod = tsInterp1Extrap(retLevel_, retPeriod_, myLevel, logExtrap);
+myRetPeriodSup = tsInterp1Extrap(rlLow, retPeriod_, myLevel, logExtrap);
+myRetPeriodInf = tsInterp1Extrap(rlHigh, retPeriod_, myLevel, logExtrap);
 myRetPeriodError = (myRetPeriodSup - myRetPeriodInf)/2.;
 
 end
