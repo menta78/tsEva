@@ -55,7 +55,7 @@ for ipp=1:length(pcts)
     nperYear=tsGetNumberPerYear(ms,locs);
     minnumperyear(ipp)=nanmin(nperYear);
 
-    if (ipp > 1) && (length(pks)/nyears<desiredEventsPerYear) && (nanmin(nperYear)<desiredEventsPerYear)
+    if (ipp > 1) && (numperyear(ipp)<desiredEventsPerYear) && (nanmin(nperYear)<desiredEventsPerYear)
 
         break
 
@@ -70,7 +70,7 @@ end
 thresholdError = nanmean(diff(thrsdts)/diffNPerYear)/2;
 
 %% Use optimal for POT
-indexp=nanmax(find(numperyear>desiredEventsPerYear==1));
+indexp = ipp;
 
 try
 

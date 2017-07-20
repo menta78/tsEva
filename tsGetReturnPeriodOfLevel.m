@@ -1,4 +1,4 @@
-function [ myRetPeriod, myRetPeriodError ] = tsGetReturnPeriodOfLevel( retPeriod, retLevel, retLevError, myLevel, varargin )
+function [ myRetPeriod, myRetPeriodError, myRetPeriodErrorSup, myRetPeriodErrorInf ] = tsGetReturnPeriodOfLevel( retPeriod, retLevel, retLevError, myLevel, varargin )
 % given a list of retPeriod and corresponding retLevel with error,
 % estimates the return period for a level myLevel, and the related error.
 
@@ -34,6 +34,9 @@ myRetPeriod = tsInterp1Extrap(retLevel_, retPeriod_, myLevel, logExtrap);
 myRetPeriodSup = tsInterp1Extrap(rlLow, retPeriod_, myLevel, logExtrap);
 myRetPeriodInf = tsInterp1Extrap(rlHigh, retPeriod_, myLevel, logExtrap);
 myRetPeriodError = (myRetPeriodSup - myRetPeriodInf)/2.;
+
+myRetPeriodErrorSup = myRetPeriodSup - myRetPeriod;
+myRetPeriodErrorInf = myRetPeriod - myRetPeriodInf;
 
 end
 
