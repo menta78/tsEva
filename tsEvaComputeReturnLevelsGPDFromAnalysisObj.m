@@ -36,7 +36,7 @@ end
 
 [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr, dtSample, returnPeriodsInYears );
 if nonStationary
-  [~, returnLevelsErrFit] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErrFit, sigmaStdErrFit, thresholdStdErrFit, dtSample, returnPeriodsInYears );
+  [~, returnLevelsErrFit] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErrFit, sigmaStdErrFit, zeros(size(thresholdStdErr)), dtSample, returnPeriodsInYears );
   [~, returnLevelsErrTransf] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErrTransf, sigmaStdErrTransf, thresholdStdErrTransf, dtSample, returnPeriodsInYears );
 else
   returnLevelsErrFit = returnLevelsErr;

@@ -37,15 +37,18 @@ args.transfType = 'trend';
 args.minPeakDistanceInDays = -1;
 args.ciPercentile = NaN;
 args.potEventsPerYear = 5;
+args.evdType = {'GEV', 'GPD'};
 args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
 ciPercentile = args.ciPercentile;
 transfType = args.transfType;
+evdType = args.evdType;
+
 if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') )
-    error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
+  error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
 end
 if minPeakDistanceInDays == -1
-    error('label parameter ''minPeakDistanceInDays'' must be set')
+  error('label parameter ''minPeakDistanceInDays'' must be set')
 end
    
 nonStationaryEvaParams = [];
@@ -94,7 +97,7 @@ fprintf('\n');
 disp('Executing stationary eva')
 pointData = tsEvaSampleData(ms, 'meanEventsPerYear', potEventsPerYear, varargin{:});
 evaAlphaCI = .68; % in a gaussian approximation alphaCI~68% corresponds to 1 sigma confidence
-[~, eva, isValid] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima);
+[~, eva, isValid] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima, 'evdType', evdType);
 if ~isValid
   return;
 end
@@ -143,11 +146,11 @@ if ~isempty(eva(1).parameters)
   gevParamStdErr.epsilonErr = errEpsilonGevNS;
   
   gevParamStdErr.sigmaErrFit = errSigmaGevFit;
-  gevParamStdErr.sigmaErrTransf = errSigmaGevTransf*ones(size(errSigmaGevNS));
+  gevParamStdErr.sigmaErrTransf = errSigmaGevTransf;
   gevParamStdErr.sigmaErr = errSigmaGevNS;
   
   gevParamStdErr.muErrFit = errMuGevFit;
-  gevParamStdErr.muErrTransf = errMuGevTransf*ones(size(errMuGevNS));
+  gevParamStdErr.muErrTransf = errMuGevTransf;
   gevParamStdErr.muErr = errMuGevNS;
   
   gevObj.method = eva(1).method;
@@ -166,56 +169,64 @@ end
 %% estimating the non stationary GPD parameters
 % !!! Assuming a Gaussian approximation to compute the standard errors for
 % the GEV parameters
-epsilonPotX = eva(2).parameters(2);
-errEpsilonPotX = epsilonPotX - eva(2).paramCIs(1, 2);
-sigmaPotX = eva(2).parameters(1);
-errSigmaPotX = sigmaPotX - eva(2).paramCIs(1, 1);
-thresholdPotX = eva(2).parameters(3);
-errThresholdPotX = eva(2).thresholdError;
-percentilePotX = eva(2).parameters(6);
-% 72 is the minumum interval in time steps used by procedure
-% tsGetPOTAndRlargest, when it calls findpeaks.
-dtPeaks = minPeakDistance/2;
-dtPotX = (timeStamps(end) - timeStamps(1))/length(series)*dtPeaks;
+if ~isempty(eva(2).parameters)
+  epsilonPotX = eva(2).parameters(2);
+  errEpsilonPotX = epsilonPotX - eva(2).paramCIs(1, 2);
+  sigmaPotX = eva(2).parameters(1);
+  errSigmaPotX = sigmaPotX - eva(2).paramCIs(1, 1);
+  thresholdPotX = eva(2).parameters(3);
+  errThresholdPotX = eva(2).thresholdError;
+  percentilePotX = eva(2).parameters(6);
+  % 72 is the minumum interval in time steps used by procedure
+  % tsGetPOTAndRlargest, when it calls findpeaks.
+  dtPeaks = minPeakDistance/2;
+  dtPotX = (timeStamps(end) - timeStamps(1))/length(series)*dtPeaks;
 
-epsilonPotNS = epsilonPotX;
-errEpsilonPotNS = errEpsilonPotX;
-sigmaPotNS = sigmaPotX*trasfData.stdDevSeries;
-% propagating the errors on stdDevSeries and sigmaPotX to sigmaPotNs.
-% err(sigmaNs) = sqrt{ [sigmaX*err(stdDev)]^2 + [stdDev*err(sigmaX)]^2 }
-% the error on sigmaGevNs is time dependant.
-errSigmaPotFit = trasfData.stdDevSeries.*errSigmaPotX;
-errSigmaPotTransf = sigmaPotX*trasfData.stdDevError;
-errSigmaPotNS = (  errSigmaPotTransf.^2   +  errSigmaPotFit.^2  ).^.5;
-thresholdPotNS = thresholdPotX*trasfData.stdDevSeries + trasfData.trendSeries;
-% propagating the errors on stdDevSeries and trendSeries to thresholdPotNs.
-% err(thresholdPotNs) = sqrt{ [thresholdPotX*err(stdDev)]^2 + err(trend)^2 }
-% the error on thresholdPotNs is constant.
-thresholdErrFit = 0;
-thresholdErrTransf = ( (trasfData.stdDevSeries*errThresholdPotX).^2 + (thresholdPotX*trasfData.stdDevError).^2  +  trasfData.trendError^2  ).^.5;
-thresholdErr = thresholdErrTransf;
-potParams.epsilon = epsilonPotNS;
-potParams.sigma = sigmaPotNS;
-potParams.threshold = thresholdPotNS;
-potParams.percentile = percentilePotX;
-potParams.timeDelta = dtPotX;
-potParams.timeDeltaYears = dtPotX/365.2425;
+  epsilonPotNS = epsilonPotX;
+  errEpsilonPotNS = errEpsilonPotX;
+  sigmaPotNS = sigmaPotX*trasfData.stdDevSeries;
+  % propagating the errors on stdDevSeries and sigmaPotX to sigmaPotNs.
+  % err(sigmaNs) = sqrt{ [sigmaX*err(stdDev)]^2 + [stdDev*err(sigmaX)]^2 }
+  % the error on sigmaGevNs is time dependant.
+  errSigmaPotFit = trasfData.stdDevSeries.*errSigmaPotX;
+  errSigmaPotTransf = sigmaPotX*trasfData.stdDevError;
+  errSigmaPotNS = (  errSigmaPotTransf.^2   +  errSigmaPotFit.^2  ).^.5;
+  thresholdPotNS = thresholdPotX*trasfData.stdDevSeries + trasfData.trendSeries;
+  % propagating the errors on stdDevSeries and trendSeries to thresholdPotNs.
+  % err(thresholdPotNs) = sqrt{ [thresholdPotX*err(stdDev)]^2 + err(trend)^2 }
+  % the error on thresholdPotNs is constant.
+  thresholdErrFit = 0;
+  thresholdErrTransf = ( (trasfData.stdDevSeries*errThresholdPotX).^2 + (thresholdPotX*trasfData.stdDevError).^2  +  trasfData.trendError^2  ).^.5;
+  thresholdErr = thresholdErrTransf;
+  potParams.epsilon = epsilonPotNS;
+  potParams.sigma = sigmaPotNS;
+  potParams.threshold = thresholdPotNS;
+  potParams.percentile = percentilePotX;
+  potParams.timeDelta = dtPotX;
+  potParams.timeDeltaYears = dtPotX/365.2425;
 
-potParamStdErr.epsilonErr = errEpsilonPotNS;
+  potParamStdErr.epsilonErr = errEpsilonPotNS;
 
-potParamStdErr.sigmaErrFit = errSigmaPotFit;
-potParamStdErr.sigmaErrTransf = errSigmaPotTransf*ones(size(errSigmaPotNS));
-potParamStdErr.sigmaErr = errSigmaPotNS;
+  potParamStdErr.sigmaErrFit = errSigmaPotFit;
+  potParamStdErr.sigmaErrTransf = errSigmaPotTransf;
+  potParamStdErr.sigmaErr = errSigmaPotNS;
 
-potParamStdErr.thresholdErrFit = thresholdErrFit*ones(size(thresholdErr));
-potParamStdErr.thresholdErrTransf = thresholdErrTransf;
-potParamStdErr.thresholdErr = thresholdErr;
+  potParamStdErr.thresholdErrFit = thresholdErrFit;
+  potParamStdErr.thresholdErrTransf = thresholdErrTransf;
+  potParamStdErr.thresholdErr = thresholdErr;
 
-potObj.method = eva(2).method;
-potObj.parameters = potParams;
-potObj.paramErr = potParamStdErr;
-potObj.stationaryParams = eva(2);
-potObj.objs = [];
+  potObj.method = eva(2).method;
+  potObj.parameters = potParams;
+  potObj.paramErr = potParamStdErr;
+  potObj.stationaryParams = eva(2);
+  potObj.objs = [];
+else
+  potObj.method = eva(1).method;
+  potObj.parameters = [];
+  potObj.paramErr = [];
+  potObj.stationaryParams = [];
+  potObj.objs.monthlyMaxIndexes = [];
+end
 
 %% setting output objects
 clear nonStationaryEvaParams;

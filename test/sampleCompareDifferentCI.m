@@ -3,7 +3,7 @@ function sampleCompareDifferentCI( varargin )
   %%
   % This example illustrates the fact that the time-varying amplitude of
   % the signal, necessary for the estimation of the extremes using the ts
-  % approach, can be extimated by means of a moving standard deviation or
+  % approach, can be estimated by means of a moving standard deviation or
   % or by means of a moving percentile.
   % The approach using the moving percentile models better the variations of the extremes
   % than the approach based on the standard deviation, but is subject to stronger
@@ -21,8 +21,8 @@ function sampleCompareDifferentCI( varargin )
   ylabel = args.ylabel;
   
   if isempty(timeAndSeries)
-    load('timeAndSeries_waves_020_953E_-035_371N.mat');
-    %load('timeAndSeries_waves_015_220E_055_509N.mat');
+    %load('timeAndSeries_waves_020_953E_-035_371N.mat');
+    load('timeAndSeries_waves_015_220E_055_509N.mat');
     %load('timeAndSeries_waves_023_688E_059_519N.mat');
   end
   

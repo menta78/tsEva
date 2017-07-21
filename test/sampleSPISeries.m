@@ -19,11 +19,8 @@ potEventsPerYear = 1;
 returnPeriodsInYears = [20 50 100 300];
 
 [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonStationary( timeAndSeries, timeWindow, 'minPeakDistanceInDays', minPeakDistanceInDays, ...
-  'transfType', 'trendCIPercentile', 'cipercentile', 90, 'potPercentiles', 90);
-% tsEvaReduceOutputObjSize: reduces the size 
-% [nonStationaryEvaParams, stationaryTransformData] = tsEvaReduceOutputObjSize(nonStationaryEvaParams, stationaryTransformData, rlTmStamps);
+  'transfType', 'trendCIPercentile', 'cipercentile', 80, 'potPercentiles', 80, 'evdType', 'GPD');
 tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStationaryEvaParams, stationaryTransformData, 'plotpercentile', 95., 'ylabel', '-SPI', 'legendLocation', 'southwest');
-% tsEvaPlotGPDImageScFromAnalysisObj(0:.01:4, nonStationaryEvaParams, stationaryTransformData);
 
 [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStationaryEvaParams, returnPeriodsInYears);
 returnLevels = returnLevels*-1;

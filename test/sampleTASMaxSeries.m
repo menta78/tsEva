@@ -7,7 +7,7 @@ function sampleTASMaxSeries
 
 addpath('../');
 
-dt = load('timeAndSeriesTAS.mat');
+dt = load('timeAndSeriesTASMax.mat');
 timeAndSeries = dt.timeAndSeries;
 clear dt;
 
@@ -15,7 +15,7 @@ timeWindow = 50*315.25;
 minPeakDistanceInDays = 5*30.2;
 returnPeriodsInYears = [20 50 100 300];
 
-[nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonStationary( timeAndSeries, timeWindow, 'minPeakDistanceInDays', minPeakDistanceInDays, 'extremeLowThreshold', .1);
+[nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonStationary( timeAndSeries, timeWindow, 'minPeakDistanceInDays', minPeakDistanceInDays, 'extremeLowThreshold', .1, 'evdType', 'GEV');
 
 tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStationaryEvaParams, stationaryTransformData, 'ylabel', 'TAS', 'legendLocation', 'northwest');
 ylim([0 40])

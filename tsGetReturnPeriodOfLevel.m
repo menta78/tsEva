@@ -16,13 +16,18 @@ if bndTo0 ~= 0
   retLevel_ = [0; sort(retLevel)];
   retLevError_ = [0; sort(retLevError)];
   rlLow = retLevel_ - retLevError_;
-  rlLow(rlLow < 0) = 0;
   rlHigh = retLevel_ + retLevError_;
 else
   retPeriod_ = retPeriod;
   retLevel_ = retLevel;
   rlLow = retLevel_ - retLevError;
   rlHigh = retLevel_ + retLevError;
+end
+ll = length(rlLow);
+rlLowDiff = [1; diff(rlLow)];
+rlLowLastIncIndx = sum(rlLowDiff > 0);
+if rlLowLastIncIndx <= ll
+  rlLow(rlLowLastIncIndx:ll) = retLevel_(rlLowLastIncIndx:ll) - retLevError_(rlLowLastIncIndx);
 end
 
 % myRetPeriod = interp1(retLevel_, retPeriod_, myLevel, interpMethod, 'extrap');

@@ -7,6 +7,9 @@ function [stationaryEvaParams, isValid] = tsEvaStationary( timeAndSeries, vararg
 args.minPeakDistanceInDays = -1;
 args.potEventsPerYear = 5;
 args.gevMaxima = 'annual';
+args.doSampleData = true;
+args.potThreshold = nan;
+args.evdType = {'GEV', 'GPD'};
 args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
 if minPeakDistanceInDays == -1
@@ -14,14 +17,24 @@ if minPeakDistanceInDays == -1
 end
 potEventsPerYear = args.potEventsPerYear;
 gevMaxima = args.gevMaxima;
+doSampleData = args.doSampleData;
+evdType = args.evdType;
+potThreshold = args.potThreshold;
    
 stationaryEvaParams = [];
 
 fprintf('\n');
-disp('Executing stationary eva')
-pointData = tsEvaSampleData(timeAndSeries, 'meanEventsPerYear', potEventsPerYear, varargin{:});
+disp('Executing stationary eva');
+if doSampleData
+  pointData = tsEvaSampleData(timeAndSeries, 'meanEventsPerYear', potEventsPerYear, varargin{:});
+else
+  if isnan(potThreshold)
+    error('if doSampleData==false, than the POT is not performed, and you need to provide a value for the threshold.');
+  end
+  pointData = tsTimeSeriesToPointData(timeAndSeries, potThreshold, 0);
+end
 evaAlphaCI = .68; % in a gaussian approximation alphaCI~68% corresponds to 1 sigma confidence
-[~, eva, isValid] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima);
+[~, eva, isValid] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima, 'evdType', evdType, varargin{:});
 if ~isValid
   return;
 end
