@@ -7,7 +7,7 @@ function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon,
 
   thresholdExceedProbability = 1 - percentile/100;
   %thresholdExceedProbability = 1;
-  m = returnPeriods/dtSample;
+  m = returnPeriods/double(dtSample);
   XX = m*thresholdExceedProbability;
   % uniforming dimensions of XX, sigma, mu
   npars = length(sigma);
