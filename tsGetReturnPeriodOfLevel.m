@@ -19,9 +19,19 @@ function [ myRetPeriod, myRetPeriodCISup, myRetPeriodCIInf ] = tsGetReturnPeriod
     rlHigh = [0; rlHigh];
   end
   
-  myRetPeriod = tsInterp1Extrap(retLevel, retPeriod, myLevel, logExtrap)';
-  myRetPeriodCISup = tsInterp1Extrap(rlLow, retPeriod, myLevel, logExtrap)';
-  myRetPeriodCIInf = tsInterp1Extrap(rlHigh, retPeriod, myLevel, logExtrap)';
+  myLevNonNan = ~isnan(myLevel);
+  myRetPeriod_ = tsInterp1Extrap(retLevel, retPeriod, myLevel(myLevNonNan), logExtrap)';
+  myRetPeriodCISup_ = tsInterp1Extrap(rlLow, retPeriod, myLevel(myLevNonNan), logExtrap)';
+  myRetPeriodCIInf_ = tsInterp1Extrap(rlHigh, retPeriod, myLevel(myLevNonNan), logExtrap)';
+  
+  myRetPeriod = ones(size(myLevel))*nan;
+  myRetPeriod(myLevNonNan) = myRetPeriod_;
+  
+  myRetPeriodCISup = ones(size(myLevel))*nan;
+  myRetPeriodCISup(myLevNonNan) = myRetPeriodCISup_;
+  
+  myRetPeriodCIInf = ones(size(myLevel))*nan;
+  myRetPeriodCIInf(myLevNonNan) = myRetPeriodCIInf_;
 
 end
 
