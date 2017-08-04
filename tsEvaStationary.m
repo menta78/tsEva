@@ -26,6 +26,9 @@ stationaryEvaParams = [];
 fprintf('\n');
 disp('Executing stationary eva');
 if doSampleData
+  % removing nan
+  cnd = ~isnan(timeAndSeries(:,2));
+  timeAndSeries = timeAndSeries(cnd, :);
   pointData = tsEvaSampleData(timeAndSeries, 'meanEventsPerYear', potEventsPerYear, varargin{:});
 else
   if isnan(potThreshold)
