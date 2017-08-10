@@ -19,7 +19,7 @@ function [ myRetPeriod, myRetPeriodCISup, myRetPeriodCIInf ] = tsGetReturnPeriod
     rlHigh = [0; rlHigh];
   end
   
-  myLevNonNan = ~isnan(myLevel);
+  myLevNonNan = ~isnan(myLevel) & ~isinf(myLevel);
 
   try
     myRetPeriod_ = tsInterp1Extrap(retLevel, retPeriod, myLevel(myLevNonNan), logExtrap)';
@@ -40,7 +40,7 @@ function [ myRetPeriod, myRetPeriodCISup, myRetPeriodCIInf ] = tsGetReturnPeriod
   try
     myRetPeriodCIInf_ = tsInterp1Extrap(rlHigh, retPeriod, myLevel(myLevNonNan), logExtrap)';
   catch
-    disp('    ... log extrapolation of return period superior bar failed for some levels. Setting there an infinite superior ci.');
+    disp('    ... log extrapolation of return period inferior bar failed for some levels. Setting there an infinite superior ci.');
     myRetPeriodCIInf_ = interp1(rlHigh, retPeriod, myLevel(myLevNonNan));
     myRetPeriodCIInf_(isnan(myRetPeriodCIInf_)) = inf;
   end
