@@ -5,7 +5,7 @@ cleaned_series = srs;
 for i=1:length(tmp2);
     ii=tmp2{i};
     if length(ii) >= stackedValuesCount; 
-        cleaned_series(ii)=nan;
+        cleaned_series(ii(2:end))=nan;
     end;
 end
 
