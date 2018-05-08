@@ -17,7 +17,8 @@ if timeIndex > 0
   sigmaStdErrFit = nonStationaryEvaParams(2).paramErr.sigmaErrFit(timeIndex);
   sigmaStdErrTransf = nonStationaryEvaParams(2).paramErr.sigmaErrTransf(timeIndex);
   thresholdStdErr = nonStationaryEvaParams(2).paramErr.thresholdErr(timeIndex);
-  thresholdStdErrFit = nonStationaryEvaParams(2).paramErr.thresholdErrFit(timeIndex);
+ %thresholdStdErrFit = nonStationaryEvaParams(2).paramErr.thresholdErrFit(timeIndex);
+  thresholdStdErrFit = 0;
   thresholdStdErrTransf = nonStationaryEvaParams(2).paramErr.thresholdErrTransf(timeIndex);
 else
   sigma = nonStationaryEvaParams(2).parameters.sigma;
