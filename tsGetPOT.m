@@ -20,10 +20,14 @@ if minPeakDistanceInDays == -1
     error('label parameter ''minPeakDistanceInDays'' must be set')
 end
 
+% sustituting the nan, that are disliked by findpeaks, with 0.
+ms(isnan(ms(:, 2)), 2) = 0;
+
+
 dt = tsEvaGetTimeStep(ms(:,1));
 minPeakDistance = minPeakDistanceInDays/dt;
 
-nyears=nanmin(diff(ms(:,1)))*length(ms(~isnan(ms(:,2)),1))/365;
+nyears = (max(ms(:,1)) - min(ms(:,1)))/365.25;
 
 if length(pcts) == 1
     % testing at least 2 percentages, to be able to compute the error on

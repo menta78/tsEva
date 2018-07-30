@@ -2,10 +2,14 @@ function [ filledTimeStamps, filledSeries, dt ] = tsEvaFillSeries( timeStamps, s
   indxs = ~isnan(series);
   timeStamps = timeStamps(indxs);
   series = series(indxs);
-
-  mint = min(timeStamps);
-  maxt = max(timeStamps);
-  dt = min(diff(timeStamps));
+  
+  %   ensuring monotonic time vector and no dubplicates. In case of dubplicate time stamps the highest value is considered
+  [newTs,~,idx] = unique(sort(timeStamps));
+  newSeries = accumarray(idx,series,[],@max);
+  
+  mint = min(newTs);
+  maxt = max(newTs);
+  dt = min(diff(newTs));
   if dt >= 350 && dt <= 370
     % this is an annual series
     mindtVec = datevec(mint);
@@ -31,7 +35,10 @@ function [ filledTimeStamps, filledSeries, dt ] = tsEvaFillSeries( timeStamps, s
   else  
     filledTimeStamps = (mint:dt:maxt)';
   end
-  filledSeries = interp1(timeStamps, series, filledTimeStamps, 'nearest');
+  
+
+  
+  filledSeries = interp1(newTs, newSeries, filledTimeStamps, 'nearest');
   filledSeries = tsRemoveConstantSubseries(filledSeries, 4);
 end
 
