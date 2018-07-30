@@ -38,11 +38,13 @@ args.minPeakDistanceInDays = -1;
 args.ciPercentile = NaN;
 args.potEventsPerYear = 5;
 args.evdType = {'GEV', 'GPD'};
+args.gevType = 'GEV' % can be 'GEV' or 'Gumbel'
 args = tsEasyParseNamedArgs(varargin, args);
 minPeakDistanceInDays = args.minPeakDistanceInDays;
 ciPercentile = args.ciPercentile;
 transfType = args.transfType;
 evdType = args.evdType;
+gevType = args.gevType;
 
 if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') )
   error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
@@ -97,7 +99,8 @@ fprintf('\n');
 disp('Executing stationary eva')
 pointData = tsEvaSampleData(ms, 'meanEventsPerYear', potEventsPerYear, varargin{:});
 evaAlphaCI = .68; % in a gaussian approximation alphaCI~68% corresponds to 1 sigma confidence
-[~, eva, isValid] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, 'gevmaxima', gevMaxima, 'evdType', evdType);
+[~, eva, isValid] = tsEVstatistics(pointData, 'alphaci', evaAlphaCI, ...
+       'gevmaxima', gevMaxima, 'gevType', gevType, 'evdType', evdType);
 if ~isValid
   return;
 end

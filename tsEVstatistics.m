@@ -1,4 +1,4 @@
-function [EVmeta,EVdata,isValid]=tsEVstatistics(pointData, varargin)
+function [EVmeta,EVdata,isValid] = tsEVstatistics(pointData, varargin)
 % Evangelos Voukouvalas, Michalis Vousdoukas 2015
 % gevMaxima can be annual or monthly. annual by default
 
@@ -12,9 +12,11 @@ function [EVmeta,EVdata,isValid]=tsEVstatistics(pointData, varargin)
 
   args.alphaCI = .95;
   args.gevMaxima = 'annual';
+  args.gevType = 'GEV' % can be 'GEV' or 'Gumbel'
   args.evdType = {'GEV', 'GPD'};
   args = tsEasyParseNamedArgs(varargin, args);
   gevMaxima = args.gevMaxima;
+  gevType = args.gevType;
   alphaCI = args.alphaCI;
   evdType = args.evdType;
 
@@ -52,7 +54,17 @@ function [EVmeta,EVdata,isValid]=tsEVstatistics(pointData, varargin)
 
       tmp=tmpmat(iIN);
 
-      [paramEsts(1,1:3),paramCIs]=gevfit(tmp, alphaCI);
+      if strcmpi(gevType, 'GEV')
+        [paramEsts,paramCIs]=gevfit(tmp, alphaCI);
+      elseif strcmpi(gevType, 'Gumbel')
+        paramEsts(1) = 0;
+        paramCIs(:,1) = 0;
+        [paramEsts(:,[3,2]),paramCIs(:,[3,2])]=evfit(-tmp, alphaCI);
+        paramEsts(3) = -paramEsts(3);
+        paramCIs([1,2], 3) = -paramCIs([2,1], 3);
+      else
+        error(['tsEVstatistics: invalid gevType: ' gevType '. Can be only GEV or Gumbel']);
+      end
       % paramEsts(jj,1): shape param
       % paramEsts(jj,2): scale param
       % paramEsts(jj,3): location param
