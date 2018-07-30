@@ -168,7 +168,7 @@ end
 
 %% estimating the non stationary GPD parameters
 % !!! Assuming a Gaussian approximation to compute the standard errors for
-% the GEV parameters
+% the GPD parameters
 if ~isempty(eva(2).parameters)
   epsilonPotX = eva(2).parameters(2);
   errEpsilonPotX = epsilonPotX - eva(2).paramCIs(1, 2);
@@ -176,6 +176,7 @@ if ~isempty(eva(2).parameters)
   errSigmaPotX = sigmaPotX - eva(2).paramCIs(1, 1);
   thresholdPotX = eva(2).parameters(3);
   errThresholdPotX = eva(2).thresholdError;
+  nPotPeaks = eva(2).parameters(5);
   percentilePotX = eva(2).parameters(6);
   % 72 is the minumum interval in time steps used by procedure
   % tsGetPOTAndRlargest, when it calls findpeaks.
@@ -204,6 +205,9 @@ if ~isempty(eva(2).parameters)
   potParams.percentile = percentilePotX;
   potParams.timeDelta = dtPotX;
   potParams.timeDeltaYears = dtPotX/365.2425;
+  potParams.timeHorizonStart = min(trasfData.timeStamps);
+  potParams.timeHorizonEnd = max(trasfData.timeStamps);
+  potParams.nPeaks = nPotPeaks;
 
   potParamStdErr.epsilonErr = errEpsilonPotNS;
 
@@ -221,11 +225,11 @@ if ~isempty(eva(2).parameters)
   potObj.stationaryParams = eva(2);
   potObj.objs = [];
 else
-  potObj.method = eva(1).method;
+  potObj.method = eva(2).method;
   potObj.parameters = [];
   potObj.paramErr = [];
   potObj.stationaryParams = [];
-  potObj.objs.monthlyMaxIndexes = [];
+  potObj.objs = [];
 end
 
 %% setting output objects

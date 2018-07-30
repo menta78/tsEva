@@ -1,4 +1,4 @@
-function [phandles, returnPeriods, returnLevels, retrunLevelsErrs] = tsEvaPlotReturnLevelsGPD( epsilon, sigma, threshold, dtSampleYears, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr, varargin  )
+function [phandles, returnPeriods, returnLevels, retrunLevelsErrs] = tsEvaPlotReturnLevelsGPD( epsilon, sigma, threshold, epsilonStdErr, sigmaStdErr, thresholdStdErr, nPeaks, timeHorizonInYears, varargin  )
 %
 
 args.minReturnPeriodYears = 5;
@@ -15,7 +15,7 @@ maxReturnPeriodYears = args.maxReturnPeriodYears;
 
 returnPeriods = logspace(log10(minReturnPeriodYears), log10(maxReturnPeriodYears));
 
-[returnLevels, retrunLevelsErrs] = tsEvaComputeReturnLevelsGPD(epsilon, sigma, threshold, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr, dtSampleYears, returnPeriods);
+[returnLevels, retrunLevelsErrs] = tsEvaComputeReturnLevelsGPD(epsilon, sigma, threshold, epsilonStdErr, sigmaStdErr, thresholdStdErr, nPeaks, timeHorizonInYears, returnPeriods);
 
 supRLCI = returnLevels + 2*retrunLevelsErrs;
 infRLCI = returnLevels - 2*retrunLevelsErrs;

@@ -1,15 +1,16 @@
-function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr, dtSample, returnPeriods )
+function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, epsilonStdErr, sigmaStdErr, thresholdStdErr, nPeaks, sampleTimeHorizon, returnPeriods )
 % reference: Stuart Coles 2001, pag 81.
-% !!!!!!!!!!!!!!!!!!!!!!!!!!!!
-% dtSample IS NOT the time interval of the sampling, but the minimum time
-% interval between 2 peaks !!!
-% !!!!!!!!!!!!!!!!!!!!!!!!!!!!
+% sampleTimeHorizon and returnPeriods must be in the same units, e.g. years
 
-  thresholdExceedProbability = 1 - percentile/100;
-  %thresholdExceedProbability = 1;
-  m = returnPeriods/double(dtSample);
-  XX = m*thresholdExceedProbability;
-  % uniforming dimensions of XX, sigma, mu
+% this is how XX is computed in Coles, which is more error-prone
+% thresholdExceedProbability = 1 - percentile/100;
+% m = returnPeriods/double(dtSample);
+% XX = m*thresholdExceedProbability;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  X0 = nPeaks/sampleTimeHorizon;
+  XX = X0*returnPeriods;
+
   npars = length(sigma);
   nt = length(returnPeriods);
   XX_ = XX(ones(1,npars),:);

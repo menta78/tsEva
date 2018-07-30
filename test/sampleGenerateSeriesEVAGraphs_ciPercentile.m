@@ -64,9 +64,13 @@ dtvc = datevec(timeStamps(timeIndex));
 tmstmpref = datenum(dtvc(1), dtvc(2), 1);
 disp(['  plotting return levels for time ' datestr(timeStamps(timeIndex))]);
 disp('  ... for GEV the sample is small and the confidence interval is broad');
+[rlevGEV, rlevGEVErr] = tsEvaComputeReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, [10, 20, 50, 100], 'timeindex', timeIndex);
+rlevGEV
 hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', rlRange);
 title(['GEV return levels for ' datestr(tmstmpref)]);
 saveas(hndl{1}, 'GEV_ReturnLevels_ciPercentile.png', 'png');
+[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, [10, 20, 50, 100], 'timeindex', timeIndex);
+rlevGPD
 hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', rlRange);
 title(['GPD return levels for ' datestr(tmstmpref)]);
 saveas(hndl{1}, 'GPD_ReturnLevels_ciPercentile.png', 'png');

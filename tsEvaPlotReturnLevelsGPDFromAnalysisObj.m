@@ -6,14 +6,17 @@ function [phandles, returnPeriods, returnLevels, retrunLevelsErrs] = tsEvaPlotRe
 epsilon = nonStationaryEvaParams(2).parameters.epsilon;
 sigma = nonStationaryEvaParams(2).parameters.sigma(timeIndex);
 threshold = nonStationaryEvaParams(2).parameters.threshold(timeIndex);
-dtSampleYears = nonStationaryEvaParams(2).parameters.timeDeltaYears;
-percentile = nonStationaryEvaParams(2).parameters.percentile;
+thStart =  nonStationaryEvaParams(2).parameters.timeHorizonStart;
+thEnd = nonStationaryEvaParams(2).parameters.timeHorizonEnd;
+timeHorizonInYears = (thEnd - thStart)/365.2425;
+nPeaks = nonStationaryEvaParams(2).parameters.nPeaks;
+
 epsilonStdErr = nonStationaryEvaParams(2).paramErr.epsilonErr;
 sigmaStdErr = nonStationaryEvaParams(2).paramErr.sigmaErr(timeIndex);
 thresholdStdErr = nonStationaryEvaParams(2).paramErr.thresholdErr(timeIndex);
 
 [phandles, returnPeriods, returnLevels, retrunLevelsErrs] = tsEvaPlotReturnLevelsGPD...
-  (epsilon, sigma, threshold, dtSampleYears, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr,...
-   'dtSampleYears', dtSampleYears, varargin{:});
+  (epsilon, sigma, threshold, epsilonStdErr, sigmaStdErr, thresholdStdErr,...
+   nPeaks, timeHorizonInYears, varargin{:});
 end
 

@@ -7,8 +7,13 @@ epsilon = nonStationaryEvaParams(2).parameters.epsilon;
 epsilonStdErr = nonStationaryEvaParams(2).paramErr.epsilonErr;
 epsilonStdErrFit = epsilonStdErr;
 epsilonStdErrTransf = 0;
-percentile = nonStationaryEvaParams(2).parameters.percentile;
-dtSample = nonStationaryEvaParams(2).parameters.timeDeltaYears;
+%percentile = nonStationaryEvaParams(2).parameters.percentile;
+%dtSample = nonStationaryEvaParams(2).parameters.timeDeltaYears;
+thStart =  nonStationaryEvaParams(2).parameters.timeHorizonStart;
+thEnd = nonStationaryEvaParams(2).parameters.timeHorizonEnd;
+timeHorizonInYears = (thEnd - thStart)/365.2425;
+nPeaks = nonStationaryEvaParams(2).parameters.nPeaks;
+
 nonStationary = isfield(nonStationaryEvaParams(2).paramErr, 'sigmaErrTransf');
 if timeIndex > 0
   sigma = nonStationaryEvaParams(2).parameters.sigma(timeIndex);
@@ -35,10 +40,10 @@ else
   end
 end
 
-[returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErr, sigmaStdErr, thresholdStdErr, dtSample, returnPeriodsInYears );
+[returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, epsilonStdErr, sigmaStdErr, thresholdStdErr, nPeaks, timeHorizonInYears, returnPeriodsInYears );
 if nonStationary
-  [~, returnLevelsErrFit] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErrFit, sigmaStdErrFit, zeros(size(thresholdStdErr)), dtSample, returnPeriodsInYears );
-  [~, returnLevelsErrTransf] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, percentile, epsilonStdErrTransf, sigmaStdErrTransf, thresholdStdErrTransf, dtSample, returnPeriodsInYears );
+  [~, returnLevelsErrFit] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, epsilonStdErrFit, sigmaStdErrFit, zeros(size(thresholdStdErr)), nPeaks, timeHorizonInYears, returnPeriodsInYears );
+  [~, returnLevelsErrTransf] = tsEvaComputeReturnLevelsGPD( epsilon, sigma, threshold, epsilonStdErrTransf, sigmaStdErrTransf, thresholdStdErrTransf, nPeaks, timeHorizonInYears, returnPeriodsInYears );
 else
   returnLevelsErrFit = returnLevelsErr;
   returnLevelsErrTransf = zeros(size(returnLevelsErr));

@@ -98,8 +98,9 @@ minPeakDistance = minPeakDistanceInDays/dt;
 % tsGetPOTAndRlargest, when it calls findpeaks.
 % If it finds 2 peaks at a distance of 72 hours, it means that dtPeaks = 72
 % hours
-dtPeaks = minPeakDistance/2;
-dtPotX = (timeStamps(end) - timeStamps(1))/length(timeStamps)*dtPeaks;
+dtPeaks = minPeakDistance;
+dtSample =  (timeStamps(end) - timeStamps(1))/length(timeStamps);
+dtPotX = max(dtSample, dtSample*dtPeaks);
 
 potParams.epsilon = epsilonPotX;
 potParams.sigma = sigmaPotX;
