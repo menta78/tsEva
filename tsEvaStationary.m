@@ -90,6 +90,7 @@ errSigmaPotX = sigmaPotX - eva(2).paramCIs(1, 1);
 thresholdPotX = eva(2).parameters(3);
 errThresholdPotX = eva(2).thresholdError;
 percentilePotX = eva(2).parameters(6);
+nPotPeaks = eva(2).parameters(5);
 
 timeStamps = timeAndSeries(:,1);
 dt = tsEvaGetTimeStep(timeStamps);
@@ -108,6 +109,9 @@ potParams.threshold = thresholdPotX;
 potParams.percentile = percentilePotX;
 potParams.timeDelta = dtPotX;
 potParams.timeDeltaYears = dtPotX/365.2425;
+potParams.timeHorizonStart = min(timeStamps);
+potParams.timeHorizonEnd = max(timeStamps);
+potParams.nPeaks = nPotPeaks;
 
 potParamStdErr.epsilonErr = errEpsilonPotX;
 potParamStdErr.sigmaErr = errSigmaPotX;
