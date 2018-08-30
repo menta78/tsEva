@@ -36,6 +36,16 @@ else
     
 end
 
+minX = min(min(Xq(:)), min(X(:)));
+if minX < 1
+  xoffset = -minX + 1;
+else
+  xoffset = 0;
+end
+
+X = X + xoffset;
+Xq = Xq + xoffset;
+
 % sort x independent variable
 [X,ii]=sort(X);
 
