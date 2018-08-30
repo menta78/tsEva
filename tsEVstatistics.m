@@ -12,7 +12,7 @@ function [EVmeta,EVdata,isValid] = tsEVstatistics(pointData, varargin)
 
   args.alphaCI = .95;
   args.gevMaxima = 'annual';
-  args.gevType = 'GEV' % can be 'GEV' or 'Gumbel'
+  args.gevType = 'GEV'; % can be 'GEV' or 'Gumbel'
   args.evdType = {'GEV', 'GPD'};
   args = tsEasyParseNamedArgs(varargin, args);
   gevMaxima = args.gevMaxima;
