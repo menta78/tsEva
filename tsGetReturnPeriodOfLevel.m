@@ -2,7 +2,7 @@ function [ myRetPeriod, myRetPeriodCISup, myRetPeriodCIInf ] = tsGetReturnPeriod
   % given a list of retPeriod and corresponding retLevel with error,
   % estimates the return period for a level myLevel, and the related confidence interval.
 
-  args.lowerBoundTo0 = true;
+  args.lowerBoundTo0 = false;
   args.logExtrap = true;
   args.cpP = .68; % by default estimating 1-sigma confidence interval
   args = tsEasyParseNamedArgs(varargin, args);
