@@ -1,6 +1,6 @@
-function [retLev, jdist, cplParam] = tsCopulaYearExtr(retPeriod, retLev, retLevError, yMax, varargin)
+function [retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, retLevError, yMax, varargin)
 
-  args.copulaFamily = 'gumbel'; % can be gaussian, gumbel, clayton, frank
+  args.copulaFamily = 'gaussian'; % can be gaussian, t, gumbel, clayton, frank
   args = tsEasyParseNamedArgs(varargin, args);
   copulaFamily = args.copulaFamily;
 
@@ -31,11 +31,18 @@ function [retLev, jdist, cplParam] = tsCopulaYearExtr(retPeriod, retLev, retLevE
   retPerOut = horzcat(retPerOutCArr{:});
   probOut = 1 - 1./retPerOut;
 
+  cplParam.family = copulaFamily;
   if strcmpi(copulaFamily, 'gaussian')
     % normal copula
-    rhohat = copulafit(copulaFamily, yProb);
-    jdist = copulacdf(copulaFamily, probOut, rhohat);
-    cplParam.rho = rhohat;
+    rho = copulafit(copulaFamily, yProb);
+    jdist = copulacdf(copulaFamily, probOut, rho);
+    cplParam.rho = rho;
+  elseif strcmpi(copulaFamily, 't')
+    % t copula
+    [rho, nu] = copulafit(copulaFamily, yProb);
+    jdist = copulacdf(copulaFamily, probOut, rho, nu);
+    cplParam.rho = rho;
+    cplParam.nu = nu;
   elseif strcmpi(copulaFamily, 'gumbel') || strcmpi(copulaFamily, 'clayton') || strcmpi(copulaFamily, 'frank')
     % one of the archimedean copulas
     [cprm, cci] = copulafit(copulaFamily, yProb);
