@@ -26,7 +26,7 @@ nResample = 1000;
 % lgnd.Position = [rsmplDist2Ax.Position(1), rsmplDist1Ax.Position(2) + rsmplDist1Ax.Position(4) - newHigh, lgndPos(3), newHigh];
 % lgnd.PlotBoxAspectRatio
 
-figHnd = tsCopulaYearExtrScatter2D(resampleLevel, yMax, 'xlbl', '-SPEI', 'ylbl', 'TMax');
+figHnd = tsCopulaYearExtrPlotSctrBivar(resampleLevel, yMax, 'xlbl', '-SPEI', 'ylbl', 'TMax');
 title(['Milan, joint distribution ' newline ' of extreme SPEI and TMax']);
 
 saveas(figHnd(1), 'milan_SpeiTmaxJointDist.png');
