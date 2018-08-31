@@ -1,4 +1,4 @@
-function [handles] = tsCopulaYearExtrScatter2D(resampleLevel, yMaxLevel, varargin)
+function [handles] = tsCopulaYearExtrPlotSctrBivar(resampleLevel, yMaxLevel, varargin)
 
 args.xlbl = 'X';
 args.ylbl = 'Y';
