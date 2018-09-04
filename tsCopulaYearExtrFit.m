@@ -32,23 +32,23 @@ function [retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, retL
   probOut = 1 - 1./retPerOut;
 
   cplParam.family = copulaFamily;
+  cplParam.familyId = tsCopulaGetFamilyId(copulaFamily);
   if strcmpi(copulaFamily, 'gaussian')
     % normal copula
     rho = copulafit(copulaFamily, yProb);
-    jdist = copulacdf(copulaFamily, probOut, rho);
+    jdist = copulapdf(copulaFamily, probOut, rho);
     cplParam.rho = rho;
   elseif strcmpi(copulaFamily, 't')
     % t copula
     [rho, nu] = copulafit(copulaFamily, yProb);
-    jdist = copulacdf(copulaFamily, probOut, rho, nu);
+    jdist = copulapdf(copulaFamily, probOut, rho, nu);
     cplParam.rho = rho;
     cplParam.nu = nu;
   elseif strcmpi(copulaFamily, 'gumbel') || strcmpi(copulaFamily, 'clayton') || strcmpi(copulaFamily, 'frank')
     % one of the archimedean copulas
     [cprm, cci] = copulafit(copulaFamily, yProb);
-    jdist = copulacdf(copulaFamily, probOut, cprm);
+    jdist = copulapdf(copulaFamily, probOut, cprm);
     cplParam.theta = cprm;
-    cplParam.thetaCI = cci;
   else
     error(['copulaFamily not supported: ' copulaFamily]);
   end
