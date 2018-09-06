@@ -1,8 +1,10 @@
-function [retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, retLevError, yMax, varargin)
+function [retLev, jpdf, cplParam, jcdf] = tsCopulaYearExtrFit(retPeriod, retLev, retLevError, yMax, varargin)
 
   args.copulaFamily = 'gaussian'; % can be gaussian, t, gumbel, clayton, frank
+  args.computeCdf = false;
   args = tsEasyParseNamedArgs(varargin, args);
   copulaFamily = args.copulaFamily;
+  computeCdf = args.computeCdf;
 
   nsrs = size(yMax, 2);
   yRetPer = zeros(size(yMax))*nan;
@@ -36,23 +38,38 @@ function [retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, retL
   if strcmpi(copulaFamily, 'gaussian')
     % normal copula
     rho = copulafit(copulaFamily, yProb);
-    jdist = copulapdf(copulaFamily, probOut, rho);
+    jpdf = copulapdf(copulaFamily, probOut, rho);
+    if computeCdf
+      jcdf = copulacdf(copulaFamily, probOut, rho);
+    end
     cplParam.rho = rho;
   elseif strcmpi(copulaFamily, 't')
     % t copula
     [rho, nu] = copulafit(copulaFamily, yProb);
-    jdist = copulapdf(copulaFamily, probOut, rho, nu);
+    jpdf = copulapdf(copulaFamily, probOut, rho, nu);
+    if computeCdf
+      jcdf = copulacdf(copulaFamily, probOut, rho, nu);
+    end
     cplParam.rho = rho;
     cplParam.nu = nu;
   elseif strcmpi(copulaFamily, 'gumbel') || strcmpi(copulaFamily, 'clayton') || strcmpi(copulaFamily, 'frank')
     % one of the archimedean copulas
     [cprm, cci] = copulafit(copulaFamily, yProb);
-    jdist = copulapdf(copulaFamily, probOut, cprm);
+    jpdf = copulapdf(copulaFamily, probOut, cprm);
+    if computeCdf
+      jcdf = copulacdf(copulaFamily, probOut, cprm);
+    end
     cplParam.theta = cprm;
+    cplParam.cci = cci;
   else
     error(['copulaFamily not supported: ' copulaFamily]);
   end
-  jdist = reshape(jdist, nrperCArr{:});
+  jpdf = reshape(jpdf, nrperCArr{:});
+  if computeCdf
+    jcdf = reshape(jcdf, nrperCArr{:});
+  else
+    jcdf = [];
+  end
   
 
 

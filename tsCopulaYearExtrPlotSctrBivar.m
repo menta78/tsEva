@@ -11,7 +11,7 @@ figPosition = args.figPosition;
 fontSize = args.fontSize;
 
 if (size(resampleLevel, 2) ~= 2) || (size(yMaxLevel, 2) ~= 2)
-  error(['tsCopulaYearExtrScatter2D: resampleLevel and yMaxLevel must be Nx2 arrays']);
+  error(['tsCopulaYearExtrPlotSctrBivar: resampleLevel and yMaxLevel must be Nx2 arrays']);
 end
 
 fig = figure('position', figPosition);
