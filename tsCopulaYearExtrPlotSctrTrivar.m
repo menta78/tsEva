@@ -1,4 +1,4 @@
-function [handles] = tsCopulaYearExtrPlotSctrTrivar(resampleLevel, yMaxLevel, varargin)
+function handles = tsCopulaYearExtrPlotSctrTrivar(resampleLevel, yMaxLevel, varargin)
 
 args.xlbl = 'X';
 args.ylbl = 'Y';
