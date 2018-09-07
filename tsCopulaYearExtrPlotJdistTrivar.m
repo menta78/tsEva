@@ -1,4 +1,4 @@
-function handles = tsCopulaYearExtrPlotJcdfTrivar( retLev, jcdf, varargin )
+function handles = tsCopulaYearExtrPlotJdistTrivar( retLev, jdist, varargin )
  
 args.figPosition = [50, 50, 800, 800];
 args.xlbl = 'X';
@@ -8,6 +8,7 @@ args.fontSize = 12;
 args.probRange = [];
 args.azimuth = -13.9;
 args.elevation = -15.6;
+args.colorbarLabel = 'Density';
 args = tsEasyParseNamedArgs(varargin, args);
 figPosition = args.figPosition;
 xlbl = args.xlbl;
@@ -17,8 +18,9 @@ fontSize = args.fontSize;
 probRange = args.probRange;
 azimuth = args.azimuth;
 elevation = args.elevation;
+colorbarLabel = args.colorbarLabel;
 
-if (size(retLev, 2) ~= 3) || (length(size(jcdf)) ~= 3)
+if (size(retLev, 2) ~= 3) || (length(size(jdist)) ~= 3)
   error('tsCopulaYearExtrPlotSctrTrivar: retLev must be an Nx3 array, jpdf must be XxYxZ');
 end
 
@@ -34,11 +36,11 @@ yslice = max(y);
 zslice = [median(z), max(z)];
 
 if ~isempty(probRange)
-  jcdf(jcdf < min(probRange)) = min(probRange);
-  jcdf(jcdf > max(probRange)) = max(probRange);
+  jdist(jdist < min(probRange)) = min(probRange);
+  jdist(jdist > max(probRange)) = max(probRange);
 end
 
-hslc = slice(xx, yy, zz, jcdf, xslice, yslice, zslice);
+hslc = slice(xx, yy, zz, jdist, xslice, yslice, zslice);
 xlabel(xlbl);
 ylabel(ylbl);
 zlabel(zlbl);
@@ -49,7 +51,7 @@ ax.FontSize = fontSize;
 
 cb = colorbar;
 cb.FontSize = fontSize;
-ylabel(cb, 'Probability', 'fontsize', fontSize);
+ylabel(cb, colorbarLabel, 'fontsize', fontSize);
 
 handles = [fig; hslc(:); cb];
 

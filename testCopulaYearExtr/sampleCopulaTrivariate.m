@@ -15,4 +15,5 @@ saveas(figHnd(1), 'testESL_closePts_trivariate_Copula.png');
 
 
 [retLev, jpdf, cplParam, jcdf] = tsCopulaYearExtrFit(retPeriod, retLev, retLevError, yMax, 'copulafamily', 'gaussian', 'computeCdf', true);
-figHnd2 = tsCopulaYearExtrPlotJcdfTrivar(retLev, jcdf, 'xlbl', 'Location 1', 'ylbl', 'Location 2', 'zlbl', 'Location 3', 'probRange', [.7 1]);
+figHnd2 = tsCopulaYearExtrPlotJdistTrivar(retLev, jcdf, 'xlbl', 'Location 1', 'ylbl', 'Location 2', 'zlbl', 'Location 3', 'probRange', [.5 1], 'colorbarLabel', 'Probability');
+figHnd3 = tsCopulaYearExtrPlotJdistTrivar(retLev, jpdf, 'xlbl', 'Location 1', 'ylbl', 'Location 2', 'zlbl', 'Location 3', 'probRange', [0 1.5E5], 'colorbarLabel', 'Density');
