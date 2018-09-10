@@ -48,6 +48,7 @@ yMaxBaseline = squeeze(yMax(iBaseline - nyrwindow:iBaseline + nyrwindow, :));
 [resampleLevelBaseline, resampleProbBaseline] = tsCopulaYearExtrRnd(returnPeriodsInYears, retLevBaseline, cplParam, nResample);
 figHndBsln = tsCopulaYearExtrPlotSctrBivar(resampleLevelBaseline, yMaxBaseline, 'xlbl', 'Location 1', 'ylbl', 'Location 2');
 title(['Baseline joint distribution (year ' num2str(baselineTestYear) ')' newline ' of extr. sea lvl at 2 close locations in S Ocean']);
+saveas(figHndBsln(1), 'testESL_closePts_bivariate_Copula_nsBaseline.png');
 
 iFuture = find(years == futureTestYear);
 retLevFuture = squeeze(retLev(iFuture, :, :));
@@ -55,6 +56,7 @@ yMaxFuture = squeeze(yMax(iFuture - nyrwindow:iFuture + nyrwindow, :));
 [resampleLevelFuture, resampleProbFuture] = tsCopulaYearExtrRnd(returnPeriodsInYears, retLevFuture, cplParam, nResample);
 figHndFut = tsCopulaYearExtrPlotSctrBivar(resampleLevelFuture, yMaxFuture, 'xlbl', 'Location 1', 'ylbl', 'Location 2');
 title(['Future joint distribution (year ' num2str(futureTestYear) ')' newline ' of extr. sea lvl at 2 close locations in S Ocean']);
+saveas(figHndFut(1), 'testESL_closePts_bivariate_Copula_nsFuture.png');
 
 
 
