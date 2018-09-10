@@ -1,3 +1,5 @@
+addpath('../');
+
 load('testSpeiTmaxCopula.mat');
 
 disp('testing stationary copula for yearly extremes of SPEI (droughts) and TMax');

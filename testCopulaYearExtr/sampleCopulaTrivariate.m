@@ -1,3 +1,5 @@
+addpath('../');
+
 load('testESL_closePts_trivariate_Copula.mat');
 
 disp('testing stat. copula for yearly extr. sea level, for 3 close locations in Portugal');
