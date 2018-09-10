@@ -1,4 +1,4 @@
-function [retLev, jpdf, cplParam, jcdf] = tsCopulaYearExtrFit(retPeriod, retLev, retLevError, yMax, varargin)
+function [retLev, jpdf, cplParam, jcdf] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, varargin)
 
   args.copulaFamily = 'gaussian'; % can be gaussian, t, gumbel, clayton, frank
   args.computeCdf = false;
@@ -7,13 +7,28 @@ function [retLev, jpdf, cplParam, jcdf] = tsCopulaYearExtrFit(retPeriod, retLev,
   computeCdf = args.computeCdf;
 
   nsrs = size(yMax, 2);
+  nyr = size(yMax, 1);
+  nretPer = length(retPeriod);
+  szsRetLev = size(retLev);
   yRetPer = zeros(size(yMax))*nan;
-  for isrs = 1:nsrs
-    [yRetPer(:,isrs), yRetPerMax, yRetPerMin] = tsGetReturnPeriodOfLevel(retPeriod, retLev(:,isrs), retLevError(:,isrs), yMax(:,isrs), varargin{:});
+  fakeErr = zeros(size(retLev));
+  
+  ndimRetLev = length(szsRetLev);
+  
+  if ndimRetLev == 2
+    % this is a stationary set of return levels
+    for isrs = 1:nsrs
+      [yRetPer(:,isrs), ~, ~] = tsGetReturnPeriodOfLevel(retPeriod, retLev(:,isrs), fakeErr(:,isrs), yMax(:,isrs), varargin{:});
+    end
+    yRetPer(yRetPer == inf) = .1;
+    yRetPer(yRetPer == -inf) = .1;
+    yRetPer(isnan(yRetPer)) = .1;
+  else
+    % this is a non-stationary set of return levels
+    if (size(szsRetLev, 1) ~= nyr) || (size(szsRetLev, 2) ~= nretPer) || (size(szsRetLev, 3) ~= nsrs)
+      error('tsCopulaYearExtrFit: for non-stationary, retLev should be dimensioned as (nTime x nReturnPeriod x nSeries)');
+    end
   end
-  yRetPer(yRetPer == inf) = .1;
-  yRetPer(yRetPer == -inf) = .1;
-  yRetPer(isnan(yRetPer)) = .1;
 
   yProb = 1 - 1./yRetPer;
   yProb(yProb <= 0) = min(yProb(yProb > 0));

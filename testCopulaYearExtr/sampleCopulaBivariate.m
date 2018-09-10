@@ -3,7 +3,7 @@ load('testSpeiTmaxCopula.mat');
 disp('testing stationary copula for yearly extremes of SPEI (droughts) and TMax');
 disp(['at lon, lat = ' num2str(xtst) ', ' num2str(ytst)]);
 
-[retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, retLevError, yMax, 'copulafamily', 'gumbel');
+[retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, 'copulafamily', 'gumbel');
 
 nResample = 10000;
 [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, cplParam, nResample);
@@ -22,7 +22,7 @@ load('testESL_closePts_bivariate_Copula.mat');
 disp('testing stat. copula for yearly extr. sea level, for 2 close locations in Portugal');
 disp(['at lon, lat = ' num2str(xtst) ', ' num2str(ytst)]);
 
-[retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, retLevError, yMax, 'copulafamily', 'gumbel');
+[retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, 'copulafamily', 'gumbel');
 
 nResample = 10000;
 [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, cplParam, nResample);

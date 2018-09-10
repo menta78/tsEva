@@ -1,6 +1,12 @@
-function [ redNonStatEvaParams, redStatTransData ] = tsEvaReduceOutputObjSize( nonStationaryEvaParams, stationaryTransformData, newTimeStamps )
+function [ redNonStatEvaParams, redStatTransData ] = tsEvaReduceOutputObjSize( nonStationaryEvaParams, stationaryTransformData, newTimeStamps, varargin )
+
+  args.maxTimeStepDist = inf;
+  args = tsEasyParseNamedArgs(varargin, args);
+  maxTimeStepDist = args.maxTimeStepDist;
+
   origTimeStamps = stationaryTransformData.timeStamps;
-  tsIndxs = knnsearch(origTimeStamps, newTimeStamps);
+  [tsIndxs, dist] = knnsearch(origTimeStamps, newTimeStamps);
+  tsIndxs = tsIndxs(dist <= maxTimeStepDist);
 
   redStatTransData = stationaryTransformData;
   %redStatTransData.stationarySeries = redStatTransData.stationarySeries(tsIndxs);
