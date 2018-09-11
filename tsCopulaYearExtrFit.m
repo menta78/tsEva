@@ -21,7 +21,8 @@ function [retLev, jpdf, cplParam, jcdf, yRetPer, yProb] = tsCopulaYearExtrFit(re
       error('tsCopulaYearExtrFit: for stationary, retLev should be dimensioned as (nReturnPeriod x nSeries)');
     end
     for isrs = 1:nsrs
-      [yRetPer(:,isrs), ~, ~] = tsGetReturnPeriodOfLevel(retPeriod, retLev(:,isrs), fakeErr(:,isrs), yMax(:,isrs), varargin{:});
+      %[yRetPer(:,isrs), ~, ~] = tsGetReturnPeriodOfLevel(retPeriod, retLev(:,isrs), fakeErr(:,isrs), yMax(:,isrs), varargin{:});
+      yRetPer(:,isrs) = interp1(retLev(:,isrs), retPeriod, yMax(:,isrs));
     end
   elseif ndimRetLev == 3
     % this is a non-stationary set of return levels
@@ -30,7 +31,8 @@ function [retLev, jpdf, cplParam, jcdf, yRetPer, yProb] = tsCopulaYearExtrFit(re
     end
     for isrs = 1:nsrs
       for iyr = 1:nyr
-        [yRetPer(iyr,isrs), ~, ~] = tsGetReturnPeriodOfLevel(retPeriod, retLev(iyr,:,isrs), fakeErr(iyr,:,isrs), yMax(iyr,isrs), varargin{:});
+        %[yRetPer(iyr,isrs), ~, ~] = tsGetReturnPeriodOfLevel(retPeriod, retLev(iyr,:,isrs), fakeErr(iyr,:,isrs), yMax(iyr,isrs), varargin{:});
+        yRetPer(iyr,isrs) = interp1(retLev(iyr,:,isrs), retPeriod, yMax(iyr,isrs));
       end
     end
   else
