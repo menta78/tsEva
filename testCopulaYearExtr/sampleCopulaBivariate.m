@@ -5,10 +5,12 @@ load('testSpeiTmaxCopula.mat');
 disp('testing stationary copula for yearly extremes of SPEI (droughts) and TMax');
 disp(['at lon, lat = ' num2str(xtst) ', ' num2str(ytst)]);
 
+copulaFamily = 't';
+
 kendallTauInput = corr(yMax, 'type', 'kendall');
 spearmanCorrInput = corr(yMax, 'type', 'spearman');
 
-[retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, 'copulafamily', 'gumbel');
+[retLev, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, 'copulafamily', copulaFamily);
 
 nResample = 100000;
 [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, cplParam, nResample);
@@ -20,6 +22,8 @@ figHnd = tsCopulaYearExtrPlotSctrBivar(resampleLevel, yMax, 'xlbl', '-SPEI', 'yl
 title(['Milan, joint distribution ' newline ' of extreme SPEI and TMax']);
 
 saveas(figHnd(1), 'milan_SpeiTmaxJointDist.png');
+
+[jpdf, jcdf] = tsCopulaYearExtrDistribution(retPeriod, cplParam, 'computeCdf', true);
 
 
 
@@ -33,7 +37,7 @@ disp(['at lon, lat = ' num2str(xtst) ', ' num2str(ytst)]);
 kendallTauInput = corr(yMax, 'type', 'kendall');
 spearmanCorrInput = corr(yMax, 'type', 'spearman');
 
-[retLev, jdist, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, 'copulafamily', 'gumbel');
+[retLev, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, 'copulafamily', copulaFamily);
 
 nResample = 10000;
 [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, cplParam, nResample);
