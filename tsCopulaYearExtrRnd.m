@@ -1,4 +1,4 @@
-function [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, copulaParam, nResample, varargin)
+function [resampleLevel, resampleProb, resampleRetPer] = tsCopulaYearExtrRnd(retPeriod, retLev, copulaParam, nResample, varargin)
 
   args.logExtrapRetlev = true;
   args = tsEasyParseNamedArgs(varargin, args);
