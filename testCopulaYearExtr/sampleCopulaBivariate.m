@@ -5,7 +5,7 @@ load('testSpeiTmaxCopula.mat');
 disp('testing stationary copula for yearly extremes of SPEI (droughts) and TMax');
 disp(['at lon, lat = ' num2str(xtst) ', ' num2str(ytst)]);
 
-copulaFamily = 't';
+copulaFamily = 'gumbel';
 
 kendallTauInput = corr(yMax, 'type', 'kendall');
 spearmanCorrInput = corr(yMax, 'type', 'spearman');
@@ -28,6 +28,8 @@ saveas(figHnd(1), 'milan_SpeiTmaxJointDist.png');
 
 
 clear all;
+
+copulaFamily = 'gumbel';
 
 load('testESL_closePts_bivariate_Copula.mat');
 
