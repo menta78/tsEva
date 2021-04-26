@@ -22,7 +22,7 @@ for ii = 1:l
                 n = n - 1;
             end
         end
-        if maxindx <= l
+        if maxindx < l
             snext = series(maxindx);
             if ~isnan(snext)
                 sm = sm + snext;
