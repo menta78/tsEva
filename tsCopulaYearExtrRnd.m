@@ -1,4 +1,4 @@
-function [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, copulaParam, nResample, varargin)
+function [resampleLevel, resampleProb, resampleRetPer] = tsCopulaYearExtrRnd(retPeriod, retLev, copulaParam, nResample, varargin)
 
   args.logExtrapRetlev = true;
   args = tsEasyParseNamedArgs(varargin, args);
@@ -24,6 +24,7 @@ function [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, 
   ncpl = size(resampleRetPer, 2);
   for ivar = 1:ncpl
     resampleLevel(:,ivar) = tsInterp1Extrap(retPeriod, retLev(:,ivar), resampleRetPer(:,ivar), logExtrapRetlev);
+    resampleLevel(isnan(resampleLevel(:,ivar)),ivar) = nanmean(resampleLevel(:,ivar));
   end
 
 

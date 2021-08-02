@@ -3,10 +3,12 @@ function [ myRetPeriod, myRetPeriodCISup, myRetPeriodCIInf ] = tsGetReturnPeriod
   % estimates the return period for a level myLevel, and the related confidence interval.
 
   args.logExtrap = true;
+  args.linExtrap = false;
   args.cpP = .68; % by default estimating 1-sigma confidence interval
   args = tsEasyParseNamedArgs(varargin, args);
-  logExtrap = args.logExtrap;
   cpP = args.cpP;
+  linExtrap = args.linExtrap;
+  logExtrap = args.logExtrap && ~linExtrap;
 
   [rlLow, rlHigh] = tsEstimateConfidenceIntervalOfRL(retLevel, retLevError, cpP);
   
@@ -25,6 +27,10 @@ function [ myRetPeriod, myRetPeriodCISup, myRetPeriodCIInf ] = tsGetReturnPeriod
     catch
       myRetPeriodCIInf_ = interp1(rlHigh, retPeriod, myLevel(myLevNonNan));
     end
+  elseif linExtrap
+    myRetPeriod_ = interp1(retLevel, retPeriod, myLevel(myLevNonNan), 'linear', 'extrap');
+    myRetPeriodCISup_ = interp1(rlLow, retPeriod, myLevel(myLevNonNan), 'linear', 'extrap');
+    myRetPeriodCIInf_ = interp1(rlHigh, retPeriod, myLevel(myLevNonNan), 'linear', 'extrap');
   else
     myRetPeriod_ = interp1(retLevel, retPeriod, myLevel(myLevNonNan));
     myRetPeriodCISup_ = interp1(rlLow, retPeriod, myLevel(myLevNonNan));

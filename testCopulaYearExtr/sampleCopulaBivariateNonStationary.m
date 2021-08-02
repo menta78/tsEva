@@ -40,7 +40,7 @@ disp('Estimating the non-stationary joint distribution from the return levels ..
 retLev = cat(3, rlev1, rlev2);
 yMax = [yMax1, yMax2];
 
-[retLev, jpdf, cplParam] = tsCopulaYearExtrFit(returnPeriodsInYears, retLev, yMax, 'copulafamily', 'gaussian');
+[retLev, cplParam] = tsCopulaYearExtrFit(returnPeriodsInYears, retLev, yMax, 'copulafamily', 'gaussian');
 
 iBaseline = find(years == baselineTestYear);
 retLevBaseline = squeeze(retLev(iBaseline, :, :));
