@@ -226,7 +226,7 @@ if ~isempty(eva(2).parameters)
   potObj.parameters = potParams;
   potObj.paramErr = potParamStdErr;
   potObj.stationaryParams = eva(2);
-  potObj.objs = [];
+  potObj.objs.peakIndexes = pointData.POT.ipeaks;
 else
   potObj.method = eva(2).method;
   potObj.parameters = [];
