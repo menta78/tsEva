@@ -18,6 +18,9 @@ function [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonSt
 %                            with a running mean, the ci with the running xx percentile.
 %                            Using this option the argument ciPercentile is
 %                            mandatory.
+%                    4)  'trendlinear':long term variability. the trend is
+%                    computed with a linear fit, the ci with a linear fit
+%                    of percentile set by the user
 % 
 %
 %% sample calls
@@ -46,8 +49,8 @@ transfType = args.transfType;
 evdType = args.evdType;
 gevType = args.gevType;
 
-if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') )
-  error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
+if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') || strcmpi(transfType, 'trendlinear') )
+  error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile, trendlinear)');
 end
 if minPeakDistanceInDays == -1
   error('label parameter ''minPeakDistanceInDays'' must be set')
@@ -69,12 +72,17 @@ elseif strcmpi(transfType, 'seasonal')
   trasfData = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow, varargin{:}  );
   gevMaxima = 'monthly';
   potEventsPerYear = 12;
+elseif strcmpi(transfType, 'trendlinear')
+  disp('estimating a linear long-term trend');
+  trasfData = tsEvaTransformSeriesToStationaryTrendLinear( timeStamps, series, timeWindow, ciPercentile, varargin{:}  );
+  gevMaxima = 'annual';
+  potEventsPerYear = 5;
 elseif strcmpi(transfType, 'trendCIPercentile') 
   if isnan(ciPercentile)
     error('For trendCIPercentile transformation the label parameter ''cipercentile'' is mandatory');
   end
   disp(['evalueting long term variations of extremes using the ' num2str(ciPercentile) 'th percentile']);
-  trasfData = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
+  trasfData = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile_EOATSEE( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
   gevMaxima = 'annual';
   potEventsPerYear = 5;
 elseif strcmpi(transfType, 'seasonalCIPercentile') 
