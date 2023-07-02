@@ -82,7 +82,7 @@ elseif strcmpi(transfType, 'trendCIPercentile')
     error('For trendCIPercentile transformation the label parameter ''cipercentile'' is mandatory');
   end
   disp(['evalueting long term variations of extremes using the ' num2str(ciPercentile) 'th percentile']);
-  trasfData = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile_EOATSEE( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
+  trasfData = tsEvaTransformSeriesToStationaryTrendOnly_ciPercentile( timeStamps, series, timeWindow, ciPercentile, varargin{:} );
   gevMaxima = 'annual';
   potEventsPerYear = 5;
 elseif strcmpi(transfType, 'seasonalCIPercentile') 
