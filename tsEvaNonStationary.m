@@ -73,6 +73,9 @@ elseif strcmpi(transfType, 'seasonal')
   gevMaxima = 'monthly';
   potEventsPerYear = 12;
 elseif strcmpi(transfType, 'trendlinear')
+  if isnan(ciPercentile)
+    error('For trendLinear transformation the label parameter ''cipercentile'' is mandatory');
+  end
   disp('estimating a linear long-term trend');
   trasfData = tsEvaTransformSeriesToStationaryTrendLinear( timeStamps, series, timeWindow, ciPercentile, varargin{:}  );
   gevMaxima = 'annual';
