@@ -58,14 +58,11 @@ hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData
     'ylabel', 'TWL(m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp,'Interpreter','none');
 disp('  saving the series plot');
 saveas(hndl{1}, 'seriesTrendLinear.png');    
-% disp('  plotting and saving the 3D GEV graph');
-% hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlabel', 'Lvl (m)', 'axisfontsize', axisFontSize3d);
-% title('GEV 3D', 'fontsize', titleFontSize);
-% saveas(hndl{1}, 'GEV3DTrendLinear.png', 'png');
-% disp('  plotting and saving the 2D GEV graph');
-% hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
-% title('GEV', 'fontsize', titleFontSize);
-% saveas(hndl{1}, 'GEV2DTrendLinear.png', 'png');
+
+disp('  plotting the POT and some return levels');
+hndl = tsPlotSeriesGPTRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
+saveas(hndl{1}, 'PotAndReturnLevelsLinearTrend.png');    
+
 disp('  plotting and saving the 2D GPD graph');
 hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'TWL(m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
 title('GPD', 'fontsize', titleFontSize);
