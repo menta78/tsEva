@@ -11,7 +11,7 @@ end
 thresholdPercentiles=[99,99,99]; %threshold levels in each series
 minPeakDistanceInDays=[3,3,3]; %minimum distance between monovariate peaks of each series
 size(nchoosek([1:3],2),1); %this is the size of maxDistanceMultivariatePeakInDays
-maxDistanceMultivariatePeaksInDays=[7,7,7]; %has to have a format and size matching size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in trivariate case, and so on
+maxDistanceMultivariatePeaksInDays=[7]; %can either take one value or has to have a format and size matching size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in trivariate case, and so on
 
 timeWindow = 365.25*15; %to be used in tsEvaNonStationary
 ciPercentile = 98;  %to be used in tsEvaNonStationary, not to be confused with thresholdPercentiles

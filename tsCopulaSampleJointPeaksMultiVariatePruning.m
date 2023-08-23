@@ -55,7 +55,9 @@ function [jointextremes,jointextremes2,thresholdsC,timestampstotal,pkstotal] = .
 % - pkstotal: 1d array with size njointevents*n, containing the values of all peaks of the
 %   monovariates.
 
-
+if size(maxdistancemultivariatepeaksindays,2)~=size(nchoosek([1:size(inputtimeseries,2)],2),1)
+    maxdistancemultivariatepeaksindays=repmat(maxdistancemultivariatepeaksindays,1,size(nchoosek([1:size(inputtimeseries,2)],2),1));
+end
 inputtimeseriesCell=mat2cell(inputtimeseries,size(inputtimeseries,1),ones(1,size(inputtimeseries,2)));
 thresholdsC=cellfun(@(x,y) prctile(x,y),inputtimeseriesCell,num2cell(thresholdpercentiles(1:size(inputtimeseriesCell,2))));
 dt = tsEvaGetTimeStep(inputtimestamps);
