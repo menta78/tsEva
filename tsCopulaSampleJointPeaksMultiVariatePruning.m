@@ -1,4 +1,4 @@
-function [jointextremes,jointextremes2,thresholdsC,peaksjointidx,peaksjointidx2] = ...
+function [jointextremes,jointextremes2,thresholdsC,jointExtremeIndices,peakIndicesAll] = ...
     tsCopulaSampleJointPeaksMultiVariatePruning(inputtimestamps,...
     inputtimeseries,...
     thresholdpercentiles,...
@@ -55,7 +55,7 @@ function [jointextremes,jointextremes2,thresholdsC,peaksjointidx,peaksjointidx2]
 %   is the number of found non-peak joint events
 % - thresholdsC: 1d array of thresholds used for selecting peaks of
 %   monovariates, with size 1*n
-% - peaksjointidx: indices of compound peak events 
+% - peaksjointidx: indices of compound peak events
 % - peaksjointidx2: indices of compound non-peak events
 
 if size(maxdistancemultivariatepeaksindays,2)~=size(nchoosek([1:size(inputtimeseries,2)],2),1)
@@ -224,14 +224,13 @@ eventstime2=eventstimetotal(idjn==2,:);
 eventpeaks=eventpeakstotal(idjn==1,:);
 eventpeaks2=eventpeakstotal(idjn==2,:);
 eventid1=eventidtotal(idjn==1,:);
-peaksjointidx=indxcelltotal(eventid1);
+jointExtremeIndices=indxcelltotal(eventid1);
 eventid22=eventidtotal(idjn==2,:);
-peaksjointidx2=indxcelltotal(eventid22);
+peakIndicesAll=[indxcelltotal(eventid1);indxcelltotal(eventid22)];
 disp([num2str(((size((eventstime),1)))),' ','compound peak events found'])
 disp([num2str(((size((eventstime2),1)))),' ','compound non-peak events found'])
 jointextremes=cat(3,eventstime,eventpeaks);
 jointextremes2=cat(3,eventstime2,eventpeaks2);
-        
 
 
 
@@ -240,5 +239,6 @@ jointextremes2=cat(3,eventstime2,eventpeaks2);
 
 
 
-   
+
+
 

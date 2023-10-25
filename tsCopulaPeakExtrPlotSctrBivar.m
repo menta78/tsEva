@@ -4,6 +4,7 @@ args.xlbl = 'X';
 args.ylbl = 'Y';
 args.figPosition = [100, 100, 800, 800];
 args.fontSize = 15;
+
 args = tsEasyParseNamedArgs(varargin, args);
 xlbl = args.xlbl;
 ylbl = args.ylbl;
@@ -11,7 +12,7 @@ figPosition = args.figPosition;
 fontSize = args.fontSize;
 
 if (size(resampleLevel, 2) ~= 2) || (size(yMaxLevel, 2) ~= 2)
-  error(['tsCopulaYearExtrPlotSctrBivar: resampleLevel and yMaxLevel must be Nx2 arrays']);
+    error(['tsCopulaYearExtrPlotSctrBivar: resampleLevel and yMaxLevel must be Nx2 arrays']);
 end
 
 fig = figure('position', figPosition);
