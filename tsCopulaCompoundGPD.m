@@ -41,7 +41,7 @@ statInputTimeSeries=[statInputTimeSeries{:}];
 
 % perform the sampling of stationarized series
 
-[jointextremes,jointnonpeak,thresholdsC,jointExtremeIndices,peakIndicesAll] =...
+[jointextremes,jointnonpeak,thresholdsStationary,jointExtremeIndices,peakIndicesAll] =...
     tsCopulaSampleJointPeaksMultiVariatePruning(inputtimestamps,statInputTimeSeries, ...
     thresholdpercentiles, ...
     minpeakdistanceindays, ...
@@ -105,15 +105,25 @@ else
     error(['copulaFamily not supported: ' copulaFamily]);
 end
 
+trendSeries=cellfun(@(x) x{2}.trendSeries,marginalAnalysis,'UniformOutput',0);
+stdDevSeries=cellfun(@(x) x{2}.stdDevSeries,marginalAnalysis,'UniformOutput',0);
+thresholdPotNS=cellfun(@(x,y,z) y*z+x,trendSeries,stdDevSeries,mat2cell(thresholdsStationary,1,ones(1,length(thresholdsStationary))),'UniformOutput',0)
 
-
+jointExtremes=jointextremes(:,:,2);
+jointExtremesNS=[];
+for ii=1:size(jointExtremes,2)
+jointExtremesNS=[jointExtremesNS,inputtimeseries(jointExtremeIndices(:,ii),ii)];
+end
 CopulaAnalysis.copulaParam=copulaParam;
 CopulaAnalysis.jointExtremeMonovariateProb=jointExtremeMonovariateProb;
 CopulaAnalysis.marginalAnalysis=marginalAnalysis;
-CopulaAnalysis.jointExtremes=jointextremes(:,:,2);
+CopulaAnalysis.jointExtremes=jointExtremesNS;
 CopulaAnalysis.jointExtremeTimeStamps=jointextremes(:,:,1);
 CopulaAnalysis.jointExtremeIndices=jointExtremeIndices;
 CopulaAnalysis.peakIndicesAll=peakIndicesAll;
-CopulaAnalysis.thresholdSampling=thresholdsC;
+CopulaAnalysis.stationaryThresholdSampling=thresholdsStationary;
+CopulaAnalysis.thresholdPotNS=[thresholdPotNS{:}];
+
+
 
 

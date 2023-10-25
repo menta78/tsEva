@@ -37,43 +37,28 @@ nResample=1000;
 
 
 peakIndices=copulaAnalysis.jointExtremeIndices;
-yMax=[timeAndSeries1(peakIndices(:,1),2),timeAndSeries2(peakIndices(:,2),2)]; %non-stationary peaks, not same as copulaAnalysis.jointExtremes
+yMax=copulaAnalysis.jointExtremes; %non-stationary peaks
 tMax=copulaAnalysis.jointExtremeTimeStamps;
-
+thresholdC=copulaAnalysis.thresholdPotNS; %non-stationary threshold parameters
 figure 
 
-subplot(2,1,1) % the non-stationary series and threshold parameter of each 
+% the non-stationary series and threshold parameter of each 
 % series is plotted to see if the peaks that were sampled from stationarized
-% series also coincide with peaks in the non-stationary ones
+% series also coincide with peaks in the non-stationary series
 
 plot(datetime(datevec(timeAndSeries1(:,1))),timeAndSeries1(:,2))
 hold on
 plot(datetime(datevec(timeAndSeries2(:,1))),timeAndSeries2(:,2))
-marginalAnalysis=copulaAnalysis.marginalAnalysis;
-thresholdC=cellfun(@(x) x{1}(2).parameters.threshold,marginalAnalysis,'UniformOutput',0);%x{2}.stationarySeries
-plot(datetime(datevec(timeAndSeries1(:,1))),thresholdC{1})
-plot(datetime(datevec(timeAndSeries2(:,1))),thresholdC{2})
+
+plot(datetime(datevec(timeAndSeries1(:,1))),thresholdC(:,1))
+plot(datetime(datevec(timeAndSeries2(:,1))),thresholdC(:,2))
 plot(datetime(datevec(tMax(:,1))),yMax(:,1),'hr')
 plot(datetime(datevec(tMax(:,2))),yMax(:,2),'.k')
-legend('Series1','Series2','Thresh-Param1','Threshold-param2','Peaks1','Peaks2')
+legend('Series1','Series2','Threshold-Param1','Threshold-param2','Peaks1','Peaks2')
 title('Non-stationary series')
 
 
-subplot(2,1,2) % the stationarized series and jointExtremes are plotted to
-% check if the sampling of peaks was done correctly 
-yMax2=copulaAnalysis.jointExtremes;
-tMax2=copulaAnalysis.jointExtremeTimeStamps;
-stationarySeries=cellfun(@(x) x{2}.stationarySeries,marginalAnalysis,'UniformOutput',0);%x{2}.stationarySeries
-thresholdsC=copulaAnalysis.thresholdSampling;
-plot(datetime(datevec(timeAndSeries1(:,1))),stationarySeries{1})
-hold on
-plot(datetime(datevec(timeAndSeries1(:,1))),stationarySeries{2})
-plot(datetime(datevec(timeAndSeries1(:,1))),thresholdsC(1).*ones(1,length(timeAndSeries1(:,1))))
-plot(datetime(datevec(timeAndSeries1(:,1))),thresholdsC(2).*ones(1,length(timeAndSeries1(:,1))))
-plot(datetime(datevec(tMax2(:,1))),yMax2(:,1),'hr')
-plot(datetime(datevec(tMax2(:,2))),yMax2(:,2),'.k')
-legend('Series1','Series2','Percentile-1','Percentile-2','Peaks-1','Peaks-2')
-title('Stationary series')
+
 
 % plotting of jointExtremes and simulated return levels from the copula 
 figHnd = tsCopulaPeakExtrPlotSctrBivar(resampleLevel, yMax, 'xlbl', 'Marshall-north', 'ylbl', 'Marshall-south');
