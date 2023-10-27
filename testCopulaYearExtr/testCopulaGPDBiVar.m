@@ -32,7 +32,7 @@ minPeakDistanceInDaysfornonstationary=[3,3]; %used for sampling peaks inside tse
 
 nResample=1000;
 
-[resampleLevel, resampleProb, resampleRetPer] = tsCopulaCoumpoundGPDMontecarlo(copulaAnalysis,...
+[resampleLevel, resampleProb, resampleRetPer] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     nResample,'timeIndex',1);
 
 
@@ -49,12 +49,16 @@ figure
 plot(datetime(datevec(timeAndSeries1(:,1))),timeAndSeries1(:,2))
 hold on
 plot(datetime(datevec(timeAndSeries2(:,1))),timeAndSeries2(:,2))
+p1=copulaAnalysis.marginalAnalysis{1}{1}(2).objs.peakIndexes;
+p2=copulaAnalysis.marginalAnalysis{2}{1}(2).objs.peakIndexes;
 
 plot(datetime(datevec(timeAndSeries1(:,1))),thresholdC(:,1))
 plot(datetime(datevec(timeAndSeries2(:,1))),thresholdC(:,2))
-plot(datetime(datevec(tMax(:,1))),yMax(:,1),'hr')
+plot(datetime(datevec(tMax(:,1))),yMax(:,1),'.r')
 plot(datetime(datevec(tMax(:,2))),yMax(:,2),'.k')
-legend('Series1','Series2','Threshold-Param1','Threshold-param2','Peaks1','Peaks2')
+plot(datetime(datevec(timeAndSeries1(p1,1))),timeAndSeries1(p1,2),'sg')
+plot(datetime(datevec(timeAndSeries2(p2,1))),timeAndSeries2(p2,2),'sb')
+legend('Series1','Series2','Threshold-Param1','Threshold-param2','Peaks1','Peaks2','monoVarPeak-1','monoVarPeak-2')
 title('Non-stationary series')
 
 
@@ -63,5 +67,35 @@ title('Non-stationary series')
 % plotting of jointExtremes and simulated return levels from the copula 
 figHnd = tsCopulaPeakExtrPlotSctrBivar(resampleLevel, yMax, 'xlbl', 'Marshall-north', 'ylbl', 'Marshall-south');
 
+%find the outliers
+y1=yMax(:,1);
+y2=yMax(:,2);
+[xData, yData] = prepareCurveData( y1, y2 );
 
+ft = fittype( 'poly1' );
 
+[fitresult, gof] = fit( xData, yData, ft );
+
+% Plot fit with data.
+figure( 'Name', 'untitled fit 1' );
+h = plot( fitresult, xData, yData );
+legend( h, 'y2 vs. y1', 'untitled fit 1', 'Location', 'NorthEast', 'Interpreter', 'none' );
+% Label axes
+xlabel( 'y1', 'Interpreter', 'none' );
+ylabel( 'y2', 'Interpreter', 'none' );
+grid on
+
+xn=linspace(min(y1),max(y1),100);
+yn=xn*(fitresult.p1)+fitresult.p2;
+dx0=[];
+for ij1=1:length(y1)
+    dx=[];    
+for ij=1:100
+    dx=[dx,sqrt((y1(ij1)-xn(ij)).^2+(y2(ij1)-yn(ij)).^2)];
+end
+dx0=[dx0,min(dx)];
+end
+[~,idx0]=sort(dx0,'descend');
+yMax(idx0(1:2),:)
+datestr(tMax(idx0(1:2),:))
+        

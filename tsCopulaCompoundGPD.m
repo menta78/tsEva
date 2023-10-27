@@ -72,17 +72,6 @@ for ii = 1:nSeries
 
 end
 
-% plot P(X) > x : the probability of exceeding x (where x is jointextremes)
-[~,iss]=sort(jointextremes(:,1,2),1,'descend');
-[~,iss2]=sort(jointextremes(:,2,2),1,'descend');
-plot(jointextremes(iss,1,2),jointExtremeMonovariateProb(iss,1))
-hold on
-plot(jointextremes(iss2,2,2),jointExtremeMonovariateProb(iss2,2))
-legend('Series1','Series2')
-ylabel('Probability')
-xlabel('Stationarized peak values')
-title('P(X) > x')
-
 % estimating the copula
 copulaParam.family = copulaFamily;
 copulaParam.familyId = tsCopulaGetFamilyId(copulaFamily);
