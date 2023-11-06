@@ -7,22 +7,24 @@ args.extremeLowThreshold = -Inf;
 args = tsEasyParseNamedArgs(varargin, args);
 extremeLowThreshold = args.extremeLowThreshold;
 
-disp('computing the trend ...');
+disp('computing the linear trend ...');
 
 [filledTimeStamps, filledSeries, dt ] = tsEvaFillSeries( timeStamps, series );
 nRunMn = ceil(timeWindow/dt); %this line is kept just for sake of code consistency
+
+% calculate linear trend
 TimeVec=datevec(filledTimeStamps);
 [~,ia,~]=unique(TimeVec(:,1),'stable'); %this ensures selection of yearly data
 YearlyAveragedSeries=zeros(length(ia),1);
 ia(end+1)=length(filledTimeStamps)+1;
 for ij=1:length(ia)-1
     filledSeriesYear=filledSeries(ia(ij):ia(ij+1)-1);
-    AveragedValYear = nanmean(filledSeriesYear);
+    AveragedValYear = mean(filledSeriesYear,'omitnan');
     YearlyAveragedSeries(ij)=AveragedValYear;
 end
 ia=ia(1:end-1);
 tvec=datevec(filledTimeStamps(ia));
-tvec=[tvec(:,1),7*ones(length(tvec),1),ones(length(tvec),1),zeros(length(tvec),3)];
+tvec=[tvec(:,1),7*ones(size(tvec,1),1),ones(size(tvec,1),1),zeros(size(tvec,1),3)];
 TimeStampsYearly=datenum(tvec);
 [p,S] = polyfit(TimeStampsYearly,YearlyAveragedSeries,1);
 trendSeries=p(1).*filledTimeStamps+p(2);
@@ -44,7 +46,7 @@ for ij=1:length(ia)-1
 end
 ia=ia(1:end-1);
 tvec=datevec(filledTimeStamps(ia));
-tvec=[tvec(:,1),7*ones(length(tvec),1),1*ones(length(tvec),1),zeros(length(tvec),3)];
+tvec=[tvec(:,1),7*ones(size(tvec,1),1),1*ones(size(tvec,1),1),zeros(size(tvec,1),3)];
 TimeStampsciPercentile=datenum(tvec);
 [p,S] = polyfit(TimeStampsciPercentile,PercentileSeries,1);
 PercentileSeriesTotal=p(1).*filledTimeStamps+p(2);
