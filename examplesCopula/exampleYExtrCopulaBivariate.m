@@ -12,7 +12,7 @@ spearmanCorrInput = corr(yMax, 'type', 'spearman');
 
 [retLev, cplParam] = tsCopulaYearExtrFit(retPeriod, retLev, yMax, 'copulafamily', copulaFamily);
 
-nResample = 100000;
+nResample = 10000;
 [resampleLevel, resampleProb] = tsCopulaYearExtrRnd(retPeriod, retLev, cplParam, nResample);
 %skipping the computation of the kendall tau for the output, as it is very slow
 % kendallTauOutput = corr(resampleLevel, 'type', 'kendall');
