@@ -22,7 +22,7 @@ classdef tsLcSubplotManager < handle
       args.Gap = obj.Gap;
       args.CellXSize = obj.CellXSize;
       args.CellYSize = obj.CellXSize;
-      args = easyParseNamedArgs(varargin, args);
+      args = tsEasyParseNamedArgs(varargin, args);
       obj.Min = args.Min;
       obj.Max = args.Max;
       obj.Gap = args.Gap;
@@ -45,7 +45,7 @@ classdef tsLcSubplotManager < handle
       end
       
       args.Gap = obj.Gap;
-      args = easyParseNamedArgs(varargin, args);
+      args = tsEasyParseNamedArgs(varargin, args);
       Gp = args.Gap;
       
       Xmin   = obj.Min(1);
@@ -77,7 +77,7 @@ classdef tsLcSubplotManager < handle
       
       args.Gap = obj.Gap;
       args.subGap = obj.Gap;
-      args = easyParseNamedArgs(varargin, args);
+      args = tsEasyParseNamedArgs(varargin, args);
       Gp = args.Gap;
       subGap = args.subGap;
       
