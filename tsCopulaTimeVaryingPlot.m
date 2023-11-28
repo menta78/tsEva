@@ -22,7 +22,7 @@ for ij=1:nFig
 rt=1;
 b0=27;
 l0=21;
-spMan = LcSubplotManager(b0, l0, 'CellXSize', round(21*rt), 'CellYSize', round(27*rt), 'gap', [0.03 0.01]);
+spMan = tsLcSubplotManager(b0, l0, 'CellXSize', round(21*rt), 'CellYSize', round(27*rt), 'gap', [0.03 0.01]);
 
 
 spMan.initFigure;

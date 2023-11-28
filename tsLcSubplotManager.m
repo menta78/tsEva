@@ -1,4 +1,4 @@
-classdef LcSubplotManager < handle
+classdef tsLcSubplotManager < handle
   properties (Access = public)
     N  % number of rows
     M  % number of cols
@@ -14,7 +14,7 @@ classdef LcSubplotManager < handle
   end
   methods
     
-    function obj = LcSubplotManager(N, M, varargin)
+    function obj = tsLcSubplotManager(N, M, varargin)
       obj.N = N;
       obj.M = M;
       args.Min = obj.Min;
@@ -99,7 +99,7 @@ classdef LcSubplotManager < handle
       Xend = Xstart + Xbox;
       Yend = Ystart + Ybox;
             
-      subSubPlotManager = LcSubplotManager(NSub, MSub, 'Min', [Xstart, Ystart], 'Max', [Xend, Yend], 'Gap', subGap, varargin{:});
+      subSubPlotManager = tsLcSubplotManager(NSub, MSub, 'Min', [Xstart, Ystart], 'Max', [Xend, Yend], 'Gap', subGap, varargin{:});
       
       obj.subSubplotManagers(SubSubplotManagerName) = subSubPlotManager;
     end
