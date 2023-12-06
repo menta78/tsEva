@@ -1,4 +1,4 @@
-function [resampleLevel, resampleProb, resampleRetPer] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+function [resampleLevel, resampleProb] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     nResample, ...
     varargin)
 
@@ -14,34 +14,36 @@ copulaFamily = copulaParam.family;
 timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
 switch timeVaryingCopula
     case false
-if strcmpi(copulaFamily, 'gaussian')
+        if strcmpi(copulaFamily, 'Gaussian')
 
-    resampleProb = copularnd(copulaFamily, copulaParam.rho, nResample);
-elseif strcmpi(copulaFamily, 't')
-    resampleProb = copularnd(copulaFamily, copulaParam.rho, copulaParam.nu, nResample);
-elseif strcmpi(copulaFamily, 'gumbel') || strcmpi(copulaFamily, 'clayton') || strcmpi(copulaFamily, 'frank')
-    resampleProb = copularnd(copulaFamily, copulaParam.theta, nResample);
-else
-    error(['copulaFamily not supported: ' copulaFamily]);
-end
+            resampleProb = copularnd(copulaFamily, copulaParam.rho, nResample);
+        elseif strcmpi(copulaFamily, 't')
+            resampleProb = copularnd(copulaFamily, copulaParam.rho, copulaParam.nu, nResample);
+        elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
+            resampleProb = copularnd(copulaFamily, copulaParam.rho, nResample);
+        else
+            error(['copulaFamily not supported: ' copulaFamily]);
+        end
 
     case true
         resampleProb={};
-if strcmpi(copulaFamily, 'gaussian')
-rhoCell=copulaParam.rho;
-for ij=1:size(rhoCell,2)
-    resampleProbT = copularnd(copulaFamily, rhoCell{ij}, nResample);
-     resampleProb=[resampleProb,resampleProbT];
-end
-elseif strcmpi(copulaFamily, 't')
-    resampleProb = copularnd(copulaFamily, copulaParam.rho, copulaParam.nu, nResample);
-elseif strcmpi(copulaFamily, 'gumbel') || strcmpi(copulaFamily, 'clayton') || strcmpi(copulaFamily, 'frank')
-    resampleProb = copularnd(copulaFamily, copulaParam.theta, nResample);
-else
-    error(['copulaFamily not supported: ' copulaFamily]);
-end
-
-
+        if strcmpi(copulaFamily, 'Gaussian') || strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
+            rhoCell=copulaParam.rho;
+            for ij=1:size(rhoCell,2)
+                resampleProbT = copularnd(copulaFamily, rhoCell{ij}, nResample);
+                resampleProb=[resampleProb,resampleProbT];
+            end
+        elseif strcmpi(copulaFamily, 't')
+             rhoCell=copulaParam.rho;
+             nuCell=copulaParam.nu;
+             for ij=1:size(rhoCell,2)
+                resampleProbT = copularnd(copulaFamily, rhoCell{ij}, nuCell{ij},nResample);
+                resampleProb=[resampleProb,resampleProbT];
+             end
+            
+        else
+            error(['copulaFamily not supported: ' copulaFamily]);
+        end
 end
 
 
@@ -51,57 +53,41 @@ nSeries = length(marginalAnalysis);
 switch timeVaryingCopula
     case false
 
+        for ivar = 1:nSeries
 
-for ivar = 1:nSeries
-
-    nonStatEvaParams = marginalAnalysis{ivar}{1};
-    thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
-    scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
-    shapeParam = nonStatEvaParams(2).parameters.epsilon;
-    nPeaks = nonStatEvaParams(2).parameters.nPeaks;
-    thStart =  nonStatEvaParams(2).parameters.timeHorizonStart;
-    thEnd = nonStatEvaParams(2).parameters.timeHorizonEnd;
-    timeHorizonInYears = (thEnd - thStart)/365.2425;
-    mx=nPeaks/timeHorizonInYears;
-
-    resampleRetPer = (1./(resampleProb))/mx;
-
-    rps = resampleRetPer(:,ivar);
-
-    [lvls, ~] = tsEvaComputeReturnLevelsGPD(shapeParam, scaleParam, thrshld, 0, 0, 0, nPeaks, timeHorizonInYears,rps');
-
-    resampleLevel(:,ivar) = lvls;
-end
+            nonStatEvaParams = marginalAnalysis{ivar}{1};
+            thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
+            scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
+            shapeParam = nonStatEvaParams(2).parameters.epsilon;
+          
+         
+% transfrom probabilities to data scale using inverse sampling law
+% no scaling is needed since thrshld parameter already transforms data with
+% lowest probability corresponding with thrshld value
+       resampleLevel(:,ivar)=gpinv(resampleProb(:,ivar),shapeParam, scaleParam, thrshld);
+       
+        end
     case true
         resampleLevelCell={};
-        resampleRetPerCell={};
-for ij=1:size(rhoCell,2)
-     resampleLevel=[];
-     resampleRetPer=[];
-for ivar = 1:nSeries
+        
+        for ij=1:size(rhoCell,2)
+            resampleLevel=[];
+            
+            resampleProbTemp=resampleProb{ij};
+            for ivar = 1:nSeries
 
-    nonStatEvaParams = marginalAnalysis{ivar}{1};
-    thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
-    scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
-    shapeParam = nonStatEvaParams(2).parameters.epsilon;
-    nPeaks = nonStatEvaParams(2).parameters.nPeaks;
-    thStart =  nonStatEvaParams(2).parameters.timeHorizonStart;
-    thEnd = nonStatEvaParams(2).parameters.timeHorizonEnd;
-    timeHorizonInYears = (thEnd - thStart)/365.2425;
-    mx=nPeaks/timeHorizonInYears;
+                nonStatEvaParams = marginalAnalysis{ivar}{1};
+                thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
+                scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
+                shapeParam = nonStatEvaParams(2).parameters.epsilon;
 
-    resampleRetPer = (1./(resampleProb{ij}))/mx;
-
-    rps = resampleRetPer(:,ivar);
-
-    [lvls, ~] = tsEvaComputeReturnLevelsGPD(shapeParam, scaleParam, thrshld, 0, 0, 0, nPeaks, timeHorizonInYears,rps');
-
-    resampleLevel(:,ivar) = lvls;
-end
-resampleLevelCell=[resampleLevelCell,resampleLevel];
-resampleRetPerCell=[resampleRetPerCell,resampleRetPer];
-end
-resampleLevel=resampleLevelCell;
-resampleRetPer=resampleRetPerCell;
+                resampleLevel(:,ivar)=gpinv(resampleProbTemp(:,ivar),shapeParam, scaleParam, thrshld);
+    
+            end
+            resampleLevelCell=[resampleLevelCell,resampleLevel];
+       
+        end
+        resampleLevel=resampleLevelCell;
+       
 end
 
