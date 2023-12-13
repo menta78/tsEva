@@ -20,7 +20,7 @@ thresholdPercentiles=[99,99]; %threshold levels in each series for sampling of d
 ciPercentile = 99;  %to be used in tsEvaNonStationary
 potPercentiles=[99]; %o be used in tsEvaNonStationary; better be set to only one value but a range is also possible
 
-timeWindow = 365*15; %if time window (in days) is equal or larger than
+timeWindow = 365*10; %if time window (in days) is equal or larger than
 % length of time series, copula will be of stationary type; a very small
 % time window may result in error (e.g., less than 3 years)
 
@@ -33,15 +33,16 @@ minPeakDistanceInDaysfornonstationary=[3,3]; %used for sampling peaks inside tse
     thresholdPercentiles, ...
     minPeakDistanceInDaysforjointpeaks, ...
     maxDistanceMultivariatePeaksInDays, ...
-    'copulaFamily','Gaussian',...
+    'copulaFamily','Clayton',...
     'transfType','trendlinear','timeWindow',timeWindow,...
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,'minPeakDistanceInDays',minPeakDistanceInDaysfornonstationary);
 
-nResample=10000; %used for Monte-Carlo simulation
+nResample=1000; %used for Monte-Carlo simulation
 
 [resampleLevel, resampleProb] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     nResample,'timeIndex',1);
 
+[gofStatistics] = tsCopulaUncertainty(resampleProb, copulaAnalysis);
 if iscell(copulaAnalysis.jointExtremeMonovariateProb)
     figHnd = tsCopulaTimeVaryingPlot(resampleLevel, copulaAnalysis, 'xlbl', 'Marshall-north', 'ylbl', 'Marshall-south','numberofverticalpanels',3,'numberofhorizontalpanels',3);
     tsCopulaPlotJointReturnPeriod(copulaAnalysis,'marginalDistributions','gp','plotType','AND')% plot type: AND, OR
