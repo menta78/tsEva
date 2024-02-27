@@ -11,7 +11,7 @@ function [gofStatistics] = tsCopulaUncertainty(resampProb,copulaAnalysis)
 % fitted copula and also information about marginals and sampled extremes
 
 % for a time-varying copula, i.e., with resampProb in a cell data type,
-% gofStatistics are calculated for all time segments 
+% gofStatistics are calculated for all time segments
 
 % Reworked from https://github.com/mscavnicky/copula-matlab
 
@@ -25,7 +25,7 @@ if iscell(U) %time-varying copula
     [nc,dc]=cellfun(@(x) size(x),U);
     if strcmpi(copulaFamily, 'Gaussian')
         rho=copulaAnalysis.copulaParam.rho;
-        Y=cellfun(@(x,y) copulapdf('Gaussian',x,y),U,rho,'UniformOutput',0);
+        Y=cellfun(@(x,y) copulacdf('Gaussian',x,y),U,rho,'UniformOutput',0);
         copulaParam.numParams = dc.*(dc-1) / 2; %number of parameters of a multivariate Gaussian copula
     elseif strcmpi(copulaFamily, 't')
         rho=copulaAnalysis.copulaParam.rho;
@@ -35,15 +35,15 @@ if iscell(U) %time-varying copula
     elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
         alpha=copulaAnalysis.copulaParam.rho;
         copulaFamilyc=repmat({copulaFamily},1,size(U,2));
-        Y=cellfun(@(x,y,z) copulapdf(z,x,y),U,alpha,copulaFamilyc,'UniformOutput',0);
+        Y=cellfun(@(x,y,z) copulacdf(z,x,y),U,alpha,copulaFamilyc,'UniformOutput',0);
         copulaParam.numParams = ones(1,size(U,2)); %Gumber, Clayton, and Frank copulas have one parameter in  case of d-dimensioanl
-                                                   % copula future works,should proparly account for d-dimensional Archimedean copula
+        % copula future works,should proparly account for d-dimensional Archimedean copula
     end
     % else
     % Compute the log-likelihood
 
     ll=cellfun(@(x) sum(log(x)),Y);
- 
+
 
     k = copulaParam.numParams;
     % Compute the AIC
@@ -53,17 +53,17 @@ if iscell(U) %time-varying copula
 
     E = rosenblattTransform(copulaParam, U );
     % Produce vector with chi-square distribution
-    
-    C=cellfun(@(x) sum(norminv(x).^ 2,2),E,'UniformOutput',0);
-    % Compute the AKS statistics
-    aks=cellfun(@(x,y,y2) sum(abs(chi2cdf(x,y) - pseudoObservations(x))) / sqrt(y2),C,mat2cell(dc,1,ones(1,size(U,2))),mat2cell(nc,1,ones(1,size(U,2))),'UniformOutput',0);
-   
+
+    % C=cellfun(@(x) sum(norminv(x).^ 2,2),E,'UniformOutput',0);
+    % % Compute the AKS statistics
+    % aks=cellfun(@(x,y,y2) sum(abs(chi2cdf(x,y) - pseudoObservations(x))) / sqrt(y2),C,mat2cell(dc,1,ones(1,size(U,2))),mat2cell(nc,1,ones(1,size(U,2))),'UniformOutput',0);
+
     % Compute the SnC statistics
 
     snc=cellfun(@(x) sum((empirical(x) - prod(x, 2)) .^ 2),E,'UniformOutput',0);
-    
+
     gofStatistics.snc=snc;  % since its a measure of departure, the smaller the better
-    gofStatistics.aks=aks; % since its a measure of departure, the smaller the better
+    % gofStatistics.aks=aks; % since its a measure of departure, the smaller the better
     gofStatistics.aic=aic;  % the smaller the better
     gofStatistics.bic=bic;  %the smaller the better
     gofStatistics.ll=ll; %the largest value represent the highest likelihood
@@ -81,6 +81,7 @@ else
 
         rho=copulaAnalysis.copulaParam.rho;
         Y=copulapdf('Gaussian',U,rho);
+        Yx=copulacdf('Gaussian',U,rho);
         copulaParam.numParams = d.*(d-1) / 2; %number of parameters of a multivariate Gaussian copula
 
     elseif strcmpi(copulaFamily, 't')
@@ -94,6 +95,8 @@ else
 
         alpha=copulaAnalysis.copulaParam.rho;
         Y=copulapdf(copulaFamily,U,alpha);
+
+        Yx=copulacdf(copulaFamily,U,alpha);
         copulaParam.numParams = 1;
 
     end
@@ -101,32 +104,37 @@ else
     % Compute the log-likelihood
 
     ll = sum(log(Y));
-
+    ll = sum(log(Yx));
     k = copulaParam.numParams;
     % Compute the AIC
     aic = -2*ll + (2*n*k)/(n-k-1);
     % Compute the BIC
     bic = -2*ll + k*log(n);
 
+    Ux=copulaAnalysis.jointExtremeMonovariateProbNS;
     E = rosenblattTransform(copulaParam, U );
+    %Ex = rosenblattTransform(copulaParam, Ux);
+    % E2 = rosenblattTransform(copulaParam,copulaAnalysis.jointExtremeMonovariateProb );
     % Produce vector with chi-square distribution
-    C = sum( norminv( E ) .^ 2, 2 );
+    % C = sum( norminv( E ) .^ 2, 2 );
 
-    % Compute the AKS statistics
-    aks = sum(abs(chi2cdf(C, d) - pseudoObservations(C))) / sqrt(n);
+    % % Compute the AKS statistics (Average Kolmogorov Smirnov)
+    % aks = sum(abs(chi2cdf(C, d) - pseudoObservations(C))) / sqrt(n);
+
     % Compute the SnC statistics
-
+    % Ux=VectorOfRanks(my_data)/100;
     snc = sum((empirical(E) - prod(E, 2)) .^ 2);
-
+    %sncx = sum((empirical(Ex) - prod(Ex, 2)) .^ 2,'omitmissing');
+    % snc2= sum((empirical(E2) - prod(E2, 2)) .^ 2);
     gofStatistics.snc=snc;  % since its a measure of departure, the smaller the better
-    gofStatistics.aks=aks; % since its a measure of departure, the smaller the better
+    % gofStatistics.aks=aks; % since its a measure of departure, the smaller the better
     gofStatistics.aic=aic;  % the smaller the better
     gofStatistics.bic=bic;  %the smaller the better
     gofStatistics.ll=ll; %the largest value represent the highest likelihood
 
-    corrKendall=corr(U,'type','Kendall');
-    corrSpearman=corr(U,'type','Spearman');
-    corrPearson=corr(U,'type','Pearson');
+    corrKendall=corr(Ux,'type','Kendall');
+    corrSpearman=corr(Ux,'type','Spearman');
+    corrPearson=corr(Ux,'type','Pearson');
 
     gofStatistics.corrKendall=corrKendall;
     gofStatistics.corrSpearman=corrSpearman;
@@ -262,7 +270,7 @@ function [ Y ] = studentCnd( copulaparams, U, m )
 %
 %   References:
 %       [1] Wang (2012) - Numerical approximations and goodness-of-fit of
-%       copulas
+%       copulas   %a master thesis of ETH
 
 nu = copulaparams.nu;
 X = tinv(U(:, 1:m-1), nu);
@@ -303,67 +311,65 @@ Y = N ./ D;
 
 end
 
-function [ U ] = pseudoObservations( X )
-%PSEUDOOBSERVATIONS Uniforms input sample to pseudo-observations.
-%   Based on empirical CDF function described in [1]. We use n+1 for
-%   division to keep empirical CDF lower than 1.
-%
-%   References:
-%       [1] Berg, D. Bakken, H. (2006) Copula Goodness-of-fit Tests: A
-%       Comparative Study
-
-[n, d] = size(X);
-U = zeros(n, d);
-
-for i=1:d
-    U(:,i) = rankmax(X(:,i)) / (n + 1);
-end
-
-end
-
-function [ R ] = rankmax( X )
-%RANKMAX Returns vector of one-based ranks for each element
-%   For the groups of same element, the maximum rank is returned. This can
-%   be viewed as number of elements smaller or equal than given number.
-
-% Number of elements
-n = size(X, 1);
-% Preallocate ranks vector
-R = zeros(n, 1);
-% Sort the array and retrieve indices
-[S, I] =  sort(X);
-% Rank of the previous element
-r = n;
-% Value of the previous element
-prev = S(n);
-
-for i=n:-1:1
-    x = S(i);
-    if x == prev
-        R(I(i)) = r;
-    else
-        prev = x;
-        r = i;
-        R(I(i)) = r;
-    end
-end
-
-end
+% function [ U ] = pseudoObservations( X )
+% %PSEUDOOBSERVATIONS Uniforms input sample to pseudo-observations.
+% %   Based on empirical CDF function described in [1]. We use n+1 for
+% %   division to keep empirical CDF lower than 1.
+% %
+% %   References:
+% %       [1] Berg, D. Bakken, H. (2006) Copula Goodness-of-fit Tests: A
+% %       Comparative Study
+% 
+% [n, d] = size(X);
+% U = zeros(n, d);
+% 
+% for i=1:d
+%     U(:,i) = rankmax(X(:,i)) / (n);
+% end
+% 
+% end
+% 
+% function [ R ] = rankmax( X )
+% %RANKMAX Returns vector of one-based ranks for each element
+% %   For the groups of same element, the maximum rank is returned. This can
+% %   be viewed as number of elements smaller or equal than given number.
+% 
+% % Number of elements
+% n = size(X, 1);
+% % Preallocate ranks vector
+% R = zeros(n, 1);
+% % Sort the array and retrieve indices
+% [S, I] =  sort(X);
+% % Rank of the previous element
+% r = n;
+% % Value of the previous element
+% prev = S(n);
+% 
+% for i=n:-1:1
+%     x = S(i);
+%     if x == prev
+%         R(I(i)) = r;
+%     else
+%         prev = x;
+%         r = i;
+%         R(I(i)) = r;
+%     end
+% end
+% 
+% end
 
 function [ C ] = empirical( U )
-%COPULA.EMPIRICAL Empirical copula for d-dimensional data.
-%   Works with uniform variates.
-%
-%   References:
-%       [1] Genest, C. (2009) Goodness-of-fit tests for copulas: A review
-%       and a power study
 
-[n d] = size(U);
+% Empirical copula 
+%   U is the uniform variates
+% C is the empirical copula
+
+[n,d] = size(U);
 
 C = zeros(n, 1);
 for i=1:n
     S = ones(n, 1);
-    % Make AND using logical bitmaps of each column
+
     for j=1:d
         S = S .* (U(:, j) <= U(i, j));
     end
@@ -508,4 +514,18 @@ switch family
         error 'Copula family not recognized.'
 end
         
+end
+
+function R = VectorOfRanks(X) 
+
+% "Vectors of ranks from multivariate data"
+% Input  -> X: n x d data matrix
+% Output -> R: n x d matrix of ranks computed for each column
+
+[n,d] = size(X);
+R = zeros(n,d);
+for j=1:d
+    R(:,j) = tiedrank(X(:,j));
+end
+
 end

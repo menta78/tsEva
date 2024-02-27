@@ -216,6 +216,21 @@ switch timeVaryingCopula
         CopulaAnalysis.jointExtremeMonovariateProb=jointExtremeMonovariateProb;
         CopulaAnalysis.marginalAnalysis=marginalAnalysis;
         CopulaAnalysis.jointExtremes=jointExtremesNS;
+        timeIndex=1;
+        jointExtremeMonovariateProbNS=[];
+        for ijx=1:size(marginalAnalysis,2)
+
+            nonStatEvaParams =marginalAnalysis{ijx}{1};
+            % timeIndex=length(nonStatEvaParams(2).parameters.threshold);
+            thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
+            scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
+            shapeParam = nonStatEvaParams(2).parameters.epsilon;
+            npeak=nonStatEvaParams(2).parameters.nPeaks;
+            nSample=size(inputtimeseries, 1);
+            jointExtremeMonovariateProbNS(:,ijx)=1-((1-cdf('gp',jointExtremesNS(:,ijx),shapeParam, scaleParam, thrshld))*(npeak/nSample));
+    
+
+        end
         CopulaAnalysis.jointExtremeTimeStamps=jointextremes(:,:,1);
         CopulaAnalysis.jointExtremeIndices=jointExtremeIndices;
         CopulaAnalysis.peakIndicesAll=peakIndicesAll;
@@ -223,7 +238,7 @@ switch timeVaryingCopula
         CopulaAnalysis.thresholdPotNS=[thresholdPotNS{:}];
         CopulaAnalysis.methodology=marginalDistributions;
         CopulaAnalysis.timeVaryingCopula=timeVaryingCopula;
-
+        CopulaAnalysis.jointExtremeMonovariateProbNS=jointExtremeMonovariateProbNS;
     case true
 
         jointExtremesNS={};
