@@ -1,243 +1,312 @@
-function [gofStatistics] = tsCopulaUncertainty(resampProb,copulaAnalysis)
-% a function to assess goodness-of-fit of the Monte-Carlo simulated
-% values
-% correlation parameters (Kendall, Spearman and Pearson) are calculated
-% using the probability values
+function [gofStatistics] = tsCopulaUncertainty(copulaAnalysis)
+%tsCopulaUncertainty estimation of copula goodness-of-fit
+% [gofStatistics] = tsCopulaUncertainty(copulaAnalysis)
+%                     returns a variable of type structure containing various parameters
+%                     related to the goodness-of-fit of the copula
 
-% resampProb is the resampled probability obtained from Monte-Carlo
-% simulation
 
-% copulaAnalysis is the copulaAnalysis structure file containing details of
-% fitted copula and also information about marginals and sampled extremes
 
-% for a time-varying copula, i.e., with resampProb in a cell data type,
-% gofStatistics are calculated for all time segments
+% A battery of goodnes-of-fit parameters are provided by tsCopulaUncertainty function.
+% These include different assessment of the correlation parameters,
+% Akaike Information Criterion (AIC), Bayesian Information Criterion (BIC), Log-likelihood
+% and a gof statistic calculated based on Cramer-Von mises statistic (CvM).
 
-% Reworked from https://github.com/mscavnicky/copula-matlab
+% input:
+%  copulaAnalysis                           - a variable of type structure provided as the output of tsCopulaCompoundGPD or
+%                                              tsCopulaCompoundGPDMontecarlo functions
 
-% M. H. Bahmanpour, 2023
+
+
+% output:
+%  gofStatistics:                           - A variable of type structure containing:
+%                                               xxx                         --
+%
+%
+
+% M.H.Bahmanpour, 2024
+
+%   References:
+%       [1] Mentaschi, L., Vousdoukas, M., Voukouvalas, E., Sartini, L., Feyen, L., Besio, G., and Alfieri, L.:
+%           The transformed-stationary approach: a generic and simplified methodology for non-stationary extreme value analysis,
+%           Hydrol. Earth Syst. Sci., 20, 3527–3547, https://doi.org/10.5194/hess-20-3527-2016, 2016
+%       [2] Genest, C., Rémillard, B., Beaudoin, D., Goodness-of-fit tests for copulas:
+%           A review and a power study (Open Access),(2009) Insurance:
+%           Mathematics and Economics, 44 (2), pp. 199-213, doi: 10.1016/j.insmatheco.2007.10.005
+
+%%%%%%%%%%%%%%%%%%%%%%
+
+% Some parts of the code are reworked from https://github.com/mscavnicky/copula-matlab
+
+
+% setting the default parameters
+
+uResampled=copulaAnalysis.resampleProb; %from Monte-Carlo simulations
+uSample=copulaAnalysis.jointExtremeMonovariateProbNS; %based on original samples
+
 
 copulaFamily=copulaAnalysis.copulaParam.family;
 copulaParam=copulaAnalysis.copulaParam;
 
-U = resampProb;
-if iscell(U) %time-varying copula
-    [nc,dc]=cellfun(@(x) size(x),U);
+
+if iscell(uResampled)
+    %time-varying (non-stationary) copula
+    [s1Sample,s2Sample]=cellfun(@(x) size(x),uSample);
+    [s1Monte,~]=cellfun(@(x) size(x),uResampled);
+
     if strcmpi(copulaFamily, 'Gaussian')
         rho=copulaAnalysis.copulaParam.rho;
-        Y=cellfun(@(x,y) copulacdf('Gaussian',x,y),U,rho,'UniformOutput',0);
-        copulaParam.numParams = dc.*(dc-1) / 2; %number of parameters of a multivariate Gaussian copula
+        yCDFSample=cellfun(@(x,y) copulacdf('Gaussian',x,y),uSample,rho,'UniformOutput',0);
+        yCDFMonte=cellfun(@(x,y) copulacdf('Gaussian',x,y),uResampled,rho,'UniformOutput',0);
+
+        copulaParam.numParams = s2Sample.*(s2Sample-1) / 2; %number of parameters of a multivariate Gaussian copula
     elseif strcmpi(copulaFamily, 't')
         rho=copulaAnalysis.copulaParam.rho;
         nu=copulaAnalysis.copulaParam.nu;
-        Y=cellfun(@(x,y,z) copulapdf('t',x,y,z),U,rho,nu,'UniformOutput',0);
-        copulaParam.numParams = 1 + dc.*(dc-1) / 2;
+        yCDFSample=cellfun(@(x,y,z) copulacdf('t',x,y,z),uSample,rho,nu,'UniformOutput',0);
+        yCDFMonte=cellfun(@(x,y,z) copulacdf('t',x,y,z),uResampled,rho,nu,'UniformOutput',0);
+        copulaParam.numParams = 1 + s2Sample.*(s2Sample-1) / 2;
     elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
+        % in MATLAB, d-dimensional Gumbel, Clayton, and Frank copulas have
+        % only one parameter currently; d-dimensional Archimedean copula
+        % could be developed later as part of future works
         alpha=copulaAnalysis.copulaParam.rho;
-        copulaFamilyc=repmat({copulaFamily},1,size(U,2));
-        Y=cellfun(@(x,y,z) copulacdf(z,x,y),U,alpha,copulaFamilyc,'UniformOutput',0);
-        copulaParam.numParams = ones(1,size(U,2)); %Gumber, Clayton, and Frank copulas have one parameter in  case of d-dimensioanl
-        % copula future works,should proparly account for d-dimensional Archimedean copula
+        copulaFamilyc=repmat({copulaFamily},1,size(uSample,2));
+        yCDFSample=cellfun(@(x,y,z) copulacdf(z,x,y),uSample,alpha,copulaFamilyc,'UniformOutput',0);
+        yCDFMonte=cellfun(@(x,y,z) copulacdf(z,x,y),uResampled,alpha,copulaFamilyc,'UniformOutput',0);
+        copulaParam.numParams = ones(1,size(uSample,2));
     end
     % else
     % Compute the log-likelihood
 
-    ll=cellfun(@(x) sum(log(x)),Y);
+    llSample=cellfun(@(x) sum(log(x)),yCDFSample);
+    llMonte=cellfun(@(x) sum(log(x)),yCDFMonte);
 
 
     k = copulaParam.numParams;
     % Compute the AIC
-    aic = -2*ll + (2*nc.*k)./(nc-k-1);
+    aicSample = -2*llSample + (2*s1Sample.*k)./(s1Sample-k-1);
+    aicMonte = -2*llMonte + (2*s1Monte.*k)./(s1Monte-k-1);
     % Compute the BIC
-    bic = -2*ll + k.*log(nc);
+    bicSample = -2*llSample + k.*log(s1Sample);
+    bicMonte = -2*llMonte + k.*log(s1Monte);
+    eSample = tsRosenblattTransform(copulaParam, uSample );
+    eMonte = tsRosenblattTransform(copulaParam, uResampled);
 
-    E = rosenblattTransform(copulaParam, U );
-    % Produce vector with chi-square distribution
+    % Compute the SnC statistics - SnC is a measure of the departure
 
-    % C=cellfun(@(x) sum(norminv(x).^ 2,2),E,'UniformOutput',0);
-    % % Compute the AKS statistics
-    % aks=cellfun(@(x,y,y2) sum(abs(chi2cdf(x,y) - pseudoObservations(x))) / sqrt(y2),C,mat2cell(dc,1,ones(1,size(U,2))),mat2cell(nc,1,ones(1,size(U,2))),'UniformOutput',0);
+    % see genest, et al., 2009, equation (9)
+    sncSample=cellfun(@(x) sum((tsEmpirical(x) - prod(x, 2)) .^ 2),eSample,'UniformOutput',0);
+    sncMonte=cellfun(@(x) sum((tsEmpirical(x) - prod(x, 2)) .^ 2),eMonte,'UniformOutput',0);
 
-    % Compute the SnC statistics
+    % compute a range of correlation parameters; both for the samples and
+    % for the resampled (or monte-carlo) values
 
-    snc=cellfun(@(x) sum((empirical(x) - prod(x, 2)) .^ 2),E,'UniformOutput',0);
+    corrKendallSample=cellfun(@(x) corr(x,'type','Kendall'),uSample,'UniformOutput',0);
+    corrSpearmanSample=cellfun(@(x) corr(x,'type','Spearman'),uSample,'UniformOutput',0);
+    corrPearsonSample=cellfun(@(x) corr(x,'type','Pearson'),uSample,'UniformOutput',0);
 
-    gofStatistics.snc=snc;  % since its a measure of departure, the smaller the better
-    % gofStatistics.aks=aks; % since its a measure of departure, the smaller the better
-    gofStatistics.aic=aic;  % the smaller the better
-    gofStatistics.bic=bic;  %the smaller the better
-    gofStatistics.ll=ll; %the largest value represent the highest likelihood
+    corrKendallMonte=cellfun(@(x) corr(x,'type','Kendall'),uResampled,'UniformOutput',0);
+    corrSpearmanMonte=cellfun(@(x) corr(x,'type','Spearman'),uResampled,'UniformOutput',0);
+    corrPearsonMonte=cellfun(@(x) corr(x,'type','Pearson'),uResampled,'UniformOutput',0);
 
-    corrKendall=cellfun(@(x) corr(x,'type','Kendall'),U,'UniformOutput',0);
-    corrSpearman=cellfun(@(x) corr(x,'type','Spearman'),U,'UniformOutput',0);
-    corrPearson=cellfun(@(x) corr(x,'type','Pearson'),U,'UniformOutput',0);
+    gofStatistics.sncSample=sncSample;
+    gofStatistics.aicSample=aicSample;
+    gofStatistics.bicSample=bicSample;
+    gofStatistics.llSample=llSample;
+    gofStatistics.sncMonte=sncMonte;
+    gofStatistics.aicMonte=aicMonte;
+    gofStatistics.bicMonte=bicMonte;
+    gofStatistics.llMonte=llMonte;
+    gofStatistics.corrKendallSample=corrKendallSample;
+    gofStatistics.corrSpearmanSample=corrSpearmanSample;
+    gofStatistics.corrPearsonSample=corrPearsonSample;
+    gofStatistics.corrKendallMonte=corrKendallMonte;
+    gofStatistics.corrSpearmanMonte=corrSpearmanMonte;
+    gofStatistics.corrPearsonMonte=corrPearsonMonte;
 
-    gofStatistics.corrKendall=corrKendall;
-    gofStatistics.corrSpearman=corrSpearman;
-    gofStatistics.corrPearson=corrPearson;
 else
-    [n,d]=size(U);
-    if strcmpi(copulaFamily, 'Gaussian')
+    %stationary copula
+
+    [s1Sample,s2Sample]=size(uSample);
+    [S1Monte,~]=size(uResampled);
+    if strcmpi(copulaFamily,'Gaussian')
 
         rho=copulaAnalysis.copulaParam.rho;
-        Y=copulapdf('Gaussian',U,rho);
-        Yx=copulacdf('Gaussian',U,rho);
-        copulaParam.numParams = d.*(d-1) / 2; %number of parameters of a multivariate Gaussian copula
+        yCDFSample=copulacdf('Gaussian',uSample,rho);
+        yCDFMonte=copulacdf('Gaussian',uResampled,rho);
+        %number of parameters of a multivariate Gaussian copula
+        copulaParam.numParams = s2Sample.*(s2Sample-1) / 2;
 
     elseif strcmpi(copulaFamily, 't')
 
         rho=copulaAnalysis.copulaParam.rho;
-        nu=opulaAnalysis.copulaParam.nu;
-        Y=copulapdf('t',U,rho,nu);
-        copulaParam.numParams = 1 + d*(d-1) / 2;
+        nu=copulaAnalysis.copulaParam.nu;
+        yCDFSample=copulacdf('t',uSample,rho,nu);
+        yCDFMonte=copulacdf('t',uResampled,rho,nu);
+        copulaParam.numParams = 1 + s2Sample*(s2Sample-1) / 2;
 
     elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
 
         alpha=copulaAnalysis.copulaParam.rho;
-        Y=copulapdf(copulaFamily,U,alpha);
-
-        Yx=copulacdf(copulaFamily,U,alpha);
+        yCDFSample=copulacdf(copulaFamily,uSample,alpha);
+        yCDFMonte=copulacdf(copulaFamily,uResampled,alpha);
         copulaParam.numParams = 1;
 
     end
 
     % Compute the log-likelihood
 
-    ll = sum(log(Y));
-    ll = sum(log(Yx));
+
+    llSample = sum(log(yCDFSample));
+    llMonte= sum(log(yCDFMonte));
     k = copulaParam.numParams;
+
     % Compute the AIC
-    aic = -2*ll + (2*n*k)/(n-k-1);
+    aicSample = -2*llSample + (2*s1Sample*k)/(s1Sample-k-1);
+    aicMonte = -2*llMonte + (2*S1Monte*k)/(S1Monte-k-1);
     % Compute the BIC
-    bic = -2*ll + k*log(n);
+    bicSample = -2*llSample + k*log(s1Sample);
+    bicMonte = -2*llMonte + k*log(S1Monte);
 
-    Ux=copulaAnalysis.jointExtremeMonovariateProbNS;
-    E = rosenblattTransform(copulaParam, U );
-    %Ex = rosenblattTransform(copulaParam, Ux);
-    % E2 = rosenblattTransform(copulaParam,copulaAnalysis.jointExtremeMonovariateProb );
-    % Produce vector with chi-square distribution
-    % C = sum( norminv( E ) .^ 2, 2 );
+    %compute SnC (a variant of CvM test Cramer-Von Mises)
+    eSample = tsRosenblattTransform(copulaParam, uSample);
+    eMonte = tsRosenblattTransform(copulaParam, uResampled);
+    sncSample = sum((tsEmpirical(eSample) - prod(eSample, 2)) .^ 2);
+    sncMonte = sum((tsEmpirical(eMonte) - prod(eMonte, 2)) .^ 2);
 
-    % % Compute the AKS statistics (Average Kolmogorov Smirnov)
-    % aks = sum(abs(chi2cdf(C, d) - pseudoObservations(C))) / sqrt(n);
+    corrKendallSample=corr(uSample,'type','Kendall');
+    corrSpearmanSample=corr(uSample,'type','Spearman');
+    corrPearsonSample=corr(uSample,'type','Pearson');
+    corrKendallMonte=corr(uResampled,'type','Kendall');
+    corrSpearmanMonte=corr(uResampled,'type','Spearman');
+    corrPearsonMonte=corr(uResampled,'type','Pearson');
 
-    % Compute the SnC statistics
-    % Ux=VectorOfRanks(my_data)/100;
-    snc = sum((empirical(E) - prod(E, 2)) .^ 2);
-    %sncx = sum((empirical(Ex) - prod(Ex, 2)) .^ 2,'omitmissing');
-    % snc2= sum((empirical(E2) - prod(E2, 2)) .^ 2);
-    gofStatistics.snc=snc;  % since its a measure of departure, the smaller the better
-    % gofStatistics.aks=aks; % since its a measure of departure, the smaller the better
-    gofStatistics.aic=aic;  % the smaller the better
-    gofStatistics.bic=bic;  %the smaller the better
-    gofStatistics.ll=ll; %the largest value represent the highest likelihood
-
-    corrKendall=corr(Ux,'type','Kendall');
-    corrSpearman=corr(Ux,'type','Spearman');
-    corrPearson=corr(Ux,'type','Pearson');
-
-    gofStatistics.corrKendall=corrKendall;
-    gofStatistics.corrSpearman=corrSpearman;
-    gofStatistics.corrPearson=corrPearson;
+    gofStatistics.sncSample=sncSample;
+    gofStatistics.sncMonte=sncMonte;
+    gofStatistics.aicSample=aicSample;
+    gofStatistics.aicMonte=aicMonte;
+    gofStatistics.bicSample=bicSample;
+    gofStatistics.bicMonte=bicMonte;
+    gofStatistics.llSample=llSample;
+    gofStatistics.llMonte=llMonte;
+    gofStatistics.corrKendallSample=corrKendallSample;
+    gofStatistics.corrKendallMonte=corrKendallMonte;
+    gofStatistics.corrSpearmanSample=corrSpearmanSample;
+    gofStatistics.corrSpearmanMonte=corrSpearmanMonte;
+    gofStatistics.corrPearsonSample=corrPearsonSample;
+    gofStatistics.corrPearsonMonte=corrPearsonMonte;
 end
 
 end
 
 
-function [ Tc ] = rosenblattTransform( copulaparams, U )
-%rosenblattTransform Performs Rosenblatt's probability integral
-%transformation under the null hypothesis that the data are generated using
-%the given copula.
+function [ Tc ] = tsRosenblattTransform( copulaparams, U )
+%tsRosenblattTransform Rosenblatt's transformation
+%
+%[ Tc ] = tsRosenblattTransform( copulaparams, U )
+%           returns a variable Tc corresponding to the Rosenblatt
+%           transformation of probability values U
+%
+%
+% this function performs Rosenblatt's probability integral under the null hypothesis that
+% the data are generated using the given copula (as dictated by
+% copulaparams)
 %
 %   References:
 %       [1] Breymann, Dependence Structures for Multivariate High-Frequency
 %       Data in Finance, 2003
-%reworked from https://github.com/mscavnicky/copula-matlab
+
+% partly reworked from https://github.com/mscavnicky/copula-matlab
+
+
 
 if iscell(U)
 
-    [nc,dc]=cellfun(@(x) size(x),U,'UniformOutput',0);
-    
-    Tc=cellfun(@(x,x1) zeros(x,x1),nc,dc,'UniformOutput',0);
-    Tci=[Tc{:,:}];
-    Ui=[U{:,:}];
-    Tci(:,1:2:end)=Ui(:,1:2:end);
+    [s1,s2]=cellfun(@(x) size(x),U,'UniformOutput',0);
 
-    Tc = mat2cell(Tci,size(Tci,1),2.*ones(1,size(U,2)));
-   
+    Tc=cellfun(@(x,x1) zeros(x,x1),s1,s2,'UniformOutput',0);
+
+    uFirstColumn=cellfun(@(x) x(:,1),U,'UniformOutput',0);
+    TcSecondColumn=cellfun(@(x,x1) x(:,2),Tc,'UniformOutput',0);
+    Tc=cellfun(@(x,x1) [x,x1],uFirstColumn,TcSecondColumn,'UniformOutput',0);
     copulaparamsC={};
 
+    rho=copulaparams.rho;
+    if strcmpi(copulaparams.family,'t')
+        nu=copulaparams.nu;
+    end
+    numPar=copulaparams.numParams;
+
     for ij=1:size(U,2)
-        rhox=copulaparams.rho;
-        if strcmp(copulaparams.family,'t')
-        nux=copulaparams.nu;
-        end
-        numparx=copulaparams.numParams;
+
         copulaparamx=copulaparams;
-        copulaparamx.rho=rhox{ij};
-        copulaparamx.numParams=numparx(ij);
-         if strcmp(copulaparams.family,'t')
-        copulaparamx.nu=nux{ij};
-         end
+        copulaparamx.rho=rho{ij};
+        copulaparamx.numParams=numPar(ij);
+        if strcmpi(copulaparams.family,'t')
+            copulaparamx.nu=nu{ij};
+        end
         copulaparamsC=[copulaparamsC,{copulaparamx}];
-        
+
     end
 
-    d=unique([dc{:}]);
+    d=unique([s2{:}]);
 
     for ii=2:d % for d-dimensional copula
 
-        ii2=repmat({ii},1,size(U,2));
-        Icc=cellfun(@(x,y,z) copulacnd(x,y,z),copulaparamsC,U,ii2,'UniformOutput',0);
-     
-        Tci=[Tc{:,:}];
-        Icci=[Icc{:,:}];
-        Tci(:,2:2:end)=Icci(:,1:1:end);
-        Tc = mat2cell(Tci,size(Tci,1),2.*ones(1,size(U,2)));
+        ithVectorCell=repmat({ii},1,size(U,2));
+        conditCopulaCell=cellfun(@(x,y,z) tsCopulaCnd(x,y,z),copulaparamsC,U,ithVectorCell,'UniformOutput',0);
+        Tc=cellfun(@(x,x1) [x(:,1),x1(:,1)],U,conditCopulaCell,'UniformOutput',0);
 
     end
 else
 
-    [n,d]=size(U);
+    [s1,s2]=size(U);
 
-    Tc = zeros(n, d);
+    Tc = zeros(s1, s2);
 
     Tc(:,1) = U(:,1);
 
-    for i=2:d
-        Tc(:,i) = copulacnd( copulaparams, U, i );
+    for i=2:s2
+        Tc(:,i) = tsCopulaCnd( copulaparams, U, i );
     end
 
 end
 end
 
 
-function [ Y ] = copulacnd( copulaparams, U, m )
-%copulacnd Conditional distribution function of different copula families.
-%   Computes conditional CDF of d-dimensional copula, where m-th variable
+function [ Y ] = tsCopulaCnd( copulaparams, U, m )
+%tsCopulaCnd Conditional distribution function of different copula families.
+%[ Y ] = tsCopulaCnd( copulaparams, U, m )
+%           retuns a variable Y containing conditional distribution function
+%   This function computes conditional CDF of d-dimensional copula, where m-th variable
 %   is conditined upon the first m-1 variables.
-% reworked from https://github.com/mscavnicky/copula-matlab
+
+% partly reworked from https://github.com/mscavnicky/copula-matlab
+
 family = copulaparams.family;
 
-switch family
-
-    case 'independent'
-        % Conditioning upon independent variables
-        Y = U(:,m);
-    case 'Gaussian'
-        Y = gaussianCnd( copulaparams, U, m );
-    case 't'
-        Y = studentCnd( copulaparams, U, m );
-    case {'Frank', 'Gumbel', 'Clayton'}
-        Y = archimcnd(family, U, copulaparams.rho, m);
+% switch family
+if strcmpi(family,'independent')
+    Y = U(:,m);
+elseif strcmpi(family,'gaussian')
+    Y = tsGaussianCnd( copulaparams, U, m );
+elseif strcmpi(family,'t')
+    Y = tsStudentCnd( copulaparams, U, m );
+elseif strcmpi(family,'frank') || strcmpi(family,'gumbel') || strcmpi(family,'clayton')
+    Y = tsArchimCnd(family, U, copulaparams.rho, m);
 
 end
 
 end
 
-function [ Y ] = gaussianCnd( copulaparams, U, m )
-%GAUSSIANCND Computation of Gaussian conditional distribution function.
+function [ Y ] = tsGaussianCnd( copulaparams, U, m )
 %
+%tsGaussianCnd Computation of Gaussian conditional distribution function.
+%[ Y ] = tsGaussianCnd( copulaparams, U, m )
+%           retuns a variable Y containing gaussian conditional distribution function
+
+% originally obtained from https://github.com/mscavnicky/copula-matlab
+
 %   References:
 %       [1] Wang (2012) - Numerical approximations and goodness-of-fit of
 %       copulas
@@ -265,12 +334,18 @@ Y = N ./ D;
 
 end
 
-function [ Y ] = studentCnd( copulaparams, U, m )
-%STUDENTCND Computation of Student-t conditional distribution function.
-%
+function [ Y ] = tsStudentCnd( copulaparams, U, m )
+
+%tsStudentCnd Computation of Student-t conditional distribution function.
+%[ Y ] = tsStudentCnd( copulaparams, U, m )
+%           retuns a variable Y containing student-t conditional distribution function
+
+% originally obtained from https://github.com/mscavnicky/copula-matlab
+
 %   References:
 %       [1] Wang (2012) - Numerical approximations and goodness-of-fit of
-%       copulas   %a master thesis of ETH
+%       copulas
+
 
 nu = copulaparams.nu;
 X = tinv(U(:, 1:m-1), nu);
@@ -296,73 +371,40 @@ Y = N ./ D;
 
 end
 
-function [ Y ] = archimcnd( family, U, alpha, m )
-% ARCHIM.CND Conditional distribution function for Archimedean copulas.
-%   Computes conditional CDF of d-dimensional copula, where m-th variable
+function [ Y ] = tsArchimCnd( family, U, alpha, m )
+
+% tsArchimCnd Conditional distribution function for Archimedean copulas.
+%[ Y ] = tsArchimCnd( family, U, alpha, m )
+%           retuns a variable Y containing archimedean type copula conditional distribution function
+% this function Computes conditional CDF of d-dimensional copula, where m-th variable
 %   is conditined upon the first m-1 variables.
 
-X1 = sum(generatorInverse(family, U(:,1:m), alpha), 2);
-N = generatorDerivative(family, X1, alpha, m-1);
+% originally obtained from https://github.com/mscavnicky/copula-matlab
 
-X2 = sum(generatorInverse(family, U(:,1:m-1), alpha), 2);
-D = generatorDerivative(family, X2, alpha, m-1);
+
+X1 = sum(tsGeneratorInverse(family, U(:,1:m), alpha), 2);
+N = tsGeneratorDerivative(family, X1, alpha, m-1);
+
+X2 = sum(tsGeneratorInverse(family, U(:,1:m-1), alpha), 2);
+D = tsGeneratorDerivative(family, X2, alpha, m-1);
 
 Y = N ./ D;
 
 end
 
-% function [ U ] = pseudoObservations( X )
-% %PSEUDOOBSERVATIONS Uniforms input sample to pseudo-observations.
-% %   Based on empirical CDF function described in [1]. We use n+1 for
-% %   division to keep empirical CDF lower than 1.
-% %
-% %   References:
-% %       [1] Berg, D. Bakken, H. (2006) Copula Goodness-of-fit Tests: A
-% %       Comparative Study
-% 
-% [n, d] = size(X);
-% U = zeros(n, d);
-% 
-% for i=1:d
-%     U(:,i) = rankmax(X(:,i)) / (n);
-% end
-% 
-% end
-% 
-% function [ R ] = rankmax( X )
-% %RANKMAX Returns vector of one-based ranks for each element
-% %   For the groups of same element, the maximum rank is returned. This can
-% %   be viewed as number of elements smaller or equal than given number.
-% 
-% % Number of elements
-% n = size(X, 1);
-% % Preallocate ranks vector
-% R = zeros(n, 1);
-% % Sort the array and retrieve indices
-% [S, I] =  sort(X);
-% % Rank of the previous element
-% r = n;
-% % Value of the previous element
-% prev = S(n);
-% 
-% for i=n:-1:1
-%     x = S(i);
-%     if x == prev
-%         R(I(i)) = r;
-%     else
-%         prev = x;
-%         r = i;
-%         R(I(i)) = r;
-%     end
-% end
-% 
-% end
 
-function [ C ] = empirical( U )
 
-% Empirical copula 
-%   U is the uniform variates
-% C is the empirical copula
+
+
+function [ C ] = tsEmpirical( U )
+
+% tsEmpirical Empirical copula
+%[ C ] = tsEmpirical( U )
+%           retuns a variable C containing the empirical copula
+%           corresponding with the U variable including the uniform
+%           variates
+
+% originally obtained from https://github.com/mscavnicky/copula-matlab
 
 [n,d] = size(U);
 
@@ -378,108 +420,124 @@ end
 
 end
 
-function [ Y ] = generatorInverse( family, X, p )
-%ARCHIM.GENERATORINVERSE Inverse of archimedean copula generator.
-%   Please note that no parameter checking is done on this level.
-%
+function [ Y ] = tsGeneratorInverse( family, X, p )
+
+% tsGeneratorInverse Inverse of archimedean copula generator
+%[ Y ] = tsGeneratorInverse( family, X, p )
+% originally obtained from https://github.com/mscavnicky/copula-matlab
 %   Reference:
 %       [1] Nelsen. R, (2006) Introduction to Copulas, Second Edition, page 116
 
-switch family
-    case 'Clayton'
-        Y = ( X .^ -p ) - 1;
-    case 'Gumbel'
-        Y = ( -log(X) ) .^ p;
-    case 'Frank'
-        Y = -log( ( exp(-p * X) - 1 ) / ( exp(-p) - 1 ) );
-    otherwise
-        error('Copula family %s not recognized.', family);
+if strcmpi(family,'clayton')
+
+    Y = ( X .^ -p ) - 1;
+elseif strcmpi(family,'gumbel')
+    Y = ( -log(X) ) .^ p;
+elseif strcmpi(family,'frank')
+    Y = -log( ( exp(-p * X) - 1 ) / ( exp(-p) - 1 ) );
+else
+    error('Copula family %s not recognized.', family);
 end
 
 end
 
-function [ Y ] = generatorDerivative( family, X, alpha, m )
-%ARCHIM.GENERATORDERIVATIVE Compute values of the m-th derivative of the
-%generator of the Archimedean copula family using numerical methods.
-%
+function [ Y ] = tsGeneratorDerivative( family, X, alpha, m )
+
+% tsGeneratorDerivative derivative of the generator of the Archimedean copula
+%[ Y ] = tsGeneratorDerivative( family, X, alpha, m )
+%           Compute values of the m-th derivative of the
+%           generator of the Archimedean copula family using numerical methods.
+% originally obtained from https://github.com/mscavnicky/copula-matlab
 %   References:
 %       [1] Hofert (2011) - Likelihood Inference for Archimedean Copulas
-
 [n, d] = size(X);
 
-switch family
-case 'Clayton' 
+if strcmpi(family,'clayton')
+
     Y = prod((0:m-1) + (1/alpha)) * (1 + X).^(-(m+1/alpha));
-case 'Gumbel'
+elseif strcmpi(family,'Gumbel')
     a = zeros(m, 1);
     for i=1:m
-       for j=i:m
-          a(i) = a(i) + alpha^(-j) * stirling1(m, j) * stirling2(j, i);
-       end        
-       a(i) = (-1)^(m-i) * a(i); 
-    end    
-    
+        for j=i:m
+            a(i) = a(i) + alpha^(-j) * tsStirling1(m, j) * tsStirling2(j, i);
+        end
+        a(i) = (-1)^(m-i) * a(i);
+    end
+
     P = zeros(n, d);
     for i=1:m
         P = P + a(i, 1) * X.^(i / alpha);
-    end    
-    
-    Y = generator('Gumbel', X, alpha) ./ (X.^m) .* P;  
-case 'Frank'
-    Y = (1/alpha) * npolylog(-m+1, (1-exp(-alpha)) * exp(-X));
+    end
+
+    Y = tsGenerator('Gumbel', X, alpha) ./ (X.^m) .* P;
+elseif strcmpi(family,'Frank')
+    Y = (1/alpha) * tsNpolylog(-m+1, (1-exp(-alpha)) * exp(-X));
 end
 
 Y = Y * (-1)^m;
 
 end
 
-function [ s ] = stirling1( m, n )
-%STIRLING1 Returns stirling number of the first kind.
-%   Caches numbers up to 32 dimensions.
+function [ s ] = tsStirling1( m, n )
+
+% tsStirling1 stirling number
+%[ s ] = tsStirling1( m, n )
+%            Returns stirling number of the first kind.
+%            Caches numbers up to 32 dimensions.
+% originally obtained from https://github.com/mscavnicky/copula-matlab
 
 persistent cache;
 if isempty(cache)
-   cache = NaN(32, 32);
-   % Put ones on diagonal
-   cache(eye(32) == 1) = 1;
-   % Zeros in the first column
-   cache(2:32,1) = 0;   
+    cache = NaN(32, 32);
+    % Put ones on diagonal
+    cache(eye(32) == 1) = 1;
+    % Zeros in the first column
+    cache(2:32,1) = 0;
 end
 
 s = cache(m+1,n+1);
 if isnan(s)
-   s = stirling1(m-1, n-1) - (m-1)*stirling1(m-1, n);
-   cache(m+1,n+1) = s;
+    s = stirling1(m-1, n-1) - (m-1)*stirling1(m-1, n);
+    cache(m+1,n+1) = s;
 end
 
 end
 
-function [ s ] = stirling2(m, n)
-%STIRLING2 Computes stirling number of the seconds kind.
-%   Caches numbers up to 32 dimensions.
+function [ s ] = tsStirling2(m, n)
+
+% tsStirling2 stirling number
+%[ s ] = tsStirling2( m, n )
+%            Returns stirling number of the second kind.
+%            Caches numbers up to 32 dimensions.
+% originally obtained from https://github.com/mscavnicky/copula-matlab
 
 persistent cache;
 if isempty(cache)
-   cache = NaN(32, 32);
-   % Put ones on diagonal
-   cache(eye(32) == 1) = 1;
-   % Zeros in the first column
-   cache(2:32,1) = 0;
-   % Ones in the second column
-   cache(2:32,2) = 1;   
+    cache = NaN(32, 32);
+    % Put ones on diagonal
+    cache(eye(32) == 1) = 1;
+    % Zeros in the first column
+    cache(2:32,1) = 0;
+    % Ones in the second column
+    cache(2:32,2) = 1;
 end
 
 s = cache(m+1,n+1);
 if isnan(s)
-   s = stirling2(m-1, n-1) + n*stirling2(m-1, n);
-   cache(m+1,n+1) = s;
+    s = stirling2(m-1, n-1) + n*stirling2(m-1, n);
+    cache(m+1,n+1) = s;
 end
 
 end
 
-function [ Y ] = npolylog( n, X )
-%NPOLYLOG Polylogratihm function for n < 0.
-%
+function [ Y ] = tsNpolylog( n, X )
+
+% tsNpolylog Polylogratihm function
+%[ Y ] = tsNpolylog( n, X )
+%            Polylogratihm function for n < 0.
+
+% originally obtained from https://github.com/mscavnicky/copula-matlab
+
 %   References:
 %       [1] http://en.wikipedia.org/wiki/Polylogarithm#Particular_values
 
@@ -490,16 +548,17 @@ W = X ./ (1 - X);
 
 Y = zeros(size(X));
 for i=0:n
-    Y = Y + factorial(i) * (W .^ (i+1)) * stirling2(n+1, i+1);
+    Y = Y + factorial(i) * (W .^ (i+1)) * tsStirling2(n+1, i+1);
 end
 
 end
 
 
-function [ Y ] = generator( family, X, p )
-%ARCHIM.GENERATOR Archimedean copula function generator.
-%   Please note that no parameter checking is done in this function.
-%
+function [ Y ] = tsGenerator( family, X, p )
+
+% tsGenerator Archimedean copula function generator
+%[ Y ] = tsGenerator( family, X, p )
+% originally obtained from https://github.com/mscavnicky/copula-matlab
 %   Reference:
 %       Nelsen. R, (2006) Introduction to Copulas, Second Edition, page 116
 
@@ -513,19 +572,6 @@ switch family
     otherwise
         error 'Copula family not recognized.'
 end
-        
-end
-
-function R = VectorOfRanks(X) 
-
-% "Vectors of ranks from multivariate data"
-% Input  -> X: n x d data matrix
-% Output -> R: n x d matrix of ranks computed for each column
-
-[n,d] = size(X);
-R = zeros(n,d);
-for j=1:d
-    R(:,j) = tiedrank(X(:,j));
-end
 
 end
+

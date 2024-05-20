@@ -1,78 +1,127 @@
-function [CopulaAnalysis] = tsCopulaCompoundGPD(inputtimestamps, ...
-    inputtimeseries, ...
-    thresholdpercentiles, ...
-    minpeakdistanceindays, ...
-    maxdistancemultivariatepeaksindays, ...
-    varargin)
-% This function estimates multivariate copula based on compound (joint)
-% extremes sampled from the inputtimeseries in accordance with sampling
-% criteria. Marginal distributions are assessed using tsEvaNonStationary.
-% Copula functions supported include "gaussian" , "t", "frank", "clayton",
-% and "gumbel". Also supports the calculation of a time-varying copula.
-% Bahmanpour, M. H., 2023
+function [CopulaAnalysis] = tsCopulaCompoundGPD(inputtimestamps,inputtimeseries, varargin)
 
-% input data:
-% - inputtimestamps: 1d array with length nt, time stamps for the input
-%   time series. must be the same for all the time series
-% - inputtimeseries: data of each time series. 2d array with size [nt x n],
-% where n is the number of variables.
-% - thresholdpercentiles: percentile threshold to be used for each time
-% series. 1d array with length n, where n is the number of variables to be
-%   considered.
-% - minpeakdistanceindays: minimum time distance among peaks of the same
-%   variable. 1d array with length n, where n is the number of variables to
-%   be considered.
-% - maxdistancemultivariatepeaksindays: maximum time distance among peaks
-%   of different variables for the peaks to be considered joint. 1d array
-%   with length size(nchoosek([1:n],2),1), where n is the number of
-%   variables to be considered. nchoosek([1:n],2) shows the format in which
-%   maxdistancemultivariatepeaksindays will be interpreted.
+%tsCopulaCompoundGPD joint distribution of non-stationary compound extremes
+% [CopulaAnalysis] = tsCopulaCompoundGPD(inputtimestamps,inputtimeseries,varargin)
+%                     returns a variable of type structure containing various parameters 
+%                     related to the joint distribution of the non-stationary extremes 
 
-% output data:
-% - CopulaAnalysis: structure containing:
-%          copulaParam: parameter(s) of copula estimated from copulafit
-%          jointExtremeMonovariateProb: probability of joint extremes
-%          marginalAnalysis: a cell array of marginal distributions
-%          jointExtremes: extremes on the original input time series
-%          jointExtremeTimeStamps: time stamp of extreme events
-%          jointExtremeIndices: indices of the joint extremes
-%          peakIndicesAll: indices of all peaks (not just joint ones)
-%          stationaryThresholdSampling: threshold level on stationarized series
-%          thresholdPotNS: non-stationary threshold level
-%          methodology: type of marginal distribution
-%          timeVaryingCopula: 1 if timevarying, 0 if stationary copula
-args.copulaFamily = "Gaussian";
-args.marginalDistributions = "gpd";
-args.timewindow = 30*365;
-args.potPercentiles = [95:0.5:99];
-args.transfType = "trendCiPercentile";
-args.ciPercentile = 97;
-args.minPeakDistanceInDays = 3;
-args.timeSlide=365;
+% Copula functions supported include MATLAB built-in copula functions, i.e.,:
+% "gaussian"
+% "t"
+% "frank"
+% "clayton"
+% "gumbel"
+
+% The compound (joint) extremes are sampled using the stationarized series. Transformation of the non-stationary series to 
+% stationarized series and the calculation of marginal distributions are performed using method of Mentaschi, et al., 2016 [1],
+% applied on each margin separately.
+
+% input:
+%  inputtimestamps                           - 1d array with length nt, time stamps for the input
+%                                              time series. must be the same for all the time series
+%  inputtimeseries                           - 2d array with size [nt x n], where n is the number of variables.
+
+% other (optional) inputs:
+
+%  samplingThresholdPrct                     - 1d array with length n, percentile threshold to be used for each time
+%                                              series. 
+%  minPeakDistanceInDaysMonovarSampling      - 1d array with length n, minimum time distance (in days) among peaks of the same
+%                                              variable used for sampling
+%  maxPeakDistanceInDaysMultivarSampling     - maximum time distance (in days) among peaks of different variables
+%                                              for the peaks to be considered joint. 1d array with  
+%                                              length(maxPeakDistanceInDaysMultivarSampling) =size(nchoosek([1:n],2),1),
+%                                              where nchoosek([1:n],2) shows the format in which maxPeakDistanceInDaysMultivarSampling
+%                                              will be interpreted. Alternatively, it can be 1d array with length 1                                             
+%  copulaFamily                              - A string indicating the type of copula function to be applied
+%  marginalDistributions                     - supports marginal distributions of type "gev" or "gpd"
+%  timewindow                                - scalar indicating time window (in days). if timewindow is less than duration of inputtimeseries, a time-varying
+%                                              copula would be adopted; in case of a transfType parameter other than
+%                                              "trendlinear", this parameter is also used within  tsEvaNonStationary; type help tsEvaNonStationary 
+%  potPercentiles                            - A 1d cell array of length n, with each cell either taking a scalar or 1d array of variable length, indicating 
+%                                              peak-over-threshold percentile levels used as input for tsEvaNonStationary for sampling; 
+%                                              type  help tsEvaNonStationary
+%  transfType                                - a string indicating transformation type (from non-stationary to stationary series) 
+%                                              ;type  help tsEvaNonStationary
+%  ciPercentile                              - 1d array of length n, indicating percentile level used for assessing amplitude of the confidence interval 
+%                                              type help tsEvaNonStationary
+%  minPeakDistanceInDaysMonovarDistribution  - 1d array of length n, used as an input parameter for function tsEvaNonStationary for obtainining monovariate peaks 
+%                                              type help tsEvaNonStationary
+%  timeSlide                                 - a scalar parameter (in number of days) where each timewindow is slided throughout the duration of inputtimeseries
+%                                              to calculate time-varying copula; default value is 365
+
+
+% output:
+%  CopulaAnalysis:                           - A variable of type structure containing:
+%                                               copulaParam                         -- Parameter(s) of copula estimated from copulafit
+%                                               jointExtremeMonovariateProb         -- Exceedance monovariate probility of joint extremes
+%                                                                                      used for fitting copula functions
+%                                               marginalAnalysis                    -- A cell array of marginal distributions data
+%                                               jointExtremes                       -- Joint extremes on the original input time series
+%                                               jointExtremeTimeStamps              -- Time stamps of extreme events
+%                                               jointExtremeIndices                 -- Indices of the joint extremes
+%                                               peakIndicesAll                      -- Indices of all extremes (joint and non-joint extremes)
+%                                               stationaryThresholdSampling         -- Threshold level on stationarized series
+%                                               thresholdPotNS                      -- Non-stationary threshold level
+%                                               methodology                         -- Type of the marginal distribution adopted
+%                                               timeVaryingCopula                   -- [1] if timevarying, [0] if stationary copula
+%                                               jointExtremeMonovariateProbNS       -- Monovariate probility of joint extremes
+%                                              
+
+% M.H.Bahmanpour, 2024
+
+%   References:
+%       [1] Mentaschi, L., Vousdoukas, M., Voukouvalas, E., Sartini, L., Feyen, L., Besio, G., and Alfieri, L.: 
+%           The transformed-stationary approach: a generic and simplified methodology for non-stationary extreme value analysis,
+%           Hydrol. Earth Syst. Sci., 20, 3527–3547, https://doi.org/10.5194/hess-20-3527-2016, 2016
+
+%%%%%%%%%%%%%%%%%%%%%%
+
+% setting the default parameters
+args.copulaFamily = 'gaussian';
+args.marginalDistributions = 'gpd';
+args.timewindow = 100*365; %long enough that in most cases a time-invariant copula be adopted as default
+args.potPercentiles = {99,99}; %for bivariate case; 
+args.transfType = 'trendCiPercentile';
+args.ciPercentile = [99,99];
+args.minPeakDistanceInDaysMonovarDistribution = [3,3];%minPeakDistanceInDays
+args.timeSlide=3*365;
+args.samplingThresholdPrct=[99,99];%thresholdpercentiles
+args.minPeakDistanceInDaysMonovarSampling=[3,3];%minpeakdistanceindays
+args.maxPeakDistanceInDaysMultivarSampling=3;%maxdistancemultivariatepeaksindays
+args.peakType='allExceedThreshold';
+% parsing of input parameters, overrides if different with the default
 args = tsEasyParseNamedArgs(varargin, args);
-
-transfType = args.transfType;
 copulaFamily = args.copulaFamily;
-timewindow = args.timewindow;
-ciPercentile = args.ciPercentile;
-potPercentiles = args.potPercentiles;
-minPeakDistanceInDays=args.minPeakDistanceInDays;
-timeSlide=args.timeSlide;
 marginalDistributions=args.marginalDistributions;
-
-nSeries = size(inputtimeseries, 2); % number of monovariate time series
+timewindow = args.timewindow;
+potPercentiles = args.potPercentiles;
+transfType = args.transfType;
+ciPercentile = args.ciPercentile;
+minPeakDistanceInDaysMonovarDistribution=args.minPeakDistanceInDaysMonovarDistribution;
+timeSlide=args.timeSlide;
+samplingThresholdPrct=args.samplingThresholdPrct;%thresholdpercentiles
+minPeakDistanceInDaysMonovarSampling=args.minPeakDistanceInDaysMonovarSampling;%minpeakdistanceindays
+maxPeakDistanceInDaysMultivarSampling=args.maxPeakDistanceInDaysMultivarSampling;%maxdistancemultivariatepeaksindays
+peakType=args.peakType;
+% number of monovariate time series
+nSeries = size(inputtimeseries, 2);
 marginalAnalysis = cell(1,nSeries);
+
+% determine whether or not a time-varying copula should be adopted
 durationSeriesInYears=(inputtimestamps(end)-inputtimestamps(1))/365;
+
 if timewindow/365<durationSeriesInYears
     timeVaryingCopula=1;
 else
     timeVaryingCopula=0;
 end
 
+% perform transformation (from non-stationary to stationary) and obtain
+% marginal distribution data
 for ii = 1:nSeries
 
     [nonStatEvaParams, statTransfData] = tsEvaNonStationary([inputtimestamps,inputtimeseries(:,ii)],timewindow,'transfType',transfType,...
-        'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,'minPeakDistanceInDays',minPeakDistanceInDays(ii));
+        'ciPercentile',ciPercentile(ii),'potPercentiles',potPercentiles{ii},'minPeakDistanceInDays',minPeakDistanceInDaysMonovarDistribution(ii));
 
     marginalAnalysis{ii} = {nonStatEvaParams, statTransfData};
 end
@@ -86,16 +135,26 @@ statInputTimeSeries=[statInputTimeSeries{:}];
 
 % perform the sampling of stationarized series
 
-[jointextremes,jointnonpeak,thresholdsStationary,jointExtremeIndices,peakIndicesAll] =...
+[samplingAnalysis] =...
     tsCopulaSampleJointPeaksMultiVariatePruning(inputtimestamps,statInputTimeSeries, ...
-    thresholdpercentiles, ...
-    minpeakdistanceindays, ...
-    maxdistancemultivariatepeaksindays);
+    'samplingThresholdPrct',samplingThresholdPrct, ...
+    'minPeakDistanceInDaysMonovarSampling',minPeakDistanceInDaysMonovarSampling, ...
+    'maxPeakDistanceInDaysMultivarSampling',maxPeakDistanceInDaysMultivarSampling,...
+    'marginalAnalysis',marginalAnalysis,'peakType',peakType);
 
 % translating the joint extremes into probabilities using the monovariate
 % stationary distribution
+if strcmpi(peakType,'anyexceedthreshold')
+    jointextremes=samplingAnalysis.jointextremes;
+    jointextremes2=samplingAnalysis.jointextremes2;
+    jointextremes=cat(1,jointextremes,jointextremes2);
+elseif strcmpi(peakType,'allexceedthreshold')
+    jointextremes=samplingAnalysis.jointextremes;
+end
+%pre-allocation
+gpdCDFCopula = nan(size(jointextremes(:,:,1)));
+monovarProbJointExtr = nan(size(jointextremes(:,:,1)));
 
-jointExtremeMonovariateProb = nan(size(jointextremes(:,:,1)));
 for ii = 1:nSeries
     nonStatEvaParams = marginalAnalysis{ii}{1};
 
@@ -104,15 +163,19 @@ for ii = 1:nSeries
     thrshldValue = nonStatEvaParams(2).stationaryParams.parameters(3);
     npeak=nonStatEvaParams(2).parameters.nPeaks;
     nSample=size(inputtimeseries, 1);
-    % COMPUTING THE PROBABILITY THAT X>jointExtreme.
-    % this is given by 1 - F(jointExtreme), where F is the cumulative
-    % distribution.
-    %  Pr⁡〖{X>x}= ξ_u [1+ξ((x-u)/σ)]^(-1⁄ξ)  〗
-    %   ξ_u=k/n    see Coles, 2001, pp. 81-82
 
+    
+    gpdCdf=((cdf('gp',jointextremes(:,ii,2),shapeParam, scaleParam, thrshldValue)));
+    
+    %gpdCDFCopula is the probabilities that would be used for copula
+    %estimation that are scaled appropriately in accordance with number of
+    %peaks (see Coles, 2001, pp. 81-82)
 
-    % jointExtremeMonovariateProb(:,ii) = (1- cdf('gp',jointextremes(:,ii,2),shapeParam,scaleParam,thrshldValue))*(1-thresholdpercentiles(ii)/100);
-    jointExtremeMonovariateProb(:,ii) = (1- cdf('gp',jointextremes(:,ii,2),shapeParam,scaleParam,thrshldValue))*(npeak/nSample);
+    gpdCDFCopula(:,ii) = 1 - (1 - gpdCdf)*(npeak/nSample);
+
+    % monovarProbJointExtr is the probabilities that would be used for
+    % assessment of sample probabilities
+    monovarProbJointExtr(:,ii) = gpdCdf; 
 
 end
 
@@ -120,20 +183,22 @@ end
 copulaParam.family = copulaFamily;
 copulaParam.familyId = tsCopulaGetFamilyId(copulaFamily);
 copulaParam.nSeries = nSeries;
+
 switch timeVaryingCopula
     case false
-        if strcmpi(copulaFamily, 'Gaussian')
+        %apply a stationary copula
+        if strcmpi(copulaFamily, 'gaussian')
             % normal copula
-            rho = copulafit(copulaFamily, jointExtremeMonovariateProb);
+            rho = copulafit(copulaFamily, gpdCDFCopula);
             copulaParam.rho = rho;
         elseif strcmpi(copulaFamily, 't')
             % t copula
-            [rho, nu] = copulafit(copulaFamily, jointExtremeMonovariateProb);
+            [rho, nu] = copulafit(copulaFamily, gpdCDFCopula);
             copulaParam.rho = rho;
             copulaParam.nu = nu;
-        elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
-            % one of the archimedean copulas
-            [cprm, cci] = copulafit(copulaFamily, jointExtremeMonovariateProb);
+        elseif strcmpi(copulaFamily, 'gumbel') || strcmpi(copulaFamily, 'clayton') || strcmpi(copulaFamily, 'frank')
+            % one of the archimedean copulas supported by MATLAB , where only bivariate case is supported by MATLAB copulafit function
+            [cprm, cci] = copulafit(copulaFamily, gpdCDFCopula);
             copulaParam.rho = cprm;
             copulaParam.nu = cci;
         else
@@ -141,31 +206,52 @@ switch timeVaryingCopula
         end
 
     case true
-
-        timePeaks=jointextremes(:,:,1);
-        rhoTotal={};
-        nuTotal={};
-        cprmTotal={};cciTotal={};
-        dt = tsEvaGetTimeStep(inputtimestamps);
-        timeWindowIndices = round(timewindow/dt);
-        timeSlideIndices = round(timeSlide/dt);
-        beginIndex=0;
+        %apply a non-stationary copula
         jointExtremeMonovariateProbCell={};
+        monovarProbJointExtrCell={};
         inputtimestampsWindowCell={};
         IndexWindowCell={};
         timePeaksCell={};
+        rhoTotal={};
+        nuTotal={};
+        cprmTotal={};cciTotal={};
+        beginIndex=0;
+
+        timePeaks=jointextremes(:,:,1);
+        dt = tsEvaGetTimeStep(inputtimestamps);
+        timeWindowIndices = round(timewindow/dt);
+        timeSlideIndices = round(timeSlide/dt);
 
         while beginIndex+timeWindowIndices<=length(inputtimestamps)
-
-            inputtimestampsWindow=inputtimestamps(beginIndex+1:beginIndex+timeWindowIndices,:);
-            [Lia,Locb] = ismember(timePeaks,inputtimestampsWindow);
+             % select portion that falls in each window and store it in a cell array
+            % for the last timeWindow, the duration is changed to cover
+            % until the end of the inputtimestamps (this ensures no peak is
+            % left behind)
+            if beginIndex+timeSlideIndices+timeWindowIndices>length(inputtimestamps)
+                inputtimestampsWindow=inputtimestamps(beginIndex+1:end,:);
+            else
+                inputtimestampsWindow=inputtimestamps(beginIndex+1:beginIndex+timeWindowIndices,:);
+            end
+           
             inputtimestampsWindowCell=[inputtimestampsWindowCell,inputtimestampsWindow];
+            % of all joint peaks, find ones that fall within the time
+            % window, use this index to also select probabilities that
+            % belong to this window
+            [Lia,~] = ismember(timePeaks,inputtimestampsWindow);
             WindowIndex=all(Lia,2);
-            [~,Locb2] = ismember(timePeaks(WindowIndex,:),inputtimestamps);
             timePeaksCell=[timePeaksCell,timePeaks(WindowIndex,:)];
-            IndexWindowCell=[IndexWindowCell,Locb2];
-            jointExtremeMonovariateProbWindow=jointExtremeMonovariateProb(WindowIndex,:);
+            jointExtremeMonovariateProbWindow=gpdCDFCopula(WindowIndex,:);%jointExtremeMonovariateProb(WindowIndex,:);
             jointExtremeMonovariateProbCell=[jointExtremeMonovariateProbCell,jointExtremeMonovariateProbWindow];
+            
+            %keep probability of extremes (i.e., CDF in an unscaled manner)
+            monovarProbJointExtrWindow=monovarProbJointExtr(WindowIndex,:);
+            monovarProbJointExtrCell=[monovarProbJointExtrCell,monovarProbJointExtrWindow];
+            % global indexing of the window in the inputtimestamps
+            [~,Locb2] = ismember(timePeaks(WindowIndex,:),inputtimestamps);
+
+            IndexWindowCell=[IndexWindowCell,Locb2];
+
+            %increase the beginIndex which controls the while loop
             beginIndex=beginIndex+timeSlideIndices;
 
             if strcmpi(copulaFamily, 'Gaussian')
@@ -198,50 +284,26 @@ switch timeVaryingCopula
 
 end
 
-trendSeries=cellfun(@(x) x{2}.trendSeries,marginalAnalysis,'UniformOutput',0);
-stdDevSeries=cellfun(@(x) x{2}.stdDevSeries,marginalAnalysis,'UniformOutput',0);
-thresholdPotNS=cellfun(@(x,y,z) y*z+x,trendSeries,stdDevSeries,mat2cell(thresholdsStationary,1,ones(1,length(thresholdsStationary))),'UniformOutput',0);
-
-jointExtremes=jointextremes(:,:,2);
-jointExtremesNS=[];
-
-for ii=1:size(jointExtremes,2)
-    jointExtremesNS=[jointExtremesNS,inputtimeseries(jointExtremeIndices(:,ii),ii)];
-end
 
 switch timeVaryingCopula
     case false
-
+ 
         CopulaAnalysis.copulaParam=copulaParam;
-        CopulaAnalysis.jointExtremeMonovariateProb=jointExtremeMonovariateProb;
+        CopulaAnalysis.jointExtremeMonovariateProb=gpdCDFCopula;
         CopulaAnalysis.marginalAnalysis=marginalAnalysis;
-        CopulaAnalysis.jointExtremes=jointExtremesNS;
-        timeIndex=1;
-        jointExtremeMonovariateProbNS=[];
-        for ijx=1:size(marginalAnalysis,2)
-
-            nonStatEvaParams =marginalAnalysis{ijx}{1};
-            % timeIndex=length(nonStatEvaParams(2).parameters.threshold);
-            thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
-            scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
-            shapeParam = nonStatEvaParams(2).parameters.epsilon;
-            npeak=nonStatEvaParams(2).parameters.nPeaks;
-            nSample=size(inputtimeseries, 1);
-            jointExtremeMonovariateProbNS(:,ijx)=1-((1-cdf('gp',jointExtremesNS(:,ijx),shapeParam, scaleParam, thrshld))*(npeak/nSample));
-    
-
-        end
+        CopulaAnalysis.jointExtremes=samplingAnalysis.jointExtremesNS;
         CopulaAnalysis.jointExtremeTimeStamps=jointextremes(:,:,1);
-        CopulaAnalysis.jointExtremeIndices=jointExtremeIndices;
-        CopulaAnalysis.peakIndicesAll=peakIndicesAll;
-        CopulaAnalysis.stationaryThresholdSampling=thresholdsStationary;
-        CopulaAnalysis.thresholdPotNS=[thresholdPotNS{:}];
+        CopulaAnalysis.jointExtremeIndices=samplingAnalysis.jointExtremeIndices;
+        CopulaAnalysis.peakIndicesAll=samplingAnalysis.peakIndicesAll;
+        CopulaAnalysis.stationaryThresholdSampling=samplingAnalysis.thresholdsC;
+        CopulaAnalysis.thresholdPotNS=[samplingAnalysis.thresholdsNonStation{:}];
         CopulaAnalysis.methodology=marginalDistributions;
         CopulaAnalysis.timeVaryingCopula=timeVaryingCopula;
-        CopulaAnalysis.jointExtremeMonovariateProbNS=jointExtremeMonovariateProbNS;
+        CopulaAnalysis.jointExtremeMonovariateProbNS=monovarProbJointExtr;
     case true
 
         jointExtremesNS={};
+       
         for ij=1:size(timePeaksCell,2)
             Indices=IndexWindowCell{ij};
             temporarySeries=[];
@@ -250,6 +312,7 @@ switch timeVaryingCopula
 
             end
             jointExtremesNS=[jointExtremesNS,temporarySeries];
+          
         end
 
         CopulaAnalysis.copulaParam=copulaParam;
@@ -258,12 +321,12 @@ switch timeVaryingCopula
         CopulaAnalysis.jointExtremes=jointExtremesNS;
         CopulaAnalysis.jointExtremeTimeStamps=timePeaksCell;
         CopulaAnalysis.jointExtremeIndices=IndexWindowCell;
-        CopulaAnalysis.peakIndicesAll=peakIndicesAll;
-        CopulaAnalysis.stationaryThresholdSampling=thresholdsStationary;
-        CopulaAnalysis.thresholdPotNS=[thresholdPotNS{:}];
+        CopulaAnalysis.peakIndicesAll=samplingAnalysis.peakIndicesAll;
+        CopulaAnalysis.stationaryThresholdSampling=samplingAnalysis.thresholdsC;
+        CopulaAnalysis.thresholdPotNS=[samplingAnalysis.thresholdsNonStation{:}];%[thresholdPotNS{:}];
         CopulaAnalysis.methodology=marginalDistributions;
         CopulaAnalysis.timeVaryingCopula=timeVaryingCopula;
-      
+        CopulaAnalysis.jointExtremeMonovariateProbNS=monovarProbJointExtrCell;
 end
 
 
