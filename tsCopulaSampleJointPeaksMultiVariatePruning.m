@@ -97,7 +97,9 @@ numVar=size(inputtimeseries,2);         %number of variables
 dt = tsEvaGetTimeStep(inputtimestamps); %time diff
 
 inputtimeseriesCell=mat2cell(inputtimeseries,size(inputtimeseries,1),ones(1,size(inputtimeseries,2)));
-thresholdsArray=cellfun(@(x,y) prctile(x,y),inputtimeseriesCell,num2cell(samplingThresholdPrct(1:numVar)));
+thresholdsArray=cellfun(@(x,y) prctile(x,y),...
+    inputtimeseriesCell,...
+    transpose(num2cell(samplingThresholdPrct(1:numVar))) );
 
 minPeakDistanceMonovarSampling = minPeakDistanceInDaysMonovarSampling/dt;
 

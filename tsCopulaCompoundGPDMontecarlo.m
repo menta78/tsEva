@@ -105,21 +105,16 @@ switch timeVaryingCopula
             %if no timeindex is set by the user use time-index to assess
             % non-stationarity parameters at half the length of the time series
             nonStatEvaParams = marginalAnalysis{ivar}{1};
+            statTransData = marginalAnalysis{ivar}{2};
 
             if ~any(strcmpi(varargin,'timeindex'))
                 timeIndex=round(length(nonStatEvaParams(2).parameters.threshold)/2);
             end
 
-            thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
-            % thrshld = thresholdValues(ivar);
-            scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
-            shapeParam = nonStatEvaParams(2).parameters.epsilon;
-
-
             % transfrom probabilities to data scale using inverse sampling law
             % no scaling is needed since thrshld parameter already transforms data with
             % lowest probability corresponding with thrshld value
-            resampleLevel(:,ivar)=gpinv(resampleProb(:,ivar),shapeParam, scaleParam, thrshld);
+            resampleLevel(:,ivar) = computeResampledLevels(resampleProb(:,ivar), nonStatEvaParams, timeIndex);
 
         end
     case true
@@ -137,6 +132,7 @@ switch timeVaryingCopula
             maxTime=jointExtremeTimeStampsCellMax{ij};
             for ivar = 1:nSeries
                 nonStatEvaParams = marginalAnalysis{ivar}{1};
+                statTransData = marginalAnalysis{ivar}{2};
 
                 if ~any(strcmpi(varargin,'timeindex'))
                     minTimex=minTime(ivar);
@@ -145,11 +141,8 @@ switch timeVaryingCopula
                     iix=find(timeStamps>=minTimex&timeStamps<=maxTimex);
                     timeIndex=iix(round(length(iix)/2));
                 end
-                thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
-                scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
-                shapeParam = nonStatEvaParams(2).parameters.epsilon;
 
-                resampleLevel(:,ivar)=gpinv(resampleProbTemp(:,ivar),shapeParam, scaleParam, thrshld);
+                resampleLevel(:,ivar) = computeResampledLevels(resampleProbTemp(:,ivar), nonStatEvaParams, timeIndex);
 
             end
             resampleLevelCell=[resampleLevelCell,resampleLevel];
@@ -163,3 +156,15 @@ end
 copulaAnalysis.resampleLevel=resampleLevel;
 
 copulaAnalysis.resampleProb=resampleProb;
+end
+
+
+function resampleLevels = computeResampledLevels(resampleProb, nonStatEvaParams, timeIndex)
+
+    thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
+    scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
+    shapeParam = nonStatEvaParams(2).parameters.epsilon;
+    resampleLevels = gpinv(resampleProb, shapeParam, scaleParam, thrshld);
+
+end
+

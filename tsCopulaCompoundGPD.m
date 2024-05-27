@@ -44,8 +44,6 @@ function [CopulaAnalysis] = tsCopulaCompoundGPD(inputtimestamps,inputtimeseries,
 %                                              ;type  help tsEvaNonStationary
 %  ciPercentile                              - 1d array of length n, indicating percentile level used for assessing amplitude of the confidence interval 
 %                                              type help tsEvaNonStationary
-%  minPeakDistanceInDaysMonovarDistribution  - 1d array of length n, used as an input parameter for function tsEvaNonStationary for obtainining monovariate peaks 
-%                                              type help tsEvaNonStationary
 %  timeSlide                                 - a scalar parameter (in number of days) where each timewindow is slided throughout the duration of inputtimeseries
 %                                              to calculate time-varying copula; default value is 365
 
@@ -83,12 +81,10 @@ args.timewindow = 100*365; %long enough that in most cases a time-invariant copu
 args.potPercentiles = {99,99}; %for bivariate case; 
 args.transfType = 'trendCiPercentile';
 args.ciPercentile = [99,99];
-args.minPeakDistanceInDaysMonovarDistribution = [3,3];%minPeakDistanceInDays
-args.timeSlide=3*365;
-args.samplingThresholdPrct=[99,99];%thresholdpercentiles
+args.timeSlide=365.25; % 1 year
 args.minPeakDistanceInDaysMonovarSampling=[3,3];%minpeakdistanceindays
 args.maxPeakDistanceInDaysMultivarSampling=3;%maxdistancemultivariatepeaksindays
-args.peakType='allExceedThreshold';
+args.peakType='anyexceedthreshold';
 % parsing of input parameters, overrides if different with the default
 args = tsEasyParseNamedArgs(varargin, args);
 copulaFamily = args.copulaFamily;
@@ -97,9 +93,7 @@ timewindow = args.timewindow;
 potPercentiles = args.potPercentiles;
 transfType = args.transfType;
 ciPercentile = args.ciPercentile;
-minPeakDistanceInDaysMonovarDistribution=args.minPeakDistanceInDaysMonovarDistribution;
 timeSlide=args.timeSlide;
-samplingThresholdPrct=args.samplingThresholdPrct;%thresholdpercentiles
 minPeakDistanceInDaysMonovarSampling=args.minPeakDistanceInDaysMonovarSampling;%minpeakdistanceindays
 maxPeakDistanceInDaysMultivarSampling=args.maxPeakDistanceInDaysMultivarSampling;%maxdistancemultivariatepeaksindays
 peakType=args.peakType;
@@ -118,12 +112,14 @@ end
 
 % perform transformation (from non-stationary to stationary) and obtain
 % marginal distribution data
+samplingThresholdPrct = zeros(nSeries, 1);
 for ii = 1:nSeries
 
     [nonStatEvaParams, statTransfData] = tsEvaNonStationary([inputtimestamps,inputtimeseries(:,ii)],timewindow,'transfType',transfType,...
-        'ciPercentile',ciPercentile(ii),'potPercentiles',potPercentiles{ii},'minPeakDistanceInDays',minPeakDistanceInDaysMonovarDistribution(ii));
+        'ciPercentile',ciPercentile(ii),'potPercentiles',potPercentiles{ii},'minPeakDistanceInDays',minPeakDistanceInDaysMonovarSampling(ii));
 
     marginalAnalysis{ii} = {nonStatEvaParams, statTransfData};
+    samplingThresholdPrct(ii) = nonStatEvaParams(2).parameters.percentile;
 end
 
 
@@ -153,7 +149,6 @@ elseif strcmpi(peakType,'allexceedthreshold')
 end
 %pre-allocation
 gpdCDFCopula = nan(size(jointextremes(:,:,1)));
-monovarProbJointExtr = nan(size(jointextremes(:,:,1)));
 
 for ii = 1:nSeries
     nonStatEvaParams = marginalAnalysis{ii}{1};
@@ -161,22 +156,10 @@ for ii = 1:nSeries
     shapeParam = nonStatEvaParams(2).stationaryParams.parameters(2);
     scaleParam = nonStatEvaParams(2).stationaryParams.parameters(1);
     thrshldValue = nonStatEvaParams(2).stationaryParams.parameters(3);
-    npeak=nonStatEvaParams(2).parameters.nPeaks;
-    nSample=size(inputtimeseries, 1);
-
     
     gpdCdf=((cdf('gp',jointextremes(:,ii,2),shapeParam, scaleParam, thrshldValue)));
-    
-    %gpdCDFCopula is the probabilities that would be used for copula
-    %estimation that are scaled appropriately in accordance with number of
-    %peaks (see Coles, 2001, pp. 81-82)
-
-    gpdCDFCopula(:,ii) = 1 - (1 - gpdCdf)*(npeak/nSample);
-
-    % monovarProbJointExtr is the probabilities that would be used for
-    % assessment of sample probabilities
-    monovarProbJointExtr(:,ii) = gpdCdf; 
-
+    gpdCdf(gpdCdf == 0) = 1e-7;
+    gpdCDFCopula(:,ii) = gpdCdf;
 end
 
 % estimating the copula
@@ -244,7 +227,7 @@ switch timeVaryingCopula
             jointExtremeMonovariateProbCell=[jointExtremeMonovariateProbCell,jointExtremeMonovariateProbWindow];
             
             %keep probability of extremes (i.e., CDF in an unscaled manner)
-            monovarProbJointExtrWindow=monovarProbJointExtr(WindowIndex,:);
+            monovarProbJointExtrWindow=gpdCDFCopula(WindowIndex,:);
             monovarProbJointExtrCell=[monovarProbJointExtrCell,monovarProbJointExtrWindow];
             % global indexing of the window in the inputtimestamps
             [~,Locb2] = ismember(timePeaks(WindowIndex,:),inputtimestamps);
@@ -299,7 +282,7 @@ switch timeVaryingCopula
         CopulaAnalysis.thresholdPotNS=[samplingAnalysis.thresholdsNonStation{:}];
         CopulaAnalysis.methodology=marginalDistributions;
         CopulaAnalysis.timeVaryingCopula=timeVaryingCopula;
-        CopulaAnalysis.jointExtremeMonovariateProbNS=monovarProbJointExtr;
+        CopulaAnalysis.jointExtremeMonovariateProbNS=gpdCDFCopula;
     case true
 
         jointExtremesNS={};
