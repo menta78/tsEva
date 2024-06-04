@@ -176,12 +176,11 @@ for combinedPeaksCount=1:length(combinedPeaksTime)-1
 
     % among the compound peaks, first we check if at least one combination
     % matches definition of a joint peak event; if two or more events match
-    % the definition of a joint peak event the one with the largest mean
-    % value is kept; if no combination matches with definition of a joint
-    % peak event, we then search for combinations that match with
-    % definition of a joint non-peak event; if two or more events match
-    % with the definition of a joint non-peak event, the one having the
-    % largest mean value is kept;
+    % the definition of a joint peak event, all are kept; if no combination
+    % matches with definition of a joint peak event, we then search for
+    % combinations that match with definition of a joint non-peak event; if
+    % two or more events match with the definition of a joint non-peak
+    % event, all are kept;
     thresholdsArrayReGrouped=thresholdsArray(compoundPeaksId);
     if any(all(compoundPeaks>=thresholdsArrayReGrouped,2)) 
         indextojointpeaks=find((all(compoundPeaks>=thresholdsArrayReGrouped,2)));
@@ -189,8 +188,9 @@ for combinedPeaksCount=1:length(combinedPeaksTime)-1
             indexJointPeaks=[indexJointPeaks,indicesCombination(indextojointpeaks,:)];
         elseif size(indextojointpeaks,1)>1 
             indjointpeaks=indicesCombination(indextojointpeaks,:);
-            [~,maxindex]=max(mean(compoundPeaks(indextojointpeaks,:),2)); 
-            indexJointPeaks=[indexJointPeaks,indjointpeaks(maxindex,:)];
+            indicesJointPeaksT=indjointpeaks';
+            indicesJointPeaksT=indicesJointPeaksT(:);
+            indexJointPeaks=[indexJointPeaks,indicesJointPeaksT'];
         end
     elseif any(any(compoundPeaks>=thresholdsArrayReGrouped,2))  
         indicesToJointNonPeaks=find((any(compoundPeaks>=thresholdsArrayReGrouped,2)));
@@ -198,8 +198,9 @@ for combinedPeaksCount=1:length(combinedPeaksTime)-1
             indexJointNonPeaks=[indexJointNonPeaks,indicesCombination(indicesToJointNonPeaks,:)];
         elseif size(indicesToJointNonPeaks,1)>1 
             indicesJointNonPeaks=indicesCombination(indicesToJointNonPeaks,:);
-            [~,maxIndex]=max(mean(compoundPeaks(indicesToJointNonPeaks,:),2)); 
-            indexJointNonPeaks=[indexJointNonPeaks,indicesJointNonPeaks(maxIndex,:)];
+            indicesJointNonPeaksT=indicesJointNonPeaks';
+            indicesJointNonPeaksT=indicesJointNonPeaksT(:);
+            indexJointNonPeaks=[indexJointNonPeaks,indicesJointNonPeaksT'];
         end
     end
 
@@ -300,8 +301,11 @@ indexJointPeaksColumnWise=jointIdTotal(idPeaksArtificial==1,:);
 indexJointNonPeaksColumnWise=jointIdTotal(idPeaksArtificial==2,:);
 
 jointExtremeIndices=combinedPeaksIndex(indexJointPeaksColumnWise);
+if size(combinedPeaksIndex(indexJointNonPeaksColumnWise),2)~=1
 peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)];
-
+else
+peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)'];
+end
 disp([num2str(((size((jointPeaksTimeColumnWise),1)))),' ','Compound peak events found'])
 disp([num2str(((size((jointNonPeaksTimeColumnWise),1)))),' ','Compound non-peak events found'])
 
