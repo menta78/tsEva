@@ -53,6 +53,7 @@ timeAndSeries3x=interp1(tt(ig2,1),coastalData1(ig2,1),tn);
 timeAndSeries3=[tn',timeAndSeries3x'];
 
 
+
 %1     6    11    16    21
 % timeAndSeries1=[tt,xx(:,11)]; 
 % timeAndSeries2=[tt,xx(:,12)];
@@ -62,12 +63,12 @@ samplingThresholdPrct=[95,99]; %percentile thresholds in each series for samplin
 ciPercentile = [99,99];  %to be used in tsEvaNonStationary
 potPercentiles=[{95},{99}]; %o be used in tsEvaNonStationary; better be set to only one value but a range is also possible
 
-timeWindow = 365*80; %if time window (in days) is equal or larger than
+timeWindow = 365*40; %if time window (in days) is equal or larger than
 % length of time series, copula will be of stationary type; a very small
 % time window may result in error (e.g., less than 3 years)
 
  minPeakDistanceInDaysMonovarSampling=[3,3];    %minimum distance between monovariate peaks of each series
- maxPeakDistanceInDaysMultivarSampling=[90]; %can either take one value or has to have a format and size matching size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in trivariate case, and so on
+ maxPeakDistanceInDaysMultivarSampling=[28]; %can either take one value or has to have a format and size matching size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in trivariate case, and so on
 minPeakDistanceInDaysMonovarDistribution=[3,3]; %used for sampling peaks inside tsevavnonstationary
 
 [copulaAnalysis] = tsCopulaCompoundGPD(timeAndSeries1(:,1), ...
@@ -75,7 +76,7 @@ minPeakDistanceInDaysMonovarDistribution=[3,3]; %used for sampling peaks inside 
     'samplingThresholdPrct', samplingThresholdPrct,...
     'minPeakDistanceInDaysMonovarSampling',minPeakDistanceInDaysMonovarSampling, ...
     'maxPeakDistanceInDaysMultivarSampling',maxPeakDistanceInDaysMultivarSampling, ...
-    'copulaFamily','gumbel',...
+    'copulaFamily','clayton',...
     'transfType','trendlinear','timeWindow',timeWindow,...
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
     'minPeakDistanceInDaysMonovarDistribution',minPeakDistanceInDaysMonovarDistribution,...
@@ -88,7 +89,7 @@ minPeakDistanceInDaysMonovarDistribution=[3,3]; %used for sampling peaks inside 
 
 [gofStatistics] = tsCopulaUncertainty(copulaAnalysis);
 
-    figHnd = tsCopulaTimeVaryingPlot(copulaAnalysis, ...
+    figHnd = tsCopulaTimeVaryingPlot(copulaAnalysis,gofStatistics, ...
         'xlbl', 'Liane river discharge (m^3/s)', 'ylbl', 'SSH (m) off liane river');
       [copulaAnalysis,figHnd2]=tsCopulaJointReturnPeriod(copulaAnalysis,'plotType','OR',...
           'xlbl', 'Liane river discharge (m^3/s)', 'ylbl', 'SSH (m) off liane river');

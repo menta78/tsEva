@@ -1,4 +1,4 @@
-function [handles] = tsCopulaTimeVaryingPlot(copulaAnalysis, varargin)
+function [handles] = tsCopulaTimeVaryingPlot(copulaAnalysis, gofStatistics,varargin)
 
 %tsCopulaTimeVaryingPlot plotting joint peaks and Monte-Carlo resampled
 %values
@@ -12,7 +12,8 @@ function [handles] = tsCopulaTimeVaryingPlot(copulaAnalysis, varargin)
 %  copulaAnalysis          - a variable of type structure provided as the 
 %                            output of tsCopulaCompoundGPD or
 %                            tsCopulaCompoundGPDMontecarlo functions
-
+%  gofStatistics           - a variable of type structure provided as the
+%                             output of tsCopulaUncertainty function 
 
 
 % output:
@@ -94,6 +95,15 @@ if iscell(copulaAnalysis.jointExtremes) %time-varying copula
     resampleLevel=copulaAnalysis.resampleLevel;
     inputtimestampsWindowCell=copulaAnalysis.copulaParam.inputtimestampsWindowCell;
 
+    %extract gof information
+    aicSample=gofStatistics.aicSample;
+    bicSample=gofStatistics.bicSample;
+    corrKendallSampleDelta=gofStatistics.corrKendallSampleDelta;
+    corrPearsonSampleDelta=gofStatistics.corrPearsonSampleDelta;
+    corrSpearmanSampleDelta=gofStatistics.corrSpearmanSampleDelta;
+    llSample=gofStatistics.llSample;
+    sncSample=gofStatistics.sncSample;
+
     %calculate limits of x and y axes
     minXYAxes=zeros(1,numVar);
     maxXYAxes=zeros(1,numVar);
@@ -152,6 +162,8 @@ if iscell(copulaAnalysis.jointExtremes) %time-varying copula
                 hold on;
                 ymaxSctr = scatter(yMaxLevel{1}(:,1), yMaxLevel{1}(:,2), 'markerfacecolor', 'r');
                 yMaxLevel=yMaxLevel(2:end);
+
+             
                 %annotate correlation parameter of the copula and date of each time window
                 if strcmpi(copulaAnalysis.copulaParam.family,'Gaussian') ||strcmpi(copulaAnalysis.copulaParam.family,'t')
                     nr=round(Rho{1}(2)*1000)/1000;
@@ -179,6 +191,22 @@ if iscell(copulaAnalysis.jointExtremes) %time-varying copula
 
                 xlim(minmaxXX)
                 ylim(minmaxYY)
+                text(0.65,0.1,['AIC = ',num2str(round(aicSample(1)*10)/10)],'units','normalized')
+                aicSample=aicSample(2:end);
+                text(0.65,0.06,['BIC = ',num2str(round(bicSample(1)*10)/10)],'units','normalized')
+                bicSample=bicSample(2:end);
+                text(0.65,0.02,['ll = ',num2str(round(llSample(1)*10)/10)],'units','normalized')
+                llSample=llSample(2:end);
+                text(0.65,0.14,['SnC = ',num2str(round(sncSample(1)*100)/100)],'units','normalized')
+                sncSample=sncSample(2:end);
+                text(0.40,0.26,[' | \tau_{Mn} - \tau_{Sm} |_{K}= ',sprintf('%.1E',corrKendallSampleDelta(1))],'units','normalized','interpreter','tex')
+                corrKendallSampleDelta=corrKendallSampleDelta(2:end);
+                text(0.40,0.22,[' | \tau_{Mn} - \tau_{Sm} |_{P}= ',sprintf('%.1E',corrPearsonSampleDelta(1))],'units','normalized','interpreter','tex')
+                corrPearsonSampleDelta=corrPearsonSampleDelta(2:end);
+                text(0.40,0.18,[' | \tau_{Mn} - \tau_{Sm} |_{S}= ',sprintf('%.1E',corrSpearmanSampleDelta(1))],'units','normalized','interpreter','tex')
+                corrSpearmanSampleDelta=corrSpearmanSampleDelta(2:end);
+ 
+ 
             end
         end
 
@@ -208,6 +236,13 @@ else %stationary copula
     yMaxLevel=copulaAnalysis.jointExtremes;
     Rho=copulaAnalysis.copulaParam.rho;
 
+    aicSample=gofStatistics.aicSample;
+    bicSample=gofStatistics.bicSample;
+    corrKendallSampleDelta=gofStatistics.corrKendallSampleDelta;
+    corrPearsonSampleDelta=gofStatistics.corrPearsonSampleDelta;
+    corrSpearmanSampleDelta=gofStatistics.corrSpearmanSampleDelta;
+    llSample=gofStatistics.llSample;
+    sncSample=gofStatistics.sncSample;
     % set-up figure dimensions
     b0=20;
     l0=20;
@@ -254,6 +289,22 @@ else %stationary copula
     grid on;
     ax = gca;
     ax.FontSize = fontSize;
+
+
+    text(0.65,0.1,['AIC = ',num2str(round(aicSample(1)*10)/10)],'units','normalized')
+    aicSample=aicSample(2:end);
+    text(0.65,0.06,['BIC = ',num2str(round(bicSample(1)*10)/10)],'units','normalized')
+    bicSample=bicSample(2:end);
+    text(0.65,0.02,['ll = ',num2str(round(llSample(1)*10)/10)],'units','normalized')
+    llSample=llSample(2:end);
+    text(0.65,0.14,['SnC = ',num2str(round(sncSample(1)*100)/100)],'units','normalized')
+    sncSample=sncSample(2:end);
+    text(0.65,0.26,[' | \tau_{Mn} - \tau_{Sm} |_{K}= ',sprintf('%.1E',corrKendallSampleDelta(1))],'units','normalized','interpreter','tex')
+    corrKendallSampleDelta=corrKendallSampleDelta(2:end);
+    text(0.65,0.22,[' | \tau_{Mn} - \tau_{Sm} |_{P}= ',sprintf('%.1E',corrPearsonSampleDelta(1))],'units','normalized','interpreter','tex')
+    corrPearsonSampleDelta=corrPearsonSampleDelta(2:end);
+    text(0.65,0.18,[' | \tau_{Mn} - \tau_{Sm} |_{S}= ',sprintf('%.1E',corrSpearmanSampleDelta(1))],'units','normalized','interpreter','tex')
+    corrSpearmanSampleDelta=corrSpearmanSampleDelta(2:end);
 
     hFig2=get(gcf,'Children');
 

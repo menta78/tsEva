@@ -132,7 +132,8 @@ statInputTimeSeries=[statInputTimeSeries{:}];
 % it is possible that inputtimestamps changes following application of tsEvaNonStationary
 
 inputtimestamps=cellfun(@(x) x{2}.timeStamps,marginalAnalysis,'UniformOutput',0);
-
+inputtimeseries=cellfun(@(x) x{2}.nonStatSeries,marginalAnalysis,'UniformOutput',0);
+inputtimeseries=[inputtimeseries{:}];
 inputtimestamps=[inputtimestamps{:}];
 inputtimestamps=inputtimestamps(:,1);
 % perform the sampling of stationarized series

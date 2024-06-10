@@ -22,7 +22,7 @@ args.xlbl = 'X';
 args.ylbl = 'Y';
 args.marginalDistributions = "gp";
 args.plotType='AND';
-args.RL=[2,100];
+args.RL=[2,20,50,100,200];
 args.numberofverticalpanels=2;
 args.numberofhorizontalpanels=3;
 
@@ -357,11 +357,13 @@ elseif iscell(PAR) % time-varying copula intended
                 set(axxcell(jk),'NextPlot','add')
                 colormap(axxcell(jk),'jet')
                 cb = colorbar(axxcell(jk),'location','south');
-                if strcmpi(Family,'Gaussian') || strcmpi(Family,'Frank') || strcmpi(Family,'Gumbel') || strcmpi(Family,'Clayton')
+                if strcmpi(Family,'Gaussian')
+                    nr=round(PAR{jk}(2)*100)/100;
+                elseif strcmpi(Family,'Frank') || strcmpi(Family,'Gumbel') || strcmpi(Family,'Clayton')
                     nr=round(PAR{jk}*100)/100;
                 elseif strcmpi(family,'t')
-                    nr=round(PAR{jk}*100)/100;
-                    nr2=round(PAR2{jk}*100)/100;
+                    nr=round(PAR{jk}(2)*100)/100;
+                    nr2=round(PAR2{jk}(2)*100)/100;
                 end
                 t1x=datestr(inputtimestampsWindowCell{jk}(1),'yyyy');
                 t2x=datestr(inputtimestampsWindowCell{jk}(end),'yyyy');

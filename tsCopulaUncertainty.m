@@ -50,20 +50,22 @@ copulaParam=copulaAnalysis.copulaParam;
 
 if iscell(uResampled)
     %time-varying (non-stationary) copula
-    [s1Sample,s2Sample]=cellfun(@(x) size(x),uSample);
-    [s1Monte,~]=cellfun(@(x) size(x),uResampled);
 
+    %calculate size of samples in each each window cell
+    [s1Sample,s2Sample]=cellfun(@(x) size(x),uSample);
+
+    %depending on copula type, calculate copula CDF
     if strcmpi(copulaFamily, 'Gaussian')
         rho=copulaAnalysis.copulaParam.rho;
         yCDFSample=cellfun(@(x,y) copulacdf('Gaussian',x,y),uSample,rho,'UniformOutput',0);
-        yCDFMonte=cellfun(@(x,y) copulacdf('Gaussian',x,y),uResampled,rho,'UniformOutput',0);
+
 
         copulaParam.numParams = s2Sample.*(s2Sample-1) / 2; %number of parameters of a multivariate Gaussian copula
     elseif strcmpi(copulaFamily, 't')
         rho=copulaAnalysis.copulaParam.rho;
         nu=copulaAnalysis.copulaParam.nu;
         yCDFSample=cellfun(@(x,y,z) copulacdf('t',x,y,z),uSample,rho,nu,'UniformOutput',0);
-        yCDFMonte=cellfun(@(x,y,z) copulacdf('t',x,y,z),uResampled,rho,nu,'UniformOutput',0);
+
         copulaParam.numParams = 1 + s2Sample.*(s2Sample-1) / 2;
     elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
         % in MATLAB, d-dimensional Gumbel, Clayton, and Frank copulas have
@@ -72,68 +74,90 @@ if iscell(uResampled)
         alpha=copulaAnalysis.copulaParam.rho;
         copulaFamilyc=repmat({copulaFamily},1,size(uSample,2));
         yCDFSample=cellfun(@(x,y,z) copulacdf(z,x,y),uSample,alpha,copulaFamilyc,'UniformOutput',0);
-        yCDFMonte=cellfun(@(x,y,z) copulacdf(z,x,y),uResampled,alpha,copulaFamilyc,'UniformOutput',0);
+
         copulaParam.numParams = ones(1,size(uSample,2));
     end
-    % else
+
     % Compute the log-likelihood
-
     llSample=cellfun(@(x) sum(log(x)),yCDFSample);
-    llMonte=cellfun(@(x) sum(log(x)),yCDFMonte);
 
-
-    k = copulaParam.numParams;
     % Compute the AIC
+    k = copulaParam.numParams;
     aicSample = -2*llSample + (2*s1Sample.*k)./(s1Sample-k-1);
-    aicMonte = -2*llMonte + (2*s1Monte.*k)./(s1Monte-k-1);
+
     % Compute the BIC
     bicSample = -2*llSample + k.*log(s1Sample);
-    bicMonte = -2*llMonte + k.*log(s1Monte);
-    eSample = tsRosenblattTransform(copulaParam, uSample );
-    eMonte = tsRosenblattTransform(copulaParam, uResampled);
 
     % Compute the SnC statistics - SnC is a measure of the departure
+    % between empirical copula and chosen copula model;
+    % see genest, et al., 2009, equation (9); based on Rosenblatt
+    % transoformation
+    eSample = tsRosenblattTransform(copulaParam, uSample );
+    sncSample=cellfun(@(x) sum((tsEmpirical(x) - prod(x, 2)) .^ 2),eSample,'UniformOutput',1);
 
-    % see genest, et al., 2009, equation (9)
-    sncSample=cellfun(@(x) sum((tsEmpirical(x) - prod(x, 2)) .^ 2),eSample,'UniformOutput',0);
-    sncMonte=cellfun(@(x) sum((tsEmpirical(x) - prod(x, 2)) .^ 2),eMonte,'UniformOutput',0);
 
     % compute a range of correlation parameters; both for the samples and
-    % for the resampled (or monte-carlo) values
+    % for the resampled (or monte-carlo) values; absolute difference
+    % between correlation values derived from samples and correlation
+    % values derived from Monte-Carlo samples is a criteria in assessing
+    % GOF of chosen copula model on samples
 
-    corrKendallSample=cellfun(@(x) corr(x,'type','Kendall'),uSample,'UniformOutput',0);
-    corrSpearmanSample=cellfun(@(x) corr(x,'type','Spearman'),uSample,'UniformOutput',0);
-    corrPearsonSample=cellfun(@(x) corr(x,'type','Pearson'),uSample,'UniformOutput',0);
+    nVar=copulaAnalysis.copulaParam.nSeries;
+    idNonDiag=repmat({eye(nVar,nVar)},1,size(uSample,2));
+
+    [corrKendallSample,~]=cellfun(@(x)corr(x,'type','Kendall'),uSample,'UniformOutput',0);
+    [corrKendallSample,ia,~]=cellfun(@(x,y) unique(x(~y),'stable'),corrKendallSample,idNonDiag,'UniformOutput',0);
+
+    [corrSpearmanSample,~]=cellfun(@(x) corr(x,'type','Spearman'),uSample,'UniformOutput',0);
+    [corrSpearmanSample]=cellfun(@(x,y) x(~y),corrSpearmanSample,idNonDiag,'UniformOutput',0);
+    corrSpearmanSample=cellfun(@(x,y) x(y),corrSpearmanSample,ia,'UniformOutput',0);
+
+    [corrPearsonSample,~]=cellfun(@(x) corr(x,'type','Pearson'),uSample,'UniformOutput',0);
+    [corrPearsonSample]=cellfun(@(x,y) x(~y),corrPearsonSample,idNonDiag,'UniformOutput',0);
+    corrPearsonSample=cellfun(@(x,y) x(y),corrPearsonSample,ia,'UniformOutput',0);
+
+
 
     corrKendallMonte=cellfun(@(x) corr(x,'type','Kendall'),uResampled,'UniformOutput',0);
+    [corrKendallMonte]=cellfun(@(x,y) x(~y),corrKendallMonte,idNonDiag,'UniformOutput',0);
+    corrKendallMonte=cellfun(@(x,y) x(y),corrKendallMonte,ia,'UniformOutput',0);
+
     corrSpearmanMonte=cellfun(@(x) corr(x,'type','Spearman'),uResampled,'UniformOutput',0);
+    [corrSpearmanMonte]=cellfun(@(x,y) x(~y),corrSpearmanMonte,idNonDiag,'UniformOutput',0);
+    corrSpearmanMonte=cellfun(@(x,y) x(y),corrSpearmanMonte,ia,'UniformOutput',0);
+
     corrPearsonMonte=cellfun(@(x) corr(x,'type','Pearson'),uResampled,'UniformOutput',0);
+    [corrPearsonMonte]=cellfun(@(x,y) x(~y),corrPearsonMonte,idNonDiag,'UniformOutput',0);
+    corrPearsonMonte=cellfun(@(x,y) x(y),corrPearsonMonte,ia,'UniformOutput',0);
+
+
+
+
+    kendallDelta=cellfun(@(x,y) abs(x-y),corrKendallSample,corrKendallMonte,'UniformOutput',1);
+    spearmanDelta=cellfun(@(x,y) abs(x-y),corrSpearmanSample,corrSpearmanMonte,'UniformOutput',1);
+
+    pearsonDelta=cellfun(@(x,y) abs(x-y),corrPearsonSample,corrPearsonMonte,'UniformOutput',1);
 
     gofStatistics.sncSample=sncSample;
     gofStatistics.aicSample=aicSample;
     gofStatistics.bicSample=bicSample;
     gofStatistics.llSample=llSample;
-    gofStatistics.sncMonte=sncMonte;
-    gofStatistics.aicMonte=aicMonte;
-    gofStatistics.bicMonte=bicMonte;
-    gofStatistics.llMonte=llMonte;
-    gofStatistics.corrKendallSample=corrKendallSample;
-    gofStatistics.corrSpearmanSample=corrSpearmanSample;
-    gofStatistics.corrPearsonSample=corrPearsonSample;
-    gofStatistics.corrKendallMonte=corrKendallMonte;
-    gofStatistics.corrSpearmanMonte=corrSpearmanMonte;
-    gofStatistics.corrPearsonMonte=corrPearsonMonte;
+
+    gofStatistics.corrKendallSampleDelta=kendallDelta;
+    gofStatistics.corrSpearmanSampleDelta=spearmanDelta;
+    gofStatistics.corrPearsonSampleDelta=pearsonDelta;
+
 
 else
     %stationary copula
 
     [s1Sample,s2Sample]=size(uSample);
-    [S1Monte,~]=size(uResampled);
+    
     if strcmpi(copulaFamily,'Gaussian')
 
         rho=copulaAnalysis.copulaParam.rho;
         yCDFSample=copulacdf('Gaussian',uSample,rho);
-        yCDFMonte=copulacdf('Gaussian',uResampled,rho);
+        
         %number of parameters of a multivariate Gaussian copula
         copulaParam.numParams = s2Sample.*(s2Sample-1) / 2;
 
@@ -142,14 +166,14 @@ else
         rho=copulaAnalysis.copulaParam.rho;
         nu=copulaAnalysis.copulaParam.nu;
         yCDFSample=copulacdf('t',uSample,rho,nu);
-        yCDFMonte=copulacdf('t',uResampled,rho,nu);
+       
         copulaParam.numParams = 1 + s2Sample*(s2Sample-1) / 2;
 
     elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
 
         alpha=copulaAnalysis.copulaParam.rho;
         yCDFSample=copulacdf(copulaFamily,uSample,alpha);
-        yCDFMonte=copulacdf(copulaFamily,uResampled,alpha);
+        
         copulaParam.numParams = 1;
 
     end
@@ -158,21 +182,20 @@ else
 
 
     llSample = sum(log(yCDFSample));
-    llMonte= sum(log(yCDFMonte));
+   
     k = copulaParam.numParams;
 
     % Compute the AIC
     aicSample = -2*llSample + (2*s1Sample*k)/(s1Sample-k-1);
-    aicMonte = -2*llMonte + (2*S1Monte*k)/(S1Monte-k-1);
+   
     % Compute the BIC
     bicSample = -2*llSample + k*log(s1Sample);
-    bicMonte = -2*llMonte + k*log(S1Monte);
-
+   
     %compute SnC (a variant of CvM test Cramer-Von Mises)
     eSample = tsRosenblattTransform(copulaParam, uSample);
-    eMonte = tsRosenblattTransform(copulaParam, uResampled);
+   
     sncSample = sum((tsEmpirical(eSample) - prod(eSample, 2)) .^ 2);
-    sncMonte = sum((tsEmpirical(eMonte) - prod(eMonte, 2)) .^ 2);
+    
 
     corrKendallSample=corr(uSample,'type','Kendall');
     corrSpearmanSample=corr(uSample,'type','Spearman');
@@ -182,19 +205,30 @@ else
     corrPearsonMonte=corr(uResampled,'type','Pearson');
 
     gofStatistics.sncSample=sncSample;
-    gofStatistics.sncMonte=sncMonte;
+    
     gofStatistics.aicSample=aicSample;
-    gofStatistics.aicMonte=aicMonte;
+    
     gofStatistics.bicSample=bicSample;
-    gofStatistics.bicMonte=bicMonte;
+    
     gofStatistics.llSample=llSample;
-    gofStatistics.llMonte=llMonte;
-    gofStatistics.corrKendallSample=corrKendallSample;
-    gofStatistics.corrKendallMonte=corrKendallMonte;
-    gofStatistics.corrSpearmanSample=corrSpearmanSample;
-    gofStatistics.corrSpearmanMonte=corrSpearmanMonte;
-    gofStatistics.corrPearsonSample=corrPearsonSample;
-    gofStatistics.corrPearsonMonte=corrPearsonMonte;
+    
+    kendallDelta=abs(corrKendallSample-corrKendallMonte);
+    spearmanDelta=abs(corrSpearmanSample-corrSpearmanMonte);
+
+    pearsonDelta=abs(corrPearsonSample-corrPearsonMonte);
+
+    nVar=copulaAnalysis.copulaParam.nSeries;
+    idNonDiag=eye(nVar,nVar);
+
+    [kendallDelta,ia,ic]=unique(kendallDelta(~idNonDiag),'stable');
+    gofStatistics.corrKendallSampleDelta=kendallDelta;
+    spearmanDelta=spearmanDelta(~idNonDiag);
+    spearmanDelta=spearmanDelta(ia);
+     pearsonDelta=pearsonDelta(~idNonDiag);
+    pearsonDelta=pearsonDelta(ia);
+    gofStatistics.corrSpearmanSampleDelta=spearmanDelta;
+    gofStatistics.corrPearsonSampleDelta=pearsonDelta;
+
 end
 
 end

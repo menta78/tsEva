@@ -32,12 +32,15 @@ load lorenzodata
 timeAndSeries1=[tt,xx(:,16)]; 
 timeAndSeries2=[tt,xx(:,21)];
 
+% igd=find(tt>=datenum(1978,10,01)&tt<=datenum(1987,08,01));
+% timeAndSeries1=timeAndSeries1(igd,:);
+% timeAndSeries2=timeAndSeries2(igd,:);
 
 samplingThresholdPrct=[99,99]; %percentile thresholds in each series for sampling of data
 ciPercentile = [99,99];  %to be used in tsEvaNonStationary
 potPercentiles=[{99},{99}]; %o be used in tsEvaNonStationary; better be set to only one value but a range is also possible
 
-timeWindow = 365*80; %if time window (in days) is equal or larger than
+timeWindow = 365*40; %if time window (in days) is equal or larger than
 % length of time series, copula will be of stationary type; a very small
 % time window may result in error (e.g., less than 3 years)
 
@@ -50,7 +53,7 @@ minPeakDistanceInDaysMonovarDistribution=[3,3]; %used for sampling peaks inside 
     'samplingThresholdPrct', samplingThresholdPrct,...
     'minPeakDistanceInDaysMonovarSampling',minPeakDistanceInDaysMonovarSampling, ...
     'maxPeakDistanceInDaysMultivarSampling',maxPeakDistanceInDaysMultivarSampling, ...
-    'copulaFamily','gumbel',...
+    'copulaFamily','gaussian',...
     'transfType','trendlinear','timeWindow',timeWindow,...
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
     'minPeakDistanceInDaysMonovarDistribution',minPeakDistanceInDaysMonovarDistribution,...
@@ -59,11 +62,11 @@ minPeakDistanceInDaysMonovarDistribution=[3,3]; %used for sampling peaks inside 
 
 
 [copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
-    'nResample',1000,'timeIndex',213280);
+    'nResample',1000,'timeIndex',length(timeAndSeries2));
 
 [gofStatistics] = tsCopulaUncertainty(copulaAnalysis);
 
-    figHnd = tsCopulaTimeVaryingPlot(copulaAnalysis, ...
+    figHnd = tsCopulaTimeVaryingPlot(copulaAnalysis,gofStatistics,...
         'xlbl', 'SSH onshore (m)', 'ylbl', 'SSH offshore (m)');
       [copulaAnalysis,figHnd2]=tsCopulaJointReturnPeriod(copulaAnalysis,'plotType','OR',...
           'xlbl', 'SSH onshore (m)', 'ylbl', 'SSH offshore (m)');
