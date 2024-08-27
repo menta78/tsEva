@@ -60,7 +60,7 @@ disp('  saving the series plot');
 saveas(hndl{1}, 'seriesTrendLinear.png');    
 
 disp('  plotting the POT and some return levels');
-hndl = tsPlotSeriesGPTRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
+hndl = tsPlotSeriesPotGPDRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
 saveas(hndl{1}, 'PotAndReturnLevelsLinearTrend.png');    
 
 disp('  plotting and saving the 2D GPD graph');
