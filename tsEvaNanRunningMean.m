@@ -1,5 +1,9 @@
 function [ rnmn ] = tsEvaNanRunningMean( series, windowSize )
 
+% at both extremeties of the series, half windowSize is used which
+% gradually increases to reach windowSize; once windowSize is reached,
+% windowSize is rolled throghout the series
+
 minNThreshold = 1;
 
 rnmn = zeros([length(series), 1])*nan;

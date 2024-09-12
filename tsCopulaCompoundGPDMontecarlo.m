@@ -42,13 +42,14 @@ function [copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargi
 
 % setting the default parameters
 
-args.timeIndex = 1; %to activate reading of "timeindex" parameter if set by the user
+args.timeIndex = 'middle'; %to activate reading of "timeindex" parameter if set by the user
 args.nResample=1000;
+
 args = tsEasyParseNamedArgs(varargin, args);
 
 timeIndex = args.timeIndex;
 nResample=args.nResample;
-
+methodology=copulaAnalysis.methodology;
 %obtain some details from the copulaAnalysis input variable
 copulaParam=copulaAnalysis.copulaParam;
 marginalAnalysis=copulaAnalysis.marginalAnalysis;
@@ -61,36 +62,46 @@ timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
 %resampling from the copula function using the copularnd function
 switch timeVaryingCopula
     case false
-        if strcmpi(copulaFamily, 'Gaussian')
+        resampleProb=cell(1,length(copulaFamily));
+        for iFamily=1:length(copulaFamily)
+            if strcmpi(copulaFamily{iFamily}, 'Gaussian')
 
-            resampleProb = copularnd(copulaFamily, copulaParam.rho, nResample);
-        elseif strcmpi(copulaFamily, 't')
-            resampleProb = copularnd(copulaFamily, copulaParam.rho, copulaParam.nu, nResample);
-        elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
-            resampleProb = copularnd(copulaFamily, copulaParam.rho, nResample);
-        else
-            error(['copulaFamily not supported: ' copulaFamily]);
+                resampleProb{iFamily} = copularnd('gaussian', copulaParam.rho{iFamily}, nResample);
+            elseif strcmpi(copulaFamily{iFamily}, 't')
+                resampleProb{iFamily} = copularnd('t', copulaParam.rho{iFamily}, copulaParam.nu{iFamily}, nResample);
+            elseif strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
+                
+                    resampleProb{iFamily} = copularnd(copulaFamily{iFamily}, copulaParam.rho{iFamily}, nResample);
+               
+            else
+                error(['copulaFamily not supported: ' copulaFamily]);
+            end
         end
-
     case true
         %for the case of a time-varying copula
-        resampleProb={};
-        if strcmpi(copulaFamily, 'Gaussian') || strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
-            rhoCell=copulaParam.rho;
-            for ij=1:size(rhoCell,2)
-                resampleProbT = copularnd(copulaFamily, rhoCell{ij}, nResample);
-                resampleProb=[resampleProb,resampleProbT];
-            end
-        elseif strcmpi(copulaFamily, 't')
-            rhoCell=copulaParam.rho;
-            nuCell=copulaParam.nu;
-            for ij=1:size(rhoCell,2)
-                resampleProbT = copularnd(copulaFamily, rhoCell{ij}, nuCell{ij},nResample);
-                resampleProb=[resampleProb,resampleProbT];
+        
+        
+        rhoCell=copulaParam.rho;
+        nuCell=copulaParam.nu;
+        resampleProb=cell(size(rhoCell));
+        for iFamily=1:length(copulaFamily)
+            if strcmpi(copulaFamily{iFamily}, 'Gaussian') || strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
+               
+                for ij=1:size(rhoCell,2)
+                    resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
+                   
+                end
+            elseif strcmpi(copulaFamily{iFamily}, 't')
+                
+                for ij=1:size(rhoCell,2)
+                    resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nuCell{iFamily,ij},nResample);
+                  
+                end
+
+            else
+                error(['copulaFamily not supported: ' copulaFamily{iFamily}]);
             end
 
-        else
-            error(['copulaFamily not supported: ' copulaFamily]);
         end
 end
 
@@ -100,54 +111,75 @@ end
 nSeries = length(marginalAnalysis);
 switch timeVaryingCopula
     case false
-
-        for ivar = 1:nSeries
-            %if no timeindex is set by the user use time-index to assess
-            % non-stationarity parameters at half the length of the time series
-            nonStatEvaParams = marginalAnalysis{ivar}{1};
-            statTransData = marginalAnalysis{ivar}{2};
-
-            if ~any(strcmpi(varargin,'timeindex'))
-                timeIndex=round(length(nonStatEvaParams(2).parameters.threshold)/2);
-            end
-
-            % transfrom probabilities to data scale using inverse sampling law
-            % no scaling is needed since thrshld parameter already transforms data with
-            % lowest probability corresponding with thrshld value
-            resampleLevel(:,ivar) = computeResampledLevels(resampleProb(:,ivar), nonStatEvaParams, timeIndex);
-
-        end
-    case true
-        %in case of a time-varying copula
-        resampleLevelCell={};
-        jointExtremeTimeStampsCell=copulaAnalysis.jointExtremeTimeStamps;
-        jointExtremeTimeStampsCellMin=cellfun(@(x) (min(x)),jointExtremeTimeStampsCell,'UniformOutput',0);
-        jointExtremeTimeStampsCellMax=cellfun(@(x) (max(x)),jointExtremeTimeStampsCell,'UniformOutput',0);
-
-        for ij=1:size(rhoCell,2)
-            resampleLevel=[];
-
-            resampleProbTemp=resampleProb{ij};
-            minTime=jointExtremeTimeStampsCellMin{ij};
-            maxTime=jointExtremeTimeStampsCellMax{ij};
+        resampleLevel=cell(1,length(copulaFamily));
+        for iFamily=1:length(copulaFamily)
             for ivar = 1:nSeries
+                %if no timeindex is set by the user use time-index to assess
+                % non-stationarity parameters at half the length of the time series
                 nonStatEvaParams = marginalAnalysis{ivar}{1};
                 statTransData = marginalAnalysis{ivar}{2};
 
-                if ~any(strcmpi(varargin,'timeindex'))
-                    minTimex=minTime(ivar);
-                    maxTimex=maxTime(ivar);
-                    timeStamps = marginalAnalysis{ivar}{2}.timeStamps;
-                    iix=find(timeStamps>=minTimex&timeStamps<=maxTimex);
-                    timeIndex=iix(round(length(iix)/2));
+                if strcmpi(timeIndex,'first') & ivar==1
+                    timeIndex=1;
+                elseif strcmpi(timeIndex,'last') & ivar==1
+                    timeIndex=(length(nonStatEvaParams(2).parameters.threshold));
+                elseif strcmpi(timeIndex,'middle') & ivar==1
+                    timeIndex=ceil(length(nonStatEvaParams(2).parameters.threshold)/2);
+                elseif isnumeric(timeIndex) & ivar==1
+                    if timeIndex<1 || timeIndex>length(nonStatEvaParams(2).parameters.threshold)
+                        error('timeIndex parameter must be chosen from {"first","last","middle"} or a valid index')
+                    end
                 end
 
-                resampleLevel(:,ivar) = computeResampledLevels(resampleProbTemp(:,ivar), nonStatEvaParams, timeIndex);
+                % transfrom probabilities to data scale using inverse sampling law
+                % no scaling is needed since thrshld parameter already transforms data with
+                % lowest probability corresponding with thrshld value
+                resampleLevel{iFamily}(:,ivar) = computeResampledLevels(resampleProb{iFamily}(:,ivar), nonStatEvaParams, timeIndex,methodology);
 
             end
-            resampleLevelCell=[resampleLevelCell,resampleLevel];
-
         end
+    case true
+        %in case of a time-varying copula
+        resampleLevelCell=cell(size(resampleProb));
+        inputtimestampsWindowCell=copulaParam.inputtimestampsWindowCell;
+        
+
+           timeStamps = marginalAnalysis{1}{2}.timeStamps;
+           timeStampsCell=repmat({timeStamps},1,size(rhoCell,2));
+           iixCell=cellfun(@(x,y) find(x>=min(y)&x<=max(y)),timeStampsCell,inputtimestampsWindowCell,'UniformOutput',0);
+            timeIndexArray=cellfun(@(x) x(round(length(x)/2)),iixCell);
+           if ~any(strcmpi(varargin,'timeindex'))
+               disp('no timeindex set - middle timeindex (for each time-window) selected automatically')
+                          
+           elseif isnumeric(timeIndex)
+            
+               sprintf(['numeric timeindex not accepted in case of \n',...
+                   'a time-varying copula use first last or middle instead\n' ...
+                   'middle timeindex for each time-window selected automatically'])
+           elseif any(strcmpi(varargin,'first'))
+                disp('first timeindex (for each time-window) selected')
+              timeIndexArray=cellfun(@(x) x(1),iixCell);
+           elseif any(strcmpi(varargin,'last'))
+                disp('last timeindex (for each time-window) selected')
+                timeIndexArray=cellfun(@(x) x(end),iixCell);
+           elseif any(strcmpi(varargin,'middle'))
+                disp('middle timeindex (for each time-window) selected')
+           end
+           for ik=1:size(rhoCell,1)
+               for ij=1:size(rhoCell,2)
+                   resampleLevel=[];
+
+                   resampleProbTemp=resampleProb{ik,ij};
+
+                   for ivar = 1:nSeries
+                       nonStatEvaParams = marginalAnalysis{ivar}{1};
+                       resampleLevelCell{ik,ij}(:,ivar) = computeResampledLevels(resampleProbTemp(:,ivar), nonStatEvaParams, timeIndexArray(ij),methodology);
+
+                   end
+                  
+
+               end
+           end
         resampleLevel=resampleLevelCell;
 
 end
@@ -159,12 +191,19 @@ copulaAnalysis.resampleProb=resampleProb;
 end
 
 
-function resampleLevels = computeResampledLevels(resampleProb, nonStatEvaParams, timeIndex)
+function resampleLevels = computeResampledLevels(resampleProb, nonStatEvaParams, timeIndex,methodology)
 
+if strcmpi(methodology,'gpd')
     thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
     scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
     shapeParam = nonStatEvaParams(2).parameters.epsilon;
     resampleLevels = gpinv(resampleProb, shapeParam, scaleParam, thrshld);
+elseif strcmpi(methodology,'gev')
+   mu = nonStatEvaParams(1).parameters.mu(timeIndex);
+    scaleParam = nonStatEvaParams(1).parameters.sigma(timeIndex);
+    shapeParam = nonStatEvaParams(1).parameters.epsilon;
+    resampleLevels = gevinv(resampleProb, shapeParam, scaleParam, mu);
+end
 
 end
 
