@@ -33,7 +33,7 @@ timeAndSeries6=[tt,timeAndSeries3Pts(:,2)];
 timeAndSeries7=[tt,timeAndSeries3Pts(:,3)];
 pbb=nchoosek([1:7],3);
 
-for ix=30%1:size(pbb,1)  %30 was selected
+for ix=29%1:size(pbb,1)  %30 was selected
 selectedSeries=pbb(ix,:);
 % set some parameters
 

@@ -42,7 +42,7 @@ xlbl = args.xlbl;
 ylbl = args.ylbl;
 fontSize = args.fontSize;
 locString=args.locString;
-locString=["Loc1","Loc2","Loc3"];
+locString=["Loc3","Loc1","Loc2"];
 latlon=args.latlon;
 % set some parameters
 labelMark=(["(a)","(b)","(c)","(d)","(e)","f"]);
@@ -84,39 +84,41 @@ for ij=1:length(h0)
         m_grid('linestyle','none','linewidth',2,'tickdir','out',...
             'xaxisloc','top','yaxisloc','right','fontsize',6);
 
-        diffArray=[latlon(1,:)-latlon(1,1);latlon(1,:)-latlon(1,2);latlon(1,:)-latlon(1,3)];
-        diffArray2=[latlon(2,:)-latlon(2,1);latlon(2,:)-latlon(2,2);latlon(2,:)-latlon(2,3)];
-        distArray=(sqrt(diffArray.^2+diffArray2.^2));
-        distArray(distArray==0)=inf;
-        [im,~]=min(min(distArray));
-        [ir,ic]=find(distArray==im,1);
-        ext1=min([latlon(:,ir),latlon(:,ic)],[],2);
-        ext2=max([latlon(:,ir),latlon(:,ic)],[],2);
+        % diffArray=[latlon(1,:)-latlon(1,1);latlon(1,:)-latlon(1,2);latlon(1,:)-latlon(1,3)];
+        % diffArray2=[latlon(2,:)-latlon(2,1);latlon(2,:)-latlon(2,2);latlon(2,:)-latlon(2,3)];
+        % distArray=(sqrt(diffArray.^2+diffArray2.^2));
+        % distArray(distArray==0)=inf;
+        % [im,~]=min(min(distArray));
+        % [ir,ic]=find(distArray==im,1);
+        % ext1=min([latlon(:,ir),latlon(:,ic)],[],2);
+        % ext2=max([latlon(:,ir),latlon(:,ic)],[],2);
         for ii=1:size(latlon,2)
             m_line(latlon(1,ii),latlon(2,ii),'marker','square','markersize',4,'color','r');
-            if ii~=ir && ii~=ic
-                m_text(latlon(1,ii),latlon(2,ii),locString(ii),'color','k','vertical','top','fontweight','bold','horizontalalignment','right');
-            end
-            m_ruler([.5 .8],.2,3,'fontsize',8);
+            % if ii~=ir && ii~=ic
+                % m_text(latlon(1,ii),latlon(2,ii),locString(ii),'color','k','vertical','top','fontweight','bold','horizontalalignment','right');
+            % end
+            
         end
+        m_ruler([.4 .7],.2,3,'fontsize',8);
+
         axx_=spMan.createAxes(num2str(7),4.7,4.45,3,3.75);
 
-        m_proj('albers equal-area','longitudes',[-9.1 -8.35], ...
-            'latitudes',[40.8 41.4],'rect','on');
+        m_proj('albers equal-area','longitudes',[-9.75 -7.75], ...
+            'latitudes',[39.7 41.3],'rect','on');
         % m_gshhs_f('patch',[.7 .9 .7]);
           m_usercoast('coastLinePortugal','color','k')
         m_grid('linestyle','none','linewidth',2,'tickdir','out',...
             'xaxisloc','top','yaxisloc','right','fontsize',6);
 
-        latlon2=[latlon(:,ir),latlon(:,ic)];
-        locString2=[locString(:,ir),locString(:,ic)];
-        for ii=1:size(latlon2,2)
-            m_line(latlon2(1,ii),latlon2(2,ii),'marker','square','markersize',4,'color','r');
-            if ii==1
-                m_text(latlon2(1,ii),latlon2(2,ii),locString2(ii),'color','k','vertical','top','fontweight','bold');
-            else
-                m_text(latlon2(1,ii),latlon2(2,ii),locString2(ii),'color','k','vertical','bottom','fontweight','bold');
-            end
+        % latlon2=[latlon(:,ir),latlon(:,ic)];
+        % locString2=[locString(:,ir),locString(:,ic)];
+        for ii=1:size(latlon,2)
+            m_line(latlon(1,ii),latlon(2,ii),'marker','square','markersize',4,'color','r');
+            % if ii==1
+                m_text(latlon(1,ii),latlon(2,ii),locString(ii),'color','k','vertical','top','fontweight','bold');
+            % else
+                % m_text(latlon(1,ii),latlon(2,ii),locString(ii),'color','k','vertical','bottom','fontweight','bold');
+            % end
 
         end
         xll=axx_.XLim;
@@ -130,10 +132,10 @@ for ij=1:length(h0)
         plot(axx,[xx(1) xx(2) xx(2) xx(1) xx(1)],[yy(1) yy(1) yy(2) yy(2) yy(1)],'LineStyle','-','LineWidth',1,'Color','k')
 
 
-        annotation(gcf,'line',[0.11214953271028 0.162883845126836],...
-            [0.814117647058824 0.861176470588235]);
-        annotation(gcf,'line',[0.113484646194927 0.164218958611482],...
-            [0.788235294117647 0.675294117647059]);
+        annotation(gcf,'line',[0.100133511348465 0.162883845126836],...
+    [0.808411764705882 0.861176470588235]);
+        annotation(gcf,'line',[0.100133511348465 0.164218958611482],...
+    [0.736470588235294 0.675294117647059]);
 
     end
     axxArray=[axxArray,axx];
