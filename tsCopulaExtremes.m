@@ -216,7 +216,8 @@ switch timeVaryingCopula
         for iFamily=1:length(copulaFamily)
             if strcmpi(copulaFamily{iFamily}, 'gaussian')
                 % normal copula
-                rho = copulafit('gaussian', gpdCDFCopula);
+                % rho = copulafit('gaussian', gpdCDFCopula);
+                rho = corr(gpdCDFCopula, 'type', 'Pearson'); % apparently works bettern than copulafit
                 rhoC{iFamily}=rho;
 
             elseif strcmpi(copulaFamily{iFamily}, 't')
@@ -292,7 +293,8 @@ switch timeVaryingCopula
           
             for iFamily=1:length(copulaFamily)
                 if strcmpi(copulaFamily{iFamily}, 'Gaussian')
-                    rho = copulafit('gaussian', jointExtremeMonovariateProbWindow);
+                    % rho = copulafit('gaussian', jointExtremeMonovariateProbWindow);
+                    rho = corr(jointExtremeMonovariateProbWindow, 'type', 'Pearson'); % apparently works bettern than copulafit
                     rho0{iFamily}=rho;
 
                     % rhoTotal=[rhoTotal,rho];
