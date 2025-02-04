@@ -44,9 +44,9 @@ function [copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargi
 
 args.timeIndex = 'middle'; %to activate reading of "timeindex" parameter if set by the user
 args.nResample=1000;
-
+args.nonStationarity = 'marginsandcoupling'; %margins ; coupling ; marginsandcoupling  
 args = tsEasyParseNamedArgs(varargin, args);
-
+nonStationarity=args.nonStationarity;
 timeIndex = args.timeIndex;
 nResample=args.nResample;
 methodology=copulaAnalysis.methodology;
@@ -56,7 +56,7 @@ marginalAnalysis=copulaAnalysis.marginalAnalysis;
 copulaFamily = copulaParam.family;
 timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
 
-
+rng default
 %differentiate between the way time-varying and time-invariant copula need
 %to be dealt with
 %resampling from the copula function using the copularnd function
@@ -88,8 +88,15 @@ switch timeVaryingCopula
             if strcmpi(copulaFamily{iFamily}, 'Gaussian') || strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
                
                 for ij=1:size(rhoCell,2)
-                    resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
-                   
+                    if strcmpi(nonStationarity,'marginsandcoupling')
+                        resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
+                    elseif strcmpi(nonStationarity,'margins')
+                        rhoCell(iFamily,:)={mean([rhoCell{iFamily,:}])};
+                        resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
+                    end
+                end
+                if strcmpi(nonStationarity,'margins')
+                    copulaAnalysis.copulaParam.rhoMean=rhoCell;
                 end
             elseif strcmpi(copulaFamily{iFamily}, 't')
                 
@@ -117,7 +124,7 @@ switch timeVaryingCopula
                 %if no timeindex is set by the user use time-index to assess
                 % non-stationarity parameters at half the length of the time series
                 nonStatEvaParams = marginalAnalysis{ivar}{1};
-                statTransData = marginalAnalysis{ivar}{2};
+                % statTransData = marginalAnalysis{ivar}{2};
 
                 if strcmpi(timeIndex,'first') & ivar==1
                     timeIndex=1;
@@ -188,6 +195,10 @@ end
 copulaAnalysis.resampleLevel=resampleLevel;
 
 copulaAnalysis.resampleProb=resampleProb;
+if exist("timeIndexArray")
+
+copulaAnalysis.timeIndexArray=timeIndexArray;
+end
 end
 
 

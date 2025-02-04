@@ -1,4 +1,4 @@
-function [handles] = tsCopulaTimeVaryingPlot(copulaAnalysis,copulaAnalysisStat,gofStatistics,varargin)
+function [axxArray] = tsCopulaTimeVaryingPlot(copulaAnalysis,gofStatistics,varargin)
 
 %tsCopulaTimeVaryingPlot plotting joint peaks and Monte-Carlo resampled
 %values
@@ -63,7 +63,7 @@ spMan.initFigure;
 h=[7,7,7,11,11];
 b=[13,13,13,11,11];
 h0=[7,16,25,11.5,24.5];
-b0=[2,2,2,17,17];
+b0=[2,2,2,17.5,17.5];
 for ij=1:length(h0)
     % format    [top left height width]   unlike the usual MATLAB
     % format of [left bottom width height]
@@ -77,9 +77,14 @@ end
 
 % read stationary copula information for plotting time series
 
-yMax=copulaAnalysisStat.jointExtremes;              %non-stationary peaks
-tMax=copulaAnalysisStat.jointExtremeTimeStamps;     %time of occurrences of non-stationary peaks
-thresholdPotNS=copulaAnalysisStat.thresholdPotNS;   %curves representing non-stationary threshold
+c=(copulaAnalysis.jointExtremes);
+ct=(copulaAnalysis.jointExtremeTimeStamps);
+ct2=vertcat(ct{:});
+[yMax,iB,~] = unique(vertcat(c{:}),'stable','rows'); 
+tMax=ct2(iB,:);
+% yMax=copulaAnalysisStat.jointExtremes;              %non-stationary peaks
+% tMax=copulaAnalysisStat.jointExtremeTimeStamps;     %time of occurrences of non-stationary peaks
+thresholdPotNS=copulaAnalysis.thresholdPotNS;   %curves representing non-stationary threshold
 
 % stationary joint peaks were sorted in the sampling process; However,
 % non-stationary peaks aren't necessarily sorted; since we use
@@ -108,7 +113,7 @@ for jx=1:size(nonStatSeries,2)
     if strcmpi(methodology,'gpd')
         plot(axxArray(jx),datetime(datevec(timeStamps(:,jx))),thresholdPotNS(:,jx),'LineWidth',2)
     end
-    scatterPlot=scatter(axxArray(jx),datetime(datevec(tMax(:,jx))),yMax(:,jx),[],yMax(:,1),'filled');
+    scatterPlot=scatter(axxArray(jx),datetime(datevec(tMax(:,jx))),yMax(:,jx),[],mean(yMax,2),'filled');
     yl=ylabel(axxArray(jx),ylbl{jx});
     positionLabel=[positionLabel;yl.Position];
     yLabel=[yLabel,yl];
@@ -148,22 +153,29 @@ copulaFamily=copulaAnalysis.copulaParam.family;
 %perform plotting
 scatterMontCarl01=scatter(axxArray(4),resampleLevel{1}(:,1), resampleLevel{1}(:,2));
 set(scatterMontCarl01,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
-    'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
+    'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6,'HandleVisibility', 'off')
 hold(axxArray(4),'on')
-scatter(axxArray(4),yMaxLevel{1}(:,1), yMaxLevel{1}(:,2),[],RGB(Locb,:),'filled');
+scatter(axxArray(4),yMaxLevel{1}(:,1), yMaxLevel{1}(:,2),[],RGB(Locb,:),'filled','HandleVisibility', 'off');
 
 scatterMontCarl02=scatter(axxArray(5),resampleLevel{end}(:,1), resampleLevel{end}(:,2));
 set(scatterMontCarl02,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
-    'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
+    'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6,'HandleVisibility', 'off')
 hold(axxArray(5),'on')
-scatter(axxArray(5),yMaxLevel{end}(:,1), yMaxLevel{end}(:,2),[],RGB(Locb2,:),'filled');
+scatter(axxArray(5),yMaxLevel{end}(:,1), yMaxLevel{end}(:,2),[],RGB(Locb2,:),'filled','HandleVisibility', 'off');
 
 if strcmpi(copulaFamily,'Gaussian')
     par01=round(couplingParam{1}(2)*100)/100;
     par02=round(couplingParam{end}(2)*100)/100;
 elseif strcmpi(copulaFamily,'Frank') || strcmpi(copulaFamily,'Clayton') ||strcmpi(copulaFamily,'Gumbel')
+    if isfield(copulaAnalysis.copulaParam,'rhoMean')
+        couplingParamMean=copulaAnalysis.copulaParam.rhoMean;
+    par01=round(couplingParamMean{1}(1)*100)/100;
+    par02=round(couplingParamMean{end}(1)*100)/100;
+    else
     par01=round(couplingParam{1}(1)*100)/100;
     par02=round(couplingParam{end}(1)*100)/100;
+
+    end
 end
 t1x=datestr(inputtimestampsWindowCell{1}(1),'yyyy');
 t2x=datestr(inputtimestampsWindowCell{1}(end),'yyyy');
@@ -197,20 +209,22 @@ text(axxArray(4),0.05,0.9,labelMark(4),'Units','normalized')
 text(axxArray(5),0.05,0.9,labelMark(5),'Units','normalized')
 
 %annotate correlations
-corrSp01M=corr(resampleLevel{1});
+corrSp01M=corr(resampleLevel{1},'type','spearman');
 corrSp01M=round(corrSp01M(2)*100)/100;
-corrSp01S=corr(yMaxLevel{1});
+corrSp01S=corr(yMaxLevel{1},'type','spearman');
 corrSp01S=round(corrSp01S(2)*100)/100;
-corrSp02M=corr(resampleLevel{end});
+corrSp02M=corr(resampleLevel{end},'type','spearman');
 corrSp02M=round(corrSp02M(2)*100)/100;
-corrSp02S=corr(yMaxLevel{end});
+corrSp02S=corr(yMaxLevel{end},'type','spearman');
 corrSp02S=round(corrSp02S(2)*100)/100;
 
-text(axxArray(4),0.6,0.08,sprintf('\\rho_{Spearman, S} =  %2g\n\\rho_{Spearman, MC} =  %2g', corrSp01S,corrSp01M),'Units','normalized')
-text(axxArray(5),0.6,0.08,sprintf('\\rho_{Spearman, S} =  %2g\n\\rho_{Spearman, MC} =  %2g', corrSp02S,corrSp02M),'Units','normalized')
+% text(axxArray(4),0.6,0.08,sprintf('\\rho_{Spearman, S} =  %2g\n\\rho_{Spearman, MC} =  %2g', corrSp01S,corrSp01M),'Units','normalized')
+% text(axxArray(5),0.6,0.08,sprintf('\\rho_{Spearman, S} =  %2g\n\\rho_{Spearman, MC} =  %2g', corrSp02S,corrSp02M),'Units','normalized')
 
 %%% calculation of p-value (using Mann-Kendall test) for time-varying copula parameter
-ttRho=cellfun(@(x) x(round(length(x)/2)),inputtimestampsWindowCell);
+% ttRho=cellfun(@(x) x(round(length(x)/2)),inputtimestampsWindowCell);
+
+ttRho=linspace(inputtimestampsWindowCell{1}(1),inputtimestampsWindowCell{end}(end),length(inputtimestampsWindowCell));
 positionLabel2=[];
 yLabel2=[];
 if strcmpi(copulaFamily,'gaussian')
@@ -226,20 +240,32 @@ if strcmpi(copulaFamily,'gaussian')
     positionLabel2=[positionLabel2;yll.Position];
     yLabel2=[yLabel2,yll];
 elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strcmpi(copulaFamily,'frank')
-    plot(axxArray(3),datetime(datevec(ttRho)),cell2mat(couplingParam),'LineWidth',1)
+    corrSpearmanSamplex=gofStatistics.corrSpearmanSamplex;
+    corrSpearmanMontex=gofStatistics.corrSpearmanMontex;
+    % [hAx,hLine1,hLine2] = plotyy(x,y1,[x',x'],[y2',y3']);
+    % plot(axxArray(3),datetime(datevec(ttRho)),cell2mat(couplingParam),'LineWidth',1)
+     [hAx,hLine1,hLine2]=plotyy(axxArray(3),datetime(datevec(ttRho)),cell2mat(couplingParam),[datetime(datevec(ttRho)),datetime(datevec(ttRho))],[[corrSpearmanSamplex{:}]',[corrSpearmanMontex{:}]']);
+    if isfield(copulaAnalysis.copulaParam,'rhoMean')
+        set(hAx(1),'NextPlot','add')
+        plot(hAx(1),datetime(datevec(ttRho)),cell2mat(copulaAnalysis.copulaParam.rhoMean),'--','LineWidth',1)
+    end
+     set(hAx,{'ycolor'},{'k';'k'}) 
+     hLine1.LineWidth=1;
+     hLine2(1).LineWidth=1;
+     hLine2(2).LineWidth=1;
     [H,p_value]=tsMann_Kendall(cell2mat(couplingParam),0.05);
 
 
     str=lower(char(copulaFamily));
     idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
     str(idx)=upper(str(idx));
-    yll=ylabel(axxArray(3),sprintf('\\theta_{%s}', str));
-
+    yll=ylabel(hAx(1),sprintf('\\theta_{%s}', str));
+    % yll2=ylabel(hAx(2),'\rho_{Spearman}');
     positionLabel2=[positionLabel2;yll.Position];
     yLabel2=[yLabel2,yll];
 end
 grid(axxArray(3),'on')
-text(axxArray(3),0.6,0.1,['{\it p-value}_{MK}= ',sprintf('%0.3g',p_value)],'units','normalized','HorizontalAlignment','left')
+text(axxArray(3),0.65,0.1,['{\it p-value}_{MK}= ',sprintf('%0.3g',p_value)],'units','normalized','HorizontalAlignment','left')
 xlabel(axxArray(3),'Date (time)')
 
 pval=cellfun(@(x) x{2}.pValueChange,copulaAnalysis.marginalAnalysis);
@@ -251,9 +277,20 @@ snSample=gofStatistics(indexToCopula).snSample;
 corrKendallSampleDelta=gofStatistics(indexToCopula).corrKendallSampleDelta;
 corrSpearmanSampleDelta=gofStatistics(indexToCopula).corrSpearmanSampleDelta;
 
-text(axxArray(3),0.6,0.2,['Sn = ',sprintf('%0.3g',snSample)],'units','normalized','HorizontalAlignment','left')
-text(axxArray(3),0.6,0.3,['\Delta\tau_{Kendall} = ',sprintf('%0.3g',corrKendallSampleDelta)],'units','normalized','HorizontalAlignment','left')
-text(axxArray(3),0.6,0.4,['\Delta\tau_{Spearman} = ',sprintf('%0.3g',corrSpearmanSampleDelta)],'units','normalized','HorizontalAlignment','left')
+% text(axxArray(3),0.65,0.2,['Sn = ',sprintf('%0.1g',snSample)],'units','normalized','HorizontalAlignment','left')
+% text(axxArray(3),0.65,0.3,['\Delta\tau_{Kendall} = ',sprintf('%0.1g',corrKendallSampleDelta)],'units','normalized','HorizontalAlignment','left')
+% text(axxArray(3),0.65,0.4,['\Delta\rho_{Spearman} = ',sprintf('%0.1g',corrSpearmanSampleDelta)],'units','normalized','HorizontalAlignment','left')
+formattedValue = sprintf('%.2g', corrSpearmanSampleDelta); % 
+formattedValue2 = sprintf('%.1g', snSample); % 
+formattedValue3 = sprintf('%.2g', corrKendallSampleDelta); % 
+
+latexString = sprintf('$\\overline{\\Delta \\rho}_{\\mathrm{Spearman}} = %s$', formattedValue);
+% latexString2 = sprintf('$\\overline{S_n} = %s$', formattedValue2);
+latexString2 = sprintf('$\\overline{S_n} = %s$', formattedValue2);
+latexString3 = sprintf('$\\overline{\\Delta \\tau}_{\\mathrm{Kendall}} = %s$', formattedValue3);
+text(axxArray(3),0.65, 0.4, latexString,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex', 'FontSize', 14);
+text(axxArray(3),0.65, 0.3, latexString3,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex','FontSize', 14);
+text(axxArray(3),0.65, 0.2, latexString2 ,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex','FontSize', 14);
 
 set(axxArray(1),'FontSize',fontSize)
 set(axxArray(2),'FontSize',fontSize)
@@ -262,6 +299,31 @@ set(axxArray(3),'FontSize',fontSize)
 text(axxArray(3),0.05,0.9,labelMark(3),'Units','normalized')
 minLabel=min([positionLabel;positionLabel2]);
 
+
+% string(['\bar','{',yll.String,'}'])
+legend1 = legend(axxArray(3),'show');
+if isfield(copulaAnalysis.copulaParam,'rhoMean')
+hl=set(legend1,...
+    'Position',[0.0647530040053402 0.237293699277636 0.140854472630173 0.0767690253671562],...
+    'EdgeColor','none',...
+    'Color','none',...
+    'AutoUpdate','off','String',{['$',yll.String,'$'],'$\overline{\theta}_{Gumbel}$',['$','\rho_{Spearman, S}','$'],['$','\rho_{Spearman, MC}','$']},'Interpreter','latex');
+else
+set(legend1,...
+    'Position',[0.0647530040053402 0.237293699277636 0.140854472630173 0.0767690253671562],...
+    'EdgeColor','none',...
+    'Color','none',...
+    'AutoUpdate','off','String',{yll.String,"\rho_{Spearman, S}","\rho_{Spearman, MC}"});
+end
+xlims=[get(axxArray(4),'xlim');get(axxArray(5),'xlim')];
+xlimsnew=[min(xlims(:,1)),max(xlims(:,2))];
+set(axxArray(4),'xlim',xlimsnew)
+set(axxArray(5),'xlim',xlimsnew)
+
+ylims=[get(axxArray(4),'ylim');get(axxArray(5),'ylim')];
+ylimsnew=[min(ylims(:,1)),max(ylims(:,2))];
+set(axxArray(4),'ylim',ylimsnew)
+set(axxArray(5),'ylim',ylimsnew)
 handles=[];
 end
 

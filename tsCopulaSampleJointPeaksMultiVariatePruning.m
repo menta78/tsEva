@@ -76,6 +76,7 @@ args.samplingThresholdPrct=[99,99];                      %thresholdpercentiles
 args.minPeakDistanceInDaysMonovarSampling=[3,3];         %minpeakdistanceindays
 args.maxPeakDistanceInDaysMultivarSampling=3;            %maxdistancemultivariatepeaksindays
 args.marginalAnalysis=cell(1,size(inputtimeseries,2));   % for calculation of non-stationary parameters
+args.samplingOrder=0;
 %                                                        used in conversion from data space to probability space
 args.peakType='allExceedThreshold';
 % parsing of input parameters, overrides if different with the default
@@ -87,6 +88,7 @@ minPeakDistanceInDaysMonovarSampling=args.minPeakDistanceInDaysMonovarSampling;%
 maxPeakDistanceInDaysMultivarSampling=args.maxPeakDistanceInDaysMultivarSampling;%maxdistancemultivariatepeaksindays
 marginalAnalysis=args.marginalAnalysis;
 peakType=args.peakType;
+samplingOrder=args.samplingOrder;
 % adjust maxPeakDistanceInDaysMultivarSampling to a compatible format 
 if size(maxPeakDistanceInDaysMultivarSampling,2)~=size(nchoosek([1:size(inputtimeseries,2)],2),1)
     maxPeakDistanceInDaysMultivarSampling=...
@@ -250,6 +252,15 @@ jointPeaksTimeTotal=[jointPeaksTimeColumnWise;jointNonPeaksTimeColumnWise];
 jointPeaksTotal=[jointPeaksColumnWise;jointNonPeaksColumnWise];
 jointIdTotal=[indexJointPeaksColumnWise;indexJointNonPeaksColumnWise];
 
+%abide-by ordering of variables
+if find(samplingOrder)
+nonrealisticIndices=find(jointPeaksTimeTotal(:,samplingOrder(2))-jointPeaksTimeTotal(:,samplingOrder(1))>0);
+jointPeaksTimeTotal(nonrealisticIndices,:)=[];
+jointPeaksTotal(nonrealisticIndices,:)=[];
+jointIdTotal(nonrealisticIndices,:)=[];
+else
+nonrealisticIndices=[];
+end
 % peaks need to be sorted in a descending manner
 [~,idSort]=sort(mean(jointPeaksTotal,2),'descend');
 jointPeaksTimeTotal=jointPeaksTimeTotal(idSort,:);
@@ -257,6 +268,7 @@ jointPeaksTotal=jointPeaksTotal(idSort,:);
 jointIdTotal=jointIdTotal(idSort,:);
 
 idPeaksArtificial=[ones(size(jointPeaksTimeColumnWise,1),1);2*ones(size(jointNonPeaksTimeColumnWise,1),1)];
+idPeaksArtificial(nonrealisticIndices,:)=[];
 idPeaksArtificial=idPeaksArtificial(idSort);
 
 minArrayPeaksTime=min(jointPeaksTimeTotal,[],2);

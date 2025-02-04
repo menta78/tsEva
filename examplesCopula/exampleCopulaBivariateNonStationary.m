@@ -30,7 +30,7 @@ disp('Performing the non-stationary extreme value analysis ...');
 [rlev1, rlevErr1] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStatEvaParams1, returnPeriodsInYears);
 
 
-[nonStatEvaParams2, statTransfData2] = tsEvaNonStationary(timeAndSeries1, timeWindow, 'transfType', 'trendCiPercentile',... 
+[nonStatEvaParams2, statTransfData2] = tsEvaNonStationary(timeAndSeries2, timeWindow, 'transfType', 'trendCiPercentile',... 
   'ciPercentile', ciPercentile, 'minPeakDistanceInDays', minPeakDistanceInDays);
 [nonStatEvaParams2, statTransfData2] = tsEvaReduceOutputObjSize(nonStatEvaParams2, statTransfData2, outTmStmp, 'maxTimeStepDist', 365.25);
 [rlev2, rlevErr2] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStatEvaParams2, returnPeriodsInYears);
