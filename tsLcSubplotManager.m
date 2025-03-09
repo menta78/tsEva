@@ -1,4 +1,6 @@
 classdef tsLcSubplotManager < handle
+    % tsLcSubplotManager a subplot manager 
+
   properties (Access = public)
     N  % number of rows
     M  % number of cols

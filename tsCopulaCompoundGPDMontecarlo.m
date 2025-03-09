@@ -1,10 +1,11 @@
 
-function [copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargin)
-%tsCopulaCompoundGPDMontecarlo Monte-carlo simulation (resampling) from a
+function [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargin)
+%tsCopulaCompoundGPDMontecarlo pefrom Monte-Carlo simulation (resampling) from a
 %pre-determined copula function
-% copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,nResample,varargin)
-%                    appends to the variable (of type structure)
-%                    copulaAnalysis results of monte-carlo simulation
+
+% [copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargin)
+%                    returns results of Monte-Carlo simulation including
+%                    resampled data in probability and data space
 %                    (i.e., resampleLevel, and resampleProb)
 
 
@@ -35,28 +36,43 @@ function [copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargi
 %                                                                       nVar indicates number of variables (e.g, 3 for trivariate case)
 %
 
-% M.H.Bahmanpour, 2024
+% M.H.Bahmanpour, 2025
 
+%REFERENCES
+
+% [1] Bahmanpour, M.H., Mentaschi, L., Tilloy, A., Vousdoukas, M.,
+%     Federico, I., Coppini, G., and Feyen, L., 2025,
+%     Transformed-Stationary EVA 2.0: A Generalized Framework for
+%     Non-stationary Joint Extreme Analysis (submitted to Hydrology and
+%     Earth System Sciences; Feb 2025)
+% [2] Mentaschi, L., Vousdoukas, M. I., Voukouvalas, E., Sartini, L.,
+%     Feyen, L., Besio, G., & Alfieri, L. (2016). The
+%     transformed-stationary approach: a generic and simplified methodology
+%     for non-stationary extreme value analysis. Hydrology and Earth System
+%     Sciences, 20(9), 3527–3547. https://doi.org/10.5194/hess-20-3527-2016
 
 %%%%%%%%%%%%%%%%%%%%%%
 
 % setting the default parameters
 
-args.timeIndex = 'middle'; %to activate reading of "timeindex" parameter if set by the user
+args.timeIndex = 'middle'; 
 args.nResample=1000;
-args.nonStationarity = 'marginsandcoupling'; %margins ; coupling ; marginsandcoupling  
+args.nonStationarity = 'marginsandcoupling'; %two switches: "margins" ; "marginsandcoupling" 
+
 args = tsEasyParseNamedArgs(varargin, args);
+
 nonStationarity=args.nonStationarity;
 timeIndex = args.timeIndex;
 nResample=args.nResample;
+
+%read input data
 methodology=copulaAnalysis.methodology;
-%obtain some details from the copulaAnalysis input variable
 copulaParam=copulaAnalysis.copulaParam;
-marginalAnalysis=copulaAnalysis.marginalAnalysis;
+nSeries = copulaParam.nSeries;
 copulaFamily = copulaParam.family;
+marginalAnalysis=copulaAnalysis.marginalAnalysis;
 timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
 
-rng default
 %differentiate between the way time-varying and time-invariant copula need
 %to be dealt with
 %resampling from the copula function using the copularnd function
@@ -67,12 +83,11 @@ switch timeVaryingCopula
             if strcmpi(copulaFamily{iFamily}, 'Gaussian')
 
                 resampleProb{iFamily} = copularnd('gaussian', copulaParam.rho{iFamily}, nResample);
-            elseif strcmpi(copulaFamily{iFamily}, 't')
-                resampleProb{iFamily} = copularnd('t', copulaParam.rho{iFamily}, copulaParam.nu{iFamily}, nResample);
+
             elseif strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
-                
-                    resampleProb{iFamily} = copularnd(copulaFamily{iFamily}, copulaParam.rho{iFamily}, nResample);
-               
+
+                resampleProb{iFamily} = copularnd(copulaFamily{iFamily}, copulaParam.rho{iFamily}, nResample);
+
             else
                 error(['copulaFamily not supported: ' copulaFamily]);
             end
@@ -80,10 +95,15 @@ switch timeVaryingCopula
     case true
         %for the case of a time-varying copula
         
-        
         rhoCell=copulaParam.rho;
-        nuCell=copulaParam.nu;
         resampleProb=cell(size(rhoCell));
+        for iFamily=1:length(copulaFamily)
+            if strcmpi(nonStationarity,'margins') & strcmpi(copulaFamily{iFamily}, 'Gaussian')
+                rhoCell(iFamily,:)={mean(cellfun(@(x) x(triu(true(size(x)),1)),rhoCell(iFamily,:),'UniformOutput',1))};
+            elseif strcmpi(nonStationarity,'margins') 
+                rhoCell(iFamily,:)={mean([rhoCell{iFamily,:}])};
+            end
+        end
         for iFamily=1:length(copulaFamily)
             if strcmpi(copulaFamily{iFamily}, 'Gaussian') || strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
                
@@ -91,18 +111,13 @@ switch timeVaryingCopula
                     if strcmpi(nonStationarity,'marginsandcoupling')
                         resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
                     elseif strcmpi(nonStationarity,'margins')
-                        rhoCell(iFamily,:)={mean([rhoCell{iFamily,:}])};
+                        
                         resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
                     end
                 end
-                if strcmpi(nonStationarity,'margins')
-                    copulaAnalysis.copulaParam.rhoMean=rhoCell;
-                end
-            elseif strcmpi(copulaFamily{iFamily}, 't')
-                
-                for ij=1:size(rhoCell,2)
-                    resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nuCell{iFamily,ij},nResample);
-                  
+                if strcmpi(nonStationarity,'margins') 
+                    monteCarloAnalysis.copulaParam=copulaParam;
+                    monteCarloAnalysis.copulaParam.rhoMean=rhoCell;
                 end
 
             else
@@ -115,7 +130,7 @@ end
 
 % on the basis of the timeIndex, find the non-stationary values of the
 % thresold and scale parameter
-nSeries = length(marginalAnalysis);
+
 switch timeVaryingCopula
     case false
         resampleLevel=cell(1,length(copulaFamily));
@@ -128,16 +143,25 @@ switch timeVaryingCopula
 
                 if strcmpi(timeIndex,'first') & ivar==1
                     timeIndex=1;
+                    fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
+                        'based on non-stationary values evaluated at\n' ...
+                        'the first timeindex'])
                 elseif strcmpi(timeIndex,'last') & ivar==1
+                    fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
+                        'based on non-stationary values evaluated at\n' ...
+                        'the last timeindex'])
                     timeIndex=(length(nonStatEvaParams(2).parameters.threshold));
                 elseif strcmpi(timeIndex,'middle') & ivar==1
+                    fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
+                        'based on non-stationary values evaluated at\n' ...
+                        'the middle timeindex'])
                     timeIndex=ceil(length(nonStatEvaParams(2).parameters.threshold)/2);
                 elseif isnumeric(timeIndex) & ivar==1
                     if timeIndex<1 || timeIndex>length(nonStatEvaParams(2).parameters.threshold)
                         error('timeIndex parameter must be chosen from {"first","last","middle"} or a valid index')
                     end
                 end
-
+                timeIndexArray=timeIndex;
                 % transfrom probabilities to data scale using inverse sampling law
                 % no scaling is needed since thrshld parameter already transforms data with
                 % lowest probability corresponding with thrshld value
@@ -146,36 +170,42 @@ switch timeVaryingCopula
             end
         end
     case true
+
         %in case of a time-varying copula
         resampleLevelCell=cell(size(resampleProb));
         inputtimestampsWindowCell=copulaParam.inputtimestampsWindowCell;
-        
 
-           timeStamps = marginalAnalysis{1}{2}.timeStamps;
-           timeStampsCell=repmat({timeStamps},1,size(rhoCell,2));
-           iixCell=cellfun(@(x,y) find(x>=min(y)&x<=max(y)),timeStampsCell,inputtimestampsWindowCell,'UniformOutput',0);
-            timeIndexArray=cellfun(@(x) x(round(length(x)/2)),iixCell);
-           if ~any(strcmpi(varargin,'timeindex'))
-               disp('no timeindex set - middle timeindex (for each time-window) selected automatically')
-                          
-           elseif isnumeric(timeIndex)
-            
-               sprintf(['numeric timeindex not accepted in case of \n',...
-                   'a time-varying copula use first last or middle instead\n' ...
-                   'middle timeindex for each time-window selected automatically'])
-           elseif any(strcmpi(varargin,'first'))
-                disp('first timeindex (for each time-window) selected')
-              timeIndexArray=cellfun(@(x) x(1),iixCell);
-           elseif any(strcmpi(varargin,'last'))
-                disp('last timeindex (for each time-window) selected')
-                timeIndexArray=cellfun(@(x) x(end),iixCell);
-           elseif any(strcmpi(varargin,'middle'))
-                disp('middle timeindex (for each time-window) selected')
-           end
+        timeStamps = marginalAnalysis{1}{2}.timeStamps;
+        timeStampsCell=repmat({timeStamps},1,size(rhoCell,2));
+        iixCell=cellfun(@(x,y) find(x>=min(y)&x<=max(y)),timeStampsCell,inputtimestampsWindowCell,'UniformOutput',0);
+        timeIndexArray=cellfun(@(x) x(round(length(x)/2)),iixCell);
+        if ~any(strcmpi(varargin,'timeindex'))
+            disp('no timeindex set - middle timeindex (for each time-window) selected automatically')
+
+        elseif isnumeric(timeIndex)
+
+            fprintf(['numeric timeindex not accepted in case of \n',...
+                'a time-varying copula use "first", "last" or "middle" instead\n' ...
+                'middle timeindex for each time-window selected automatically'])
+        elseif any(strcmpi(varargin,'first'))
+            fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
+                'based on non-stationary values evaluated at\n' ...
+                'the first timeindex for each time-window'])
+            timeIndexArray=cellfun(@(x) x(1),iixCell);
+        elseif any(strcmpi(varargin,'last'))
+            fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
+                'based on non-stationary values evaluated at\n' ...
+                'the last timeindex for each time-window'])
+            timeIndexArray=cellfun(@(x) x(end),iixCell);
+        elseif any(strcmpi(varargin,'middle'))
+            fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
+                'based on non-stationary values evaluated at\n' ...
+                'the middle timeindex for each time-window'])
+
+        end
            for ik=1:size(rhoCell,1)
                for ij=1:size(rhoCell,2)
-                   resampleLevel=[];
-
+                   
                    resampleProbTemp=resampleProb{ik,ij};
 
                    for ivar = 1:nSeries
@@ -184,7 +214,6 @@ switch timeVaryingCopula
 
                    end
                   
-
                end
            end
         resampleLevel=resampleLevelCell;
@@ -192,13 +221,12 @@ switch timeVaryingCopula
 end
 %append resampleLevel and resampleProb to the copulaAnalysis file of type
 %structure
-copulaAnalysis.resampleLevel=resampleLevel;
+monteCarloAnalysis.resampleLevel=resampleLevel;
 
-copulaAnalysis.resampleProb=resampleProb;
-if exist("timeIndexArray")
+monteCarloAnalysis.resampleProb=resampleProb;
 
-copulaAnalysis.timeIndexArray=timeIndexArray;
-end
+monteCarloAnalysis.timeIndexArray=timeIndexArray;
+
 end
 
 

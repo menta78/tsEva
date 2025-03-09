@@ -2,14 +2,15 @@
 % (under review)
 
 % The second case study evaluated the spatial relationship of SWH across
-% three locations scattered around the Marshall islands. Wave data
+% three locations scattered around the Marshall Islands. Wave data
 % comprised 3-hourly SWH records from a high-resolution global wave model
 % (Mentaschi et al., 2023) with nearshore resolutions of 2–4 km, covering
 % the period 1950–2020. This trivariate analysis highlighted spatial
 % dependencies, employing a non-stationary Gaussian copula with
 % non-stationary margins, modeled with GPD. Each variable was sampled at
-% the 99th percentile, with univariate peaks spaced a minimum of 3 days
-% apart and a maximum allowable distance of 3 days for multivariate peaks.
+% the 99th percentile, with univariate peaks spaced a minimum of 12 hours
+% apart and a maximum allowable distance of 12 hours for multivariate
+% peaks.
 
 
 %REFERENCES
@@ -61,14 +62,15 @@ minDeltaUnivarSampli=[0.5,0.5,0.5];
  %trivariate case, and so on
 maxDeltaMultivarSampli=0.5; 
 
-%copula family; Gumbel, gaussian and Frank are possible choices
+%copula family; Gaussian is the only choice since it can handle trivariate
+%input
 copulaFamily={'gaussian'};  
 
 %methodology to perform univariate transformation from non-stationary to
 %stationary
 transfType='trendlinear';
 peakType='allExceedThreshold';
-[copulaAnalysisNonStat] = tsCopulaExtremes(timeAndSeries1(:,1), ...
+[copulaAnalysis] = tsCopulaExtremes(timeAndSeries1(:,1), ...
     [timeAndSeries1(:,2),timeAndSeries2(:,2),timeAndSeries3(:,2)], ...
     'minPeakDistanceInDaysMonovarSampling',minDeltaUnivarSampli, ...
     'maxPeakDistanceInDaysMultivarSampling',maxDeltaMultivarSampli, ...
@@ -77,15 +79,18 @@ peakType='allExceedThreshold';
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
     'peakType',peakType);
 
+[monteCarloAnalysis1] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+    'nResample',300,'timeIndex','middle');
+% append monteCarloAnalysis to copulaAnalysis 
+fields = fieldnames(monteCarloAnalysis1); %
 
+for ii = 1:numel(fields)
+    copulaAnalysis.(fields{ii}) = monteCarloAnalysis1.(fields{ii}); 
+end
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'pValSn',0);
 
-[copulaAnalysisNonStat] = tsCopulaCompoundGPDMontecarlo(copulaAnalysisNonStat,...
-    'nResample',300,'timeIndex','last');
-[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysisNonStat,'pValSn',0);
-
-% 
- axxArray = tsCopulaPlotTrivariateNonStat(copulaAnalysisNonStat,gofStatistics, ...
-    'ylbl', {'SWH (m)','SWH (m)','SWH (m)'},'locString',locString,'latlon',latlon);
+ axxArray = tsCopulaPlotTrivariate(copulaAnalysis,gofStatistics, ...
+    'ylbl', {'SWH (m)','SWH (m)','SWH (m)'},'locString',locString,'latlon',latlon,'smoothInd',10);
 
 
 

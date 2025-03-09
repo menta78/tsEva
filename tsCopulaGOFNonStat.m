@@ -1,23 +1,41 @@
-function [gofStatistics] = tsCopulaGOF(copulaAnalysis,varargin)
-%tsCopulaUncertainty estimation of copula goodness-of-fit
-% [gofStatistics] = tsCopulaUncertainty(copulaAnalysis,varargin)
+function [gofStatistics,iToCopula] = tsCopulaGOF(copulaAnalysis,varargin)
+%tsCopulaGOFNonStat estimation of copula goodness-of-fit and other battery
+%of statistics
+
+% [gofStatistics] = tsCopulaGOF(copulaAnalysis,varargin)
 %                     returns a variable of type structure containing various parameters
 %                     related to the goodness-of-fit of the copula
 
-%goodness-of-fit is always assessed based on a stationary model of copula
-%(otherwise, we have accepted the possibility of having different copula
-%models in each time window, which is not desirable). 
 
-% A battery of goodnes-of-fit parameters are provided by tsCopulaGOF function.
-% These include different assessment of the correlation parameters
-% (kendall, pearson and spearman), Akaike Information Criterion (AIC), Bayesian Information Criterion (BIC), 
-% and Log-likelihood; moreover, a measure of departure between the fitted and empirical copula is presented based on
-% Cramer-Von mises statistic (CvM), including its two variants SnC (based
-% on Rosenblatt transformation) and Sn (based on psudo-observations) (see
-% ref [2])
+% To evaluate the goodness-of-fit (GOF) of the copula model, a
+% multi-parameter approach was employed by analyzing a set of statistics
+% that quantify the similarity between the fitted distribution and the
+% empirical data. Specifically, the following statistics were considered:
+% 	Cramér-von Mises statistic. The statistic Sn serves as a proxy for the
+% 	distance
+% between the empirical and theoretical distributions in probability space.
+% In this study, we applied the rank-based version of the Cramér-von Mises
+% statistic, where the ranks of Cn and Cθ are compared. For non-stationary
+% distributions, Sn is estimated separately over different time windows,
+% and the results are averaged, to provide the mean Cramér-von Mises
+% statistic.
+%
+% 	For each bivariate sub-distribution, the goodness-of-fit was evaluated
+% 	by comparing the correlation structure of the fitted copula to that of
+% 	the original data. Specifically, the differences in Spearman’s rank
+% 	correlation coefficient (Δρ_Spearmann) and Kendall’s tau (Δτ_Kendall)
+% 	were computed between a Monte Carlo simulation of the fitted copula
+% 	distribution and the empirical values derived from the original sample.
+% 	This provides a measure of how well the fitted model captures the
+% 	dependency structure of the data. For multivariate non-stationary
+% 	copulas, this analysis was extended by computing the average
+% 	differences over all the bivariate
+% 	sub-distributions and the considered time windows.
+
+
 
 % input:
-%  copulaAnalysis                           - a variable of type structure provided as the output of tsCopulaCompoundGPD or
+%  copulaAnalysis                           - a variable of type structure provided as the output of tsCopulaExtremes or
 %                                              tsCopulaCompoundGPDMontecarlo functions
 
 
@@ -28,189 +46,155 @@ function [gofStatistics] = tsCopulaGOF(copulaAnalysis,varargin)
 %
 %
 
-% M.H.Bahmanpour, 2024
+% M.H.Bahmanpour, 2025
 
-%   References:
-%       [1] Mentaschi, L., Vousdoukas, M., Voukouvalas, E., Sartini, L., Feyen, L., Besio, G., and Alfieri, L.:
-%           The transformed-stationary approach: a generic and simplified methodology for non-stationary extreme value analysis,
-%           Hydrol. Earth Syst. Sci., 20, 3527–3547, https://doi.org/10.5194/hess-20-3527-2016, 2016
-%       [2] Genest, C., Rémillard, B., Beaudoin, D., Goodness-of-fit tests for copulas:
-%           A review and a power study (Open Access),(2009) Insurance:
-%           Mathematics and Economics, 44 (2), pp. 199-213, doi: 10.1016/j.insmatheco.2007.10.005
+%REFERENCES
 
-%       [3] Hofert, M., Kojadinovic, I., Mächler, M. & Yan, J. Elements of Copula Modeling with R (Springer, New York, 2018).
+% [1] Bahmanpour, M.H., Mentaschi, L., Tilloy, A., Vousdoukas, M.,
+%     Federico, I., Coppini, G., and Feyen, L., 2025,
+%     Transformed-Stationary EVA 2.0: A Generalized Framework for
+%     Non-stationary Joint Extreme Analysis (submitted to Hydrology and
+%     Earth System Sciences; Feb 2025)
+% [2] Mentaschi, L., Vousdoukas, M. I., Voukouvalas, E., Sartini, L.,
+%     Feyen, L., Besio, G., & Alfieri, L. (2016). The
+%     transformed-stationary approach: a generic and simplified methodology
+%     for non-stationary extreme value analysis. Hydrology and Earth System
+%     Sciences, 20(9), 3527–3547. https://doi.org/10.5194/hess-20-3527-2016
+% [3] Genest, C., Rémillard, B., Beaudoin, D., Goodness-of-fit tests
+%      for copulas: A review and a power study (Open Access),(2009) Insurance:
+%      Mathematics and Economics, 44 (2), pp. 199-213, doi:
+%      10.1016/j.insmatheco.2007.10.005
+% [4] Hofert, M., Kojadinovic, I., Mächler, M. & Yan, J. Elements of
+%      Copula Modeling with R (Springer, New York, 2018).
 
 %%%%%%%%%%%%%%%%%%%%%%
-
-% Some parts of the code are reworked from https://github.com/mscavnicky/copula-matlab
 
 
 % setting the default parameters
 
 
-
-args.pValSn=0;
-args = tsEasyParseNamedArgs(varargin, args);
-
-pValSn=args.pValSn;
 copulaFamily = copulaAnalysis.copulaParam.family;
 copulaParam=copulaAnalysis.copulaParam;
 
-jointExtremesResampled=copulaAnalysis.resampleLevel; %from Monte-Carlo simulations
-
-%non-stationary joint extremes
+%read non-stationary joint extremes
 jointExtremes=copulaAnalysis.jointExtremes;
-% calculate psuedo-observations
-% uSample=tsPseudoObservations(jointExtremes);
-uSample= cellfun(@(x) tsPseudoObservations(x),jointExtremes,'UniformOutput',0);
+
+% calculate psuedo-observations (needed for Cramer-von Mises statistic)
+
+if iscell(jointExtremes)
+    uSample= cellfun(@(x) tsPseudoObservations(x),jointExtremes,'UniformOutput',0);
+else
+    uSample= cellfun(@(x) tsPseudoObservations(x),{jointExtremes},'UniformOutput',0);
+end
+
 for iFamily=1:length(copulaFamily)
     rhoC=cell(1,length(copulaFamily));
-    nuC=cell(1,length(copulaFamily));
-if strcmpi(copulaFamily{iFamily},'Gaussian')
 
-    %obtain an estimation of rho based on psudo-observations 
-    % rho= copulafit('gaussian', uSample);
-  rho=  cellfun(@(x) copulafit('gaussian',x),uSample,'UniformOutput',0);
-    rhoC{iFamily}=rho;
-    
-elseif strcmpi(copulaFamily{iFamily}, 't')
+    if strcmpi(copulaFamily{iFamily},'Gaussian')
 
-    % [rho,nu]=copulafit('t', uSample);
-    % 
-    % rhoC{iFamily}=rho;
-    % nuC{iFamily}=nu;
-elseif strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
+        %obtain an estimation of rho based on psudo-observations
 
-    % alpha=copulafit(copulaFamily{iFamily}, uSample);
-alpha=  cellfun(@(x) copulafit(copulaFamily{iFamily},x),uSample,'UniformOutput',0);
-    
-    rhoC{iFamily}=alpha;
+        rho=  cellfun(@(x) copulafit('gaussian',x),uSample,'UniformOutput',0);
+        rhoC{iFamily}=rho;
+
+    elseif strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
+
+        alpha=  cellfun(@(x) copulafit(copulaFamily{iFamily},x),uSample,'UniformOutput',0);
+        rhoC{iFamily}=alpha;
+    end
+    copulaParam.rho=rhoC;
+
+    if strcmpi(copulaParam.family{iFamily}, 'gaussian')
+
+        Y=cellfun(@(x,y) copulacdf('gaussian',x,y),uSample,copulaParam.rho{iFamily},'UniformOutput',0);
+
+    elseif strcmpi(copulaParam.family{iFamily}, 'clayton') || strcmpi(copulaParam.family{iFamily}, 'frank') || strcmpi(copulaParam.family{iFamily}, 'gumbel')
+
+        Y=cellfun(@(x,y) copulacdf(copulaParam.family{iFamily},x,y),uSample,copulaParam.rho{iFamily},'UniformOutput',0);
+    end
+
+    snSample=cellfun(@(x,y) sum((tsEmpirical(x) - y) .^ 2),uSample,Y);
+
+    gofStatistics(iFamily).snSample=mean((snSample));
+    gofStatistics(iFamily).copulaFamily=copulaFamily{iFamily};
+
+    % calculate correlations in probability space
+    jointExtremeMonovariateProbNS=copulaAnalysis.jointExtremeMonovariateProbNS;
+    if copulaAnalysis.timeVaryingCopula==1
+        jointExtremesResampled=copulaAnalysis.resampleProb(iFamily,:); %from Monte-Carlo simulations
+    else
+        jointExtremesResampled=copulaAnalysis.resampleProb(iFamily); %from Monte-Carlo simulations
+
+    end
+    if iscell(jointExtremeMonovariateProbNS)
+        corrKendallSample=cellfun(@(x) nonzeros(triu(corr(x,'type','Kendall'),1)),jointExtremeMonovariateProbNS,'UniformOutput',0);
+
+        corrSpearmanSample=cellfun(@(x) nonzeros(triu(corr(x,'type','Spearman'),1)),jointExtremeMonovariateProbNS,'UniformOutput',0);
+    else
+        corrKendallSample=cellfun(@(x) nonzeros(triu(corr(x,'type','Kendall'),1)),{jointExtremeMonovariateProbNS},'UniformOutput',0);
+
+        corrSpearmanSample=cellfun(@(x) nonzeros(triu(corr(x,'type','Spearman'),1)),{jointExtremeMonovariateProbNS},'UniformOutput',0);
+    end
+
+    corrKendallMonte=cellfun(@(x) nonzeros(triu(corr(x,'type','Kendall'),1)),jointExtremesResampled,'UniformOutput',0);
+    corrSpearmanMonte=cellfun(@(x) nonzeros(triu(corr(x,'type','Spearman'),1)),jointExtremesResampled,'UniformOutput',0);
+
+    kendallDelta=cellfun(@(x,y) abs(x-y),corrKendallSample,corrKendallMonte,'UniformOutput',0);
+    spearmanDelta=cellfun(@(x,y) abs(x-y),corrSpearmanSample,corrSpearmanMonte,'UniformOutput',0);
+
+    gofStatistics(iFamily).corrKendallSampleDelta=mean(cellfun(@(x) (mean(x)),kendallDelta,'UniformOutput',1));
+    gofStatistics(iFamily).corrSpearmanSampleDelta=mean(cellfun(@(x) (mean(x)),spearmanDelta));
+
+    gofStatistics(iFamily).corrSpearmanSamplex=corrSpearmanSample;
+    gofStatistics(iFamily).corrSpearmanMontex=corrSpearmanMonte;
+    gofStatistics(iFamily).corrKendallSamplex=corrKendallSample;
+    gofStatistics(iFamily).corrKendallMontex=corrKendallMonte;
 end
-copulaParam.rho=rhoC;
-copulaParam.nu=nuC;
-
-
-%compute SnC statistic (a variant of CvM Cramer-Von Mises test)
-% if strcmpi(copulaParam.family{iFamily},'gaussian') || strcmpi(copulaParam.family{iFamily},'gumbel') || strcmpi(copulaParam.family{iFamily},'clayton')  || strcmpi(copulaParam.family{iFamily},'frank') 
-% 
-% eSample = tsRosenblattTransform(uSample,'rho',copulaParam.rho{iFamily},'family',copulaParam.family{iFamily});
-% elseif strcmpi(copulaParam.family{iFamily},'t')
-% eSample = tsRosenblattTransform(uSample,'rho',copulaParam.rho{iFamily},'nu',copulaParam.nu{iFamily},'family',copulaParam.family{iFamily});
-% 
-% end
-% 
-% sncSample = sum((tsEmpirical(eSample) - prod(eSample, 2)) .^ 2);
-
-%compute Sn statistic (a variant of CvM Cramer-Von Mises test)
-
-if strcmpi(copulaParam.family{iFamily}, 'gaussian')
-    % Y = copulacdf('gaussian', uSample, copulaParam.rho{iFamily});
-    Y=cellfun(@(x,y) copulacdf('gaussian',x,y),uSample,copulaParam.rho{iFamily},'UniformOutput',0);
-elseif  strcmpi(copulaParam.family{iFamily}, 't')
-    % Y = copulacdf('t', uSample, copulaParam.rho{iFamily}, copulaParam.nu{iFamily});
-elseif strcmpi(copulaParam.family{iFamily}, 'clayton') || strcmpi(copulaParam.family{iFamily}, 'frank') || strcmpi(copulaParam.family{iFamily}, 'gumbel')
-    % Y = copulacdf(copulaParam.family{iFamily}, uSample, copulaParam.rho{iFamily});
-       Y=cellfun(@(x,y) copulacdf(copulaParam.family{iFamily},x,y),uSample,copulaParam.rho{iFamily},'UniformOutput',0);
-end
-% snSample= sum((tsEmpirical(uSample) - Y) .^ 2);
-snSample=cellfun(@(x,y) sum((tsEmpirical(x) - y) .^ 2),uSample,Y);
-%calculate approximate p-value of sn estimate (details in Hofart book)
-% if pValSn
-%     N=1000;
-%     Pval=tsApproxP(N,copulaParam.family{iFamily},copulaParam.rho{iFamily}, copulaParam.nu{iFamily},snSample,copulaParam.nSeries);
-%     gofStatistics(iFamily).Pval=Pval;
-% end
-gofStatistics(iFamily).snSample=mean(round(snSample*1000)/1000);
-gofStatistics(iFamily).copulaFamily=copulaFamily{iFamily};
-% corrKendallSample=corr(jointExtremes,'type','Kendall');
-corrKendallSample=cellfun(@(x) corr(x,'type','Kendall'),jointExtremes,'UniformOutput',0);
-% corrSpearmanSample=corr(jointExtremes,'type','Spearman');
-corrSpearmanSample=cellfun(@(x) corr(x,'type','Spearman'),jointExtremes,'UniformOutput',0);
-
-% corrKendallMonte=corr(jointExtremesResampled{iFamily},'type','Kendall');
-corrKendallMonte=cellfun(@(x) corr(x,'type','Kendall'),jointExtremesResampled,'UniformOutput',0);
-
-% corrSpearmanMonte=corr(jointExtremesResampled{iFamily},'type','Spearman');
-corrSpearmanMonte=cellfun(@(x) corr(x,'type','Spearman'),jointExtremesResampled,'UniformOutput',0);
-
-
-
-
-% kendallDelta=abs(corrKendallSample-corrKendallMonte);
-kendallDelta=cellfun(@(x,y) abs(x-y),corrKendallSample,corrKendallMonte,'UniformOutput',0);
-% spearmanDelta=abs(corrSpearmanSample-corrSpearmanMonte);
-spearmanDelta=cellfun(@(x,y) abs(x-y),corrSpearmanSample,corrSpearmanMonte,'UniformOutput',0);
-
-
-nVar=copulaAnalysis.copulaParam.nSeries;
-idNonDiag=eye(nVar,nVar);
-idNonDiag=repmat({idNonDiag},size(kendallDelta));
-% [kendallDelta,ia,~]=unique(kendallDelta(~idNonDiag),'stable');
-[kendallDelta,ia,~]=cellfun(@(x,y) unique(x(~y),'stable'),kendallDelta,idNonDiag,'UniformOutput',0);
-
-% gofStatistics(iFamily).corrKendallSampleDelta=round(mean(kendallDelta)*1000)/1000;
-gofStatistics(iFamily).corrKendallSampleDelta=mean(cellfun(@(x) round(mean(x)*1000)/1000,kendallDelta,'UniformOutput',1))
-% spearmanDelta=spearmanDelta(~idNonDiag);
-spearmanDelta=cellfun(@(x,y) x(~y),spearmanDelta,idNonDiag,'UniformOutput',0);
-% spearmanDelta=spearmanDelta(ia);
-spearmanDelta=cellfun(@(x,y) x(y),spearmanDelta,ia,'UniformOutput',0);
-% gofStatistics(iFamily).corrSpearmanSampleDelta=round(mean(spearmanDelta)*1000)/1000;
-gofStatistics(iFamily).corrSpearmanSampleDelta=mean(cellfun(@(x) round(mean(x)*1000)/1000,spearmanDelta))
-
-
-corrSpearmanSamplex=cellfun(@(x,y) x(~y),corrSpearmanSample,idNonDiag,'UniformOutput',0);
-
-corrSpearmanSamplex=cellfun(@(x,y) x(y),corrSpearmanSamplex,ia,'UniformOutput',0);
-
-corrSpearmanMontex=cellfun(@(x,y) x(~y),corrSpearmanMonte,idNonDiag,'UniformOutput',0);
-
-corrSpearmanMontex=cellfun(@(x,y) x(y),corrSpearmanMontex,ia,'UniformOutput',0);
-gofStatistics(iFamily).corrSpearmanSamplex=corrSpearmanSamplex;
-gofStatistics(iFamily).corrSpearmanMontex=corrSpearmanMontex;
-
-end
-
 
 fields = fieldnames(gofStatistics);
 igd=find(cellfun(@(x) isempty(regexp(x,'copulaFamily')),fields));
-imnst=[];
+imnst={};
 for ifields=igd'
-    if  strcmpi(fields{ifields},'snsample') || strcmpi(fields{ifields},'aicsample') || strcmpi(fields{ifields},'bicsample') || strcmpi(fields{ifields},'sncsample')
+    if  strcmpi(fields{ifields},'snsample') || strcmpi(fields{ifields},'corrkendallsampledelta')  || strcmpi(fields{ifields},'corrspearmansampledelta')
 
         ser0=extractfield(gofStatistics,fields{ifields});
-        [mser0]=min(ser0);
-        imns=find(ser0==mser0);
-        imnst=[imnst,imns];
-    elseif strcmpi(fields{ifields},'llsample')
-        ser0=extractfield(gofStatistics,fields{ifields});
-        [maser0]=max(ser0);
-        imns=find(ser0==maser0);
-        imnst=[imnst,imns];
-    elseif strcmpi(fields{ifields},'corrkendallsampledelta')  || strcmpi(fields{ifields},'corrspearmansampledelta') || strcmpi(fields{ifields},'corrpearsonsampledelta')
-        ser0=extractfield(gofStatistics,fields{ifields});
-        if copulaAnalysis.copulaParam.nSeries==3
-        ser00=ser0;
-        elseif copulaAnalysis.copulaParam.nSeries==2
-            ser00=ser0;
-        end
-        [mser02]=min((ser00));
-         imns=find(ser00==mser02);
-        imnst=[imnst,imns];
+        [~,ixx]=sort(ser0,'ascend');
+        imnst=[imnst;copulaFamily(ixx)];
+
     end
 end
 
+[~, cols] = size(imnst);
 
-[n,bin] = hist(imnst,unique(imnst));
-bin=bin(find(n));
-n=n(find(n));
-[~,idx] = sort(-n);
- 
-res=cellfun(@(x,y) [x,' with ',num2str(y),' test passed'],copulaFamily(bin(idx)),num2cell(n(idx)),'UniformOutput',0);
+% Loop over the columns incrementally
+for col = 1:cols
+    % Take the first `col` columns of the array
+    currentNames = imnst(:, 1:col);
+    
+    % Flatten the array to a 1D cell array
+    flattenedNames = currentNames(:);
+    
+    % Get unique names and their counts
+    [uniqueNames, ~, idx] = unique(flattenedNames);
+    counts = histcounts(idx, 1:numel(uniqueNames) + 1);
+    
+    % Find the most frequent name and its count
+    [maxCountForCol, maxIdx] = max(counts);
+    mostFrequentName = uniqueNames{maxIdx};
 
-disp(['GOF results:'])
-disp([char(res')])
+    % Check if this name is the only most frequent one
+    if sum(counts == maxCountForCol) == 1 % Ensure it's unique
+        fprintf(['\nThe best performing copula is: \n', mostFrequentName]);
+        iToCopula=find(strcmpi(copulaFamily,mostFrequentName));
 
+        break; 
+    end
+end
 
+if sum(counts == maxCountForCol) ~=1
+    fprintf(['\nAll copulas performed equally well, the following copulas was selected \n', copulaFamily{1}]);
+    iToCopula=1;
+end
 
 end
 

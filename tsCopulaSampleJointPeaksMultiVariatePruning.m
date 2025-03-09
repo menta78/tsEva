@@ -6,18 +6,28 @@ function [samplingAnalysis] = tsCopulaSampleJointPeaksMultiVariatePruning(inputt
 %                     returns a variable of type structure containing various parameters 
 %                     related to the sampled compound extremes
 
-% This function samples the compound events (multivariate peaks) from inputtimeseries, based on a multivariate peak
-% over threshold approach (also known as coincidence analysis).inputtimeseries must be stationarized beforehand. 
-% A compound peak event is defined as an event whereby all monovariates exceed their respective thresholds while a 
-% compound non-peak event is defined as an event where at least one (but not all) monovariate exceed its threshold value. 
-%The sampling method is such that at first, all possible combination of compound peak and non-peak events are sampled
-%based on user-define minimum and maximum allowable distance between the monovariate and multivariate peaks, respectively. 
-%subsequently, during the pruning stage, events are sorted from the largest mean value to the lowest mean value and any
-% overlapping event gets discarded as the code works out through in the decreasing order of events magnitude
+% This function samples the compound events (multivariate peaks) from
+% inputtimeseries, based on a multivariate peak over threshold
+% approach.inputtimeseries must be stationarized beforehand. The function
+% keeps record of both compound peak events (defined as events during which
+% all monovariates exceed their respective thresholds) and compound
+% non-peak events (defined as events during which at least one (but not
+% all) monovariate exceed its threshold value).
 
-% The compound (joint) extremes are sampled using the stationarized series. Transformation of the non-stationary series to 
-% stationarized series and the calculation of marginal distributions are performed using method of Mentaschi, et al., 2016 [1],
-% applied on each margin separately.
+% POT sampling is conducted on each stationarized series x(t)
+% (inputtimeseries need to be stationarized prior to calling this
+% function), selecting multivariate peaks within a defined maximum time
+% interval 〖Δt〗_multivariate. A challenge with this approach is the
+% potential for multiple combinations of univariate peaks within the
+% interval 〖Δt〗_multivariate. In tsEVA 2.0, this issue is addressed by
+% prioritizing joint peaks with the largest mean values (average of
+% univariate peak values), iteratively removing all other peak
+% combinations.
+
+% The compound (joint) extremes are sampled using the stationarized series.
+% Transformation of the non-stationary series to stationarized series and
+% the calculation of marginal distributions are performed using method of
+% Mentaschi, et al., 2016 [1], applied on each margin separately.
 
 % input:
 %  inputtimestamps                           - 1d array with length nt, time stamps for the input
@@ -26,11 +36,11 @@ function [samplingAnalysis] = tsCopulaSampleJointPeaksMultiVariatePruning(inputt
 
 % other (optional) inputs:
 
-%  thresholdpercentiles                      - 1d array with length n, percentile threshold to be used for each time
+%  samplingThresholdPrct                     - 1d array with length n, percentile threshold to be used for each time
 %                                              series. 
-%  minpeakdistanceindays                     - 1d array with length n, minimum time distance (in days) among peaks of the same
+%  minPeakDistanceInDaysMonovarSampling      - 1d array with length n, minimum time distance (in days) among peaks of the same
 %                                              variable used for sampling
-%  maxdistancemultivariatepeaksindays        - maximum time distance (in days) among peaks of different variables
+%  maxPeakDistanceInDaysMultivarSampling     - maximum time distance (in days) among peaks of different variables
 %                                              for the peaks to be considered joint. 1d array with  
 %                                              length(maxPeakDistanceInDaysMultivarSampling) =size(nchoosek([1:n],2),1),
 %                                              where nchoosek([1:n],2) shows the format in which maxPeakDistanceInDaysMultivarSampling
@@ -61,42 +71,51 @@ function [samplingAnalysis] = tsCopulaSampleJointPeaksMultiVariatePruning(inputt
 %                                               peaksjointidx2                       -- indices of compound non-peak events
                                              
 
-% M.H.Bahmanpour, 2024
+% M.H.Bahmanpour, 2025
 
-%   References:
-%       [1] Mentaschi, L., Vousdoukas, M., Voukouvalas, E., Sartini, L., Feyen, L., Besio, G., and Alfieri, L.: 
-%           The transformed-stationary approach: a generic and simplified methodology for non-stationary extreme value analysis,
-%           Hydrol. Earth Syst. Sci., 20, 3527–3547, https://doi.org/10.5194/hess-20-3527-2016, 2016
+%REFERENCES
+
+% [1] Bahmanpour, M.H., Mentaschi, L., Tilloy, A., Vousdoukas, M.,
+%     Federico, I., Coppini, G., and Feyen, L., 2025,
+%     Transformed-Stationary EVA 2.0: A Generalized Framework for
+%     Non-stationary Joint Extreme Analysis (submitted to Hydrology and
+%     Earth System Sciences; Feb 2025)
+% [2] Mentaschi, L., Vousdoukas, M. I., Voukouvalas, E., Sartini, L.,
+%     Feyen, L., Besio, G., & Alfieri, L. (2016). The
+%     transformed-stationary approach: a generic and simplified methodology
+%     for non-stationary extreme value analysis. Hydrology and Earth System
+%     Sciences, 20(9), 3527–3547. https://doi.org/10.5194/hess-20-3527-2016
 
 %%%%%%%%%%%%%%%%%%%%%%
 
 % setting the default parameters
 
-args.samplingThresholdPrct=[99,99];                      %thresholdpercentiles
-args.minPeakDistanceInDaysMonovarSampling=[3,3];         %minpeakdistanceindays
-args.maxPeakDistanceInDaysMultivarSampling=3;            %maxdistancemultivariatepeaksindays
-args.marginalAnalysis=cell(1,size(inputtimeseries,2));   % for calculation of non-stationary parameters
+args.samplingThresholdPrct=[99,99];                      
+args.minPeakDistanceInDaysMonovarSampling=[3,3];         
+args.maxPeakDistanceInDaysMultivarSampling=3;           
+args.marginalAnalysis=cell(1,size(inputtimeseries,2));   % used for calculation of non-stationary parameters
 args.samplingOrder=0;
-%                                                        used in conversion from data space to probability space
 args.peakType='allExceedThreshold';
+
 % parsing of input parameters, overrides if different with the default
 args = tsEasyParseNamedArgs(varargin, args);
 
 
-samplingThresholdPrct=args.samplingThresholdPrct;%thresholdpercentiles
-minPeakDistanceInDaysMonovarSampling=args.minPeakDistanceInDaysMonovarSampling;%minpeakdistanceindays
-maxPeakDistanceInDaysMultivarSampling=args.maxPeakDistanceInDaysMultivarSampling;%maxdistancemultivariatepeaksindays
+samplingThresholdPrct=args.samplingThresholdPrct;
+minPeakDistanceInDaysMonovarSampling=args.minPeakDistanceInDaysMonovarSampling;
+maxPeakDistanceInDaysMultivarSampling=args.maxPeakDistanceInDaysMultivarSampling;
 marginalAnalysis=args.marginalAnalysis;
 peakType=args.peakType;
 samplingOrder=args.samplingOrder;
+
 % adjust maxPeakDistanceInDaysMultivarSampling to a compatible format 
 if size(maxPeakDistanceInDaysMultivarSampling,2)~=size(nchoosek([1:size(inputtimeseries,2)],2),1)
     maxPeakDistanceInDaysMultivarSampling=...
         repmat(maxPeakDistanceInDaysMultivarSampling,1,size(nchoosek([1:size(inputtimeseries,2)],2),1));
 end
 
-numVar=size(inputtimeseries,2);         %number of variables
-dt = tsEvaGetTimeStep(inputtimestamps); %time diff
+numVar=size(inputtimeseries,2);         
+dt = tsEvaGetTimeStep(inputtimestamps); 
 
 inputtimeseriesCell=mat2cell(inputtimeseries,size(inputtimeseries,1),ones(1,size(inputtimeseries,2)));
 thresholdsArray=cellfun(@(x,y) prctile(x,y),...
@@ -137,7 +156,6 @@ combinationVariates=nchoosek([1:size(numVarId,1)],2);
 combinationVariates=combinationVariates(sortIndexCombinations,:);
 
 for combinedPeaksCount=1:length(combinedPeaksTime)-1
-
 
     combinedPeaksIdPair=numVarId(numVarId~=combinedPeaksId(combinedPeaksCount));
     indicesPerEventCell={};
@@ -254,12 +272,12 @@ jointIdTotal=[indexJointPeaksColumnWise;indexJointNonPeaksColumnWise];
 
 %abide-by ordering of variables
 if find(samplingOrder)
-nonrealisticIndices=find(jointPeaksTimeTotal(:,samplingOrder(2))-jointPeaksTimeTotal(:,samplingOrder(1))>0);
-jointPeaksTimeTotal(nonrealisticIndices,:)=[];
-jointPeaksTotal(nonrealisticIndices,:)=[];
-jointIdTotal(nonrealisticIndices,:)=[];
+    nonrealisticIndices=find(jointPeaksTimeTotal(:,samplingOrder(2))-jointPeaksTimeTotal(:,samplingOrder(1))<0);
+    jointPeaksTimeTotal(nonrealisticIndices,:)=[];
+    jointPeaksTotal(nonrealisticIndices,:)=[];
+    jointIdTotal(nonrealisticIndices,:)=[];
 else
-nonrealisticIndices=[];
+    nonrealisticIndices=[];
 end
 % peaks need to be sorted in a descending manner
 [~,idSort]=sort(mean(jointPeaksTotal,2),'descend');
@@ -314,13 +332,16 @@ indexJointNonPeaksColumnWise=jointIdTotal(idPeaksArtificial==2,:);
 
 jointExtremeIndices=combinedPeaksIndex(indexJointPeaksColumnWise);
 if size(combinedPeaksIndex(indexJointNonPeaksColumnWise),2)~=1
-peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)];
+    peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)];
 else
-peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)'];
+    peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)'];
 end
 disp([num2str(((size((jointPeaksTimeColumnWise),1)))),' ','Compound peak events found'])
-disp([num2str(((size((jointNonPeaksTimeColumnWise),1)))),' ','Compound non-peak events found'])
-
+% disp([num2str(((size((jointNonPeaksTimeColumnWise),1)))),' ','Compound non-peak events found'])
+disp(['average time among peaks of ',...
+    num2str(mean(abs(diff(jointPeaksTimeColumnWise,[],2)))),' days',...
+    ' with minimum of ',num2str(min(abs(diff(jointPeaksTimeColumnWise,[],2)))),' days',...
+    ' and maximum of ', num2str(max(abs(diff(jointPeaksTimeColumnWise,[],2)))),' days'])
 jointextremes=cat(3,jointPeaksTimeColumnWise,jointPeaksColumnWise);
 jointextremes2=cat(3,jointNonPeaksTimeColumnWise,jointNonPeaksColumnWise);
 if ~isempty(marginalAnalysis)

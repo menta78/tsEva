@@ -5,16 +5,14 @@
 % temperature and the 6-month Standardized Precipitation-Evapotranspiration
 % Index (SPEI) in a region south of Milan, Italy (9.25E, 45.25N). Hourly
 % surface temperature data from the ECMWF ERA-5 dataset (1959–2023) was
-% paired with monthly SPEI data (interpolated to hourly data) (1959–2022)
-% (Zhang, 2023). To better capture heatwave dynamics, the hourly
-% temperature data were smoothed using a 10-day running mean. The analysis
-% was restricted to the period from April to September, which aligns with
-% the growing season when drought impacts are at their peak and heatwaves
-% present a significant hazard. This case study demonstrated a scenario
-% where block-maxima sampling is a valid and simpler alternative to the POT
-% method for analyzing extremes.
-
-
+% paired with monthly SPEI data (1959–2022) (Zhang, 2023). To better
+% capture heatwave dynamics, the temperature data were smoothed using a
+% 10-day running mean. The analysis was restricted to the period from April
+% to September, which aligns with the growing season when drought impacts
+% are at their peak and heatwaves present a significant hazard. This case
+% study demonstrated a scenario where block-maxima sampling is a valid and
+% simpler alternative to the POT method for analyzing extremes. A 35-year
+% non-stationary time window was used in this analysis.
 
 
 %REFERENCES
@@ -52,7 +50,7 @@ potPercentiles=[{75},{97}];
 
 %Non-stationary time window (in days) used for time-varying joint
 %distribution
-timeWindowNonStat=365*40;
+timeWindowNonStat=365*35;
 
 %minimum distance (in days) between univariate peaks 
  minDeltaUnivarSampli=[30,30];  
@@ -60,7 +58,7 @@ timeWindowNonStat=365*40;
  %one value or has to have a format and size matching
  %size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in
  %trivariate case, and so on
- maxDeltaMultivarSampli=12*30; 
+ maxDeltaMultivarSampli=12*30; %12
 
  %copula family; Gumbel, gaussian and Frank are possible choices
 copulaFamily={'gumbel'};  
@@ -70,7 +68,7 @@ copulaFamily={'gumbel'};
 transfType='trendlinear';
 peakType='allExceedThreshold';
 marginalDistributions='gev';
-[copulaAnalysisNonStat] = tsCopulaExtremes(timeAndSeries1(:,1), ...
+[copulaAnalysis] = tsCopulaExtremes(timeAndSeries1(:,1), ...
     [timeAndSeries2(:,2),timeAndSeries1(:,2)], ...
     'minPeakDistanceInDaysMonovarSampling',minDeltaUnivarSampli, ...
     'maxPeakDistanceInDaysMultivarSampling',maxDeltaMultivarSampli, ...
@@ -80,21 +78,52 @@ marginalDistributions='gev';
     'peakType',peakType, ...
     'marginalDistributions',marginalDistributions);
 
-[copulaAnalysisNonStat] = tsCopulaCompoundGPDMontecarlo(copulaAnalysisNonStat,...
-    'nResample',1000,'timeIndex','middle','nonStationarity','margins');
-% [gofStatistics] = tsCopulaUncertainty(copulaAnalysis);
+[monteCarloAnalysis1] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+    'nResample',10000,'timeIndex','middle','nonStationarity','margins');%'nonStationarity','margins'
+[monteCarloAnalysis2] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+    'nResample',1000,'timeIndex','middle','nonStationarity','margins');%'nonStationarity','margins'
 
-[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysisNonStat,'pValSn',0);
-% figHnd1 = tsCopulaPlot(copulaAnalysis,gofStatistics, ...
-%     'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'scale',0);
-axxArray = tsCopulaPlotBivariate(copulaAnalysisNonStat,gofStatistics, ...
-    'ylbl', {'- SPEI','Temp °C'});
-[~,hFig1]=tsPlotBivarReturnPeriod(copulaAnalysisNonStat,axxArray,'xlbl','River discharge (m^3s^{-1})','ylbl','SWH (m)');
+% append monteCarloAnalysis to copulaAnalysis 
+fields = fieldnames(monteCarloAnalysis1); %
 
+for ii = 1:numel(fields)
+    copulaAnalysis.(fields{ii}) = monteCarloAnalysis1.(fields{ii}); 
+end
 
+[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis);
 
+fields = fieldnames(monteCarloAnalysis2); %
 
+for ii = 1:numel(fields)
+    copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii}); 
+end
 
+if length(copulaFamily)>1
+    copulaAnalysis.copulaParam.family=copulaFamily{iToCopula};
+    if copulaAnalysis.timeVaryingCopula==1
+        copulaAnalysis.copulaParam.rho=copulaAnalysis.copulaParam.rho(iToCopula,:);
+        copulaAnalysis.copulaParam.rhoMean=copulaAnalysis.copulaParam.rhoMean(iToCopula,:);
+    else
+        copulaAnalysis.copulaParam.rho=copulaAnalysis.copulaParam.rho(iToCopula);
+         copulaAnalysis.copulaParam.rhoMean=copulaAnalysis.copulaParam.rhoMean(iToCopula,:);
 
-%%
+    end
+    
+    for ii = 1:numel(fields)
+        if strcmpi(fields{ii},'resamplelevel') || strcmpi(fields{ii},'resampleprob')
+            if copulaAnalysis.timeVaryingCopula==1
+                copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii})(iToCopula,:);
+            else
+                copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii})(iToCopula);
+            end
+
+        end
+    end
+end
+
+axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
+    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'smoothInd',10);
+
+[rpAnalysis,~]=tsCopulaComputeandPlotBivarRP(copulaAnalysis,'axxArray',axxArray);
+
 
