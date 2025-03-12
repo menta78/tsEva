@@ -53,14 +53,14 @@ potPercentiles=[{75},{97}];
 timeWindowNonStat=365*35;
 
 %minimum distance (in days) between univariate peaks 
- minDeltaUnivarSampli=[30,30];  
-  %maximum distance (in days) between multivariate peaks; can either take
- %one value or has to have a format and size matching
- %size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in
- %trivariate case, and so on
- maxDeltaMultivarSampli=12*30; %12
+minDeltaUnivarSampli=[30,30];  
+%maximum distance (in days) between multivariate peaks; can either take
+%one value or has to have a format and size matching
+%size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in
+%trivariate case, and so on
+maxDeltaMultivarSampli=12*30; %12
 
- %copula family; Gumbel, gaussian and Frank are possible choices
+%copula family; Gumbel, gaussian and Frank are possible choices
 copulaFamily={'gumbel'};  
 
 %methodology to perform univariate transformation from non-stationary to

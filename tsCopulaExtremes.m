@@ -259,10 +259,8 @@ switch timeVaryingCopula
         inputtimestampsWindowCell={};
         IndexWindowCell={};
         timePeaksCell={};
-        rhoTotal={};
-        nuTotal={};
+        rhoTotal={}; % handling with a cell, because we don't know in advance what each copula needs
         rho0=cell(length(copulaFamily),1);
-        nu0=cell(length(copulaFamily),1);
         beginIndex=0;
 
         timePeaks=jointextremes(:,:,1);
@@ -325,7 +323,10 @@ switch timeVaryingCopula
             end
 
             rhoTotal=[rhoTotal,rho0];
-            nuTotal=[nuTotal,nu0];
+
+            % smoothing
+            % THE SMOOTHING SHOULD BE DONE HERE BASED ON the timewindow
+            % parameter, separately for each copula
         end
  
         inputtimeseriesC=repmat({inputtimeseries},1,size(IndexWindowCell,2));
@@ -335,7 +336,6 @@ switch timeVaryingCopula
             jointExtremesNS=cellfun(@(x,y) [x(y(:,1),1),x(y(:,2),2),x(y(:,3),3)],inputtimeseriesC,IndexWindowCell,'UniformOutput',0);
         end
         copulaParam.rho=rhoTotal;
-        copulaParam.nu=nuTotal;
     
         cellTimePeaks=vertcat(timePeaksCell{:});
         [yMax,iB,~] = unique(vertcat(jointExtremesNS{:}),'stable','rows');

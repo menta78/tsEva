@@ -42,7 +42,6 @@ args.ylbl = 'Y';
 args.fontSize = 12;
 args.locString=["Loc1","Loc2","Loc3"];
 args.latlon=[];
-args.smoothInd=1;
 
 args = tsEasyParseNamedArgs(varargin, args);
 
@@ -51,7 +50,6 @@ ylbl = args.ylbl;
 fontSize = args.fontSize;
 locString=args.locString;
 latlon=args.latlon;
-smoothInd=args.smoothInd;
 % set some parameters
 labelMark=(["(a)","(b)","(c)","(d)","(e)","(f)","(g)","(h)","(i)","(j)","(k)","(l)"]);
 
@@ -398,7 +396,7 @@ yLabel2=[];
 %
 couplingParamMat=(cell2mat(cellfun(@(x) x(find(tril(x,-1))),couplingParam,'UniformOutput',0)))';
 
-couplingParamMat = arrayfun(@(col) smooth(couplingParamMat(:, col),smoothInd), 1:size(couplingParamMat, 2), 'UniformOutput', false);
+couplingParamMat = arrayfun(@(col) couplingParamMat(:, col), 1:size(couplingParamMat, 2), 'UniformOutput', false);
 couplingParamMat = cell2mat(couplingParamMat);  % Convert cell array back to matrix
 
 plot(axxArray(9),datetime(datevec(ttRho)),couplingParamMat);

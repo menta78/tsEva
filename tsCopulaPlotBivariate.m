@@ -40,15 +40,13 @@ function [axxArray] = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics,varargi
 
 args.xlbl = 'Date (time)';
 args.ylbl = 'Y';
-args.fontSize = 12;
-args.smoothInd=1;
+args.fontSize = 14;
 
 args = tsEasyParseNamedArgs(varargin, args);
 
 xlbl = args.xlbl;
 ylbl = args.ylbl;
 fontSize = args.fontSize;
-smoothInd = args.smoothInd;
 % set some parameters
 labelMark=(["(a)","(b)","(c)","(d)","(e)"]);
 
@@ -268,9 +266,9 @@ if strcmpi(copulaFamily,'gaussian')
     elseif copulaAnalysis.timeVaryingCopula==1
         rho=cellfun(@(x) x(2),couplingParam);
         x11=datetime(datevec(ttRho));
-        y11=smooth(rho,smoothInd);
+        y11=rho;
         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
-        y22=[smooth([corrSpearmanSamplex{:}]',smoothInd),smooth([corrSpearmanMontex{:}]',smoothInd)];
+        y22=[cell2mat(corrSpearmanSamplex)', cell2mat(corrSpearmanMontex)'];
         [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11,x22,y22);
 
         if isfield(copulaAnalysis.copulaParam,'rhoMean')
@@ -313,9 +311,9 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
 
     elseif copulaAnalysis.timeVaryingCopula==1
         x11=datetime(datevec(ttRho));
-        y11=smooth(cell2mat(couplingParam),smoothInd);
+        y11=cell2mat(couplingParam);
         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
-        y22=[smooth([corrSpearmanSamplex{:}]',smoothInd),smooth([corrSpearmanMontex{:}]',smoothInd)];
+        y22=[cell2mat(corrSpearmanSamplex)', cell2mat(corrSpearmanMontex)'];
         [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11,x22,y22);
         if isfield(copulaAnalysis.copulaParam,'rhoMean')
             set(hAx(1),'NextPlot','add')
@@ -358,9 +356,9 @@ elseif copulaAnalysis.timeVaryingCopula==0
     latexString2 = sprintf('${S_n} = %s$', formattedValue2);
     latexString3 = sprintf('${\\Delta \\tau}_{\\mathrm{Kendall}} = %s$', formattedValue3);
 end
-text(axxArray(3),0.65, 0.4, latexString,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex', 'FontSize', 14);
-text(axxArray(3),0.65, 0.3, latexString3,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex','FontSize', 14);
-text(axxArray(3),0.65, 0.2, latexString2 ,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex','FontSize', 14);
+text(axxArray(3),0.65, 0.4, latexString,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex', 'FontSize', fontSize);
+text(axxArray(3),0.65, 0.3, latexString3,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex','FontSize', fontSize);
+text(axxArray(3),0.65, 0.2, latexString2 ,'units','normalized','HorizontalAlignment','left','Interpreter', 'latex','FontSize', fontSize);
 
 set(axxArray(3),'FontSize',fontSize)
 

@@ -1,5 +1,5 @@
 
-function [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargin)
+function [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis, varargin)
 %tsCopulaCompoundGPDMontecarlo pefrom Monte-Carlo simulation (resampling) from a
 %pre-determined copula function
 
