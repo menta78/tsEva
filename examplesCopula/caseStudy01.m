@@ -107,7 +107,8 @@ samplingOrder=[2,1];
     'copulaFamily',copulaFamily,...
     'transfType',transfType,'timeWindow',timeWindowJointDist,...
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
-    'marginalDistributions',marginalDistributions,'samplingOrder',samplingOrder);
+    'marginalDistributions',marginalDistributions,'samplingOrder',samplingOrder,...
+    'smoothInd',10);
 
 [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     'nResample',1000,'timeIndex','middle');
@@ -119,7 +120,7 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis.(fields{ii}); 
 end
 
-[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis);
+[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis,'smoothInd',10);
 
 if length(copulaFamily)>1
     copulaAnalysis.copulaParam.family=copulaFamily{iToCopula};

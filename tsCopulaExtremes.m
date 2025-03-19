@@ -95,10 +95,11 @@ args.minPeakDistanceInDaysMonovarSampling=[3,3];
 args.maxPeakDistanceInDaysMultivarSampling=3;
 args.peakType='allexceedthreshold';
 args.samplingOrder=0;
-
+args.smoothInd=1;
 % parsing of input parameters, overrides if different with the default
 args = tsEasyParseNamedArgs(varargin, args);
 
+smoothInd=args.smoothInd;
 copulaFamily = args.copulaFamily;
 marginalDistributions=args.marginalDistributions;
 timewindow = args.timewindow;
@@ -335,7 +336,45 @@ switch timeVaryingCopula
         elseif nSeries==3
             jointExtremesNS=cellfun(@(x,y) [x(y(:,1),1),x(y(:,2),2),x(y(:,3),3)],inputtimeseriesC,IndexWindowCell,'UniformOutput',0);
         end
-        copulaParam.rho=rhoTotal;
+        if nSeries==2
+            rhoTotal=num2cell(smoothdata(cell2mat(rhoTotal),'movmean',smoothInd));
+            copulaParam.rho=rhoTotal;
+        elseif nSeries==3
+            N = length(rhoTotal); % Number of 3x3 cell arrays
+
+            % Preallocate arrays to store extracted values
+            comp_12 = cell(1, N);
+            comp_13 = cell(1, N);
+            comp_23 = cell(1, N);
+
+            % Extract the required components
+            for ij = 1:N
+                comp_12{ij} = rhoTotal{ij}(1,2); % Extract (1,2) component
+                comp_13{ij} = rhoTotal{ij}(1,3); % Extract (1,3) component
+                comp_23{ij} = rhoTotal{ij}(2,3); % Extract (2,3) component
+            end
+            comp_12=num2cell(smoothdata(cell2mat(comp_12),'movmean',smoothInd));
+            comp_13=num2cell(smoothdata(cell2mat(comp_13),'movmean',smoothInd));
+            comp_23=num2cell(smoothdata(cell2mat(comp_23),'movmean',smoothInd));
+            for ij = 1:N
+                rhoTotal{ij}(1,2)=comp_12{ij} ; % Extract (1,2) component
+                rhoTotal{ij}(1,3)=comp_13{ij} ; % Extract (1,3) component
+                rhoTotal{ij}(2,3)=comp_23{ij} ; % Extract (2,3) component
+            end
+
+            for ij = 1:N
+                % Extract the current 3x3 matrix
+                M = rhoTotal{ij};
+
+                % Copy the upper triangular part to the lower triangular part
+                M = triu(M) + triu(M,1)';  % triu(M,1)' copies the upper part to lower
+
+                % Store back in the cell array
+                rhoTotal{ij} = M;
+            end
+            copulaParam.rho=rhoTotal;
+        end
+       
     
         cellTimePeaks=vertcat(timePeaksCell{:});
         [yMax,iB,~] = unique(vertcat(jointExtremesNS{:}),'stable','rows');

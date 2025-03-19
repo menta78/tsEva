@@ -77,7 +77,7 @@ peakType='allExceedThreshold';
     'copulaFamily',copulaFamily,...
     'transfType',transfType,'timeWindow',timeWindowNonStat,...
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
-    'peakType',peakType);
+    'peakType',peakType,'smoothInd',10);
 
 [monteCarloAnalysis1] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     'nResample',300,'timeIndex','middle');
@@ -87,7 +87,7 @@ fields = fieldnames(monteCarloAnalysis1); %
 for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis1.(fields{ii}); 
 end
-[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'pValSn',0);
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'pValSn',0,'smoothInd',10);
 
 axxArray = tsCopulaPlotTrivariate(copulaAnalysis,gofStatistics, ...
     'ylbl', {'SWH (m)','SWH (m)','SWH (m)'},'locString',locString,'latlon',latlon,'smoothInd',10);

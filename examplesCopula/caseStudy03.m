@@ -76,7 +76,7 @@ marginalDistributions='gev';
     'transfType',transfType,'timeWindow',timeWindowNonStat,...
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
     'peakType',peakType, ...
-    'marginalDistributions',marginalDistributions);
+    'marginalDistributions',marginalDistributions,'smoothInd',10);
 
 [monteCarloAnalysis1] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     'nResample',10000,'timeIndex','middle','nonStationarity','margins');%'nonStationarity','margins'
@@ -90,7 +90,7 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis1.(fields{ii}); 
 end
 
-[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis);
+[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis,'smoothInd',10);
 
 fields = fieldnames(monteCarloAnalysis2); %
 
