@@ -162,6 +162,7 @@ end
 [~,Locb2]=ismember(yMaxLevel{end},yMax,'rows');
 
 couplingParam=copulaAnalysis.copulaParam.rho;
+couplingParamRaw=copulaAnalysis.copulaParam.rhoRaw; % used to compute the Mann-Kendall test
 copulaFamily=copulaAnalysis.copulaParam.family;
 %perform plotting
 scatterMontCarl01=scatter(axxArray(4),resampleLevel{1}(:,1), resampleLevel{1}(:,2));
@@ -265,6 +266,7 @@ if strcmpi(copulaFamily,'gaussian')
         yLabel2=[yLabel2,yll];
     elseif copulaAnalysis.timeVaryingCopula==1
         rho=cellfun(@(x) x(2),couplingParam);
+        rhoRaw=cellfun(@(x) x(2),couplingParamRaw);
         x11=datetime(datevec(ttRho));
         y11=rho;
         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
@@ -279,7 +281,7 @@ if strcmpi(copulaFamily,'gaussian')
         hLine1.LineWidth=1;
         hLine2(1).LineWidth=1;
         hLine2(2).LineWidth=1;
-        [~,p_value]=tsMann_Kendall(rho,0.05);
+        [~,p_value]=tsMann_Kendall(rhoRaw,0.05);
 
         str=lower(char(copulaFamily));
         idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
@@ -323,7 +325,7 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
         hLine1.LineWidth=1;
         hLine2(1).LineWidth=1;
         hLine2(2).LineWidth=1;
-        [~,p_value]=tsMann_Kendall(cell2mat(couplingParam),0.05);
+        [~,p_value]=tsMann_Kendall(cell2mat(couplingParamRaw),0.05);
 
         str=lower(char(copulaFamily));
         idx=regexp([' ' str],'(?<=\s+)\S','start')-1;

@@ -360,6 +360,7 @@ yMaxLevel=copulaAnalysis.jointExtremes;
 [~,Locb2]=ismember(yMaxLevel{end},yMax,'rows');
 
 couplingParam=copulaAnalysis.copulaParam.rho;
+couplingParamRaw=copulaAnalysis.copulaParam.rhoRaw; % used to compute the Mann-Kendall test
 copulaFamily=copulaAnalysis.copulaParam.family;
 
 sc3.CData=RGB;
@@ -393,14 +394,15 @@ ht6.VerticalAlignment='top';
 ttRho=linspace(inputtimestampsWindowCell{1}(1),inputtimestampsWindowCell{end}(end),length(inputtimestampsWindowCell));
 positionLabel2=[];
 yLabel2=[];
-%
-couplingParamMat=(cell2mat(cellfun(@(x) x(find(tril(x,-1))),couplingParam,'UniformOutput',0)))';
 
+couplingParamMat=(cell2mat(cellfun(@(x) x(find(tril(x,-1))),couplingParam,'UniformOutput',0)))';
 couplingParamMat = arrayfun(@(col) couplingParamMat(:, col), 1:size(couplingParamMat, 2), 'UniformOutput', false);
 couplingParamMat = cell2mat(couplingParamMat);  % Convert cell array back to matrix
-
 plot(axxArray(9),datetime(datevec(ttRho)),couplingParamMat);
 
+couplingParamMat=(cell2mat(cellfun(@(x) x(find(tril(x,-1))),couplingParamRaw,'UniformOutput',0)))';
+couplingParamMat = arrayfun(@(col) couplingParamMat(:, col), 1:size(couplingParamMat, 2), 'UniformOutput', false);
+couplingParamMat = cell2mat(couplingParamMat);  % Convert cell array back to matrix
 [~,p_value]=tsMann_Kendall(couplingParamMat(:,1),0.05);
 [~,p_value2]=tsMann_Kendall(couplingParamMat(:,2),0.05);
 [~,p_value3]=tsMann_Kendall(couplingParamMat(:,3),0.05);

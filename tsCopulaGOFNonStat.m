@@ -72,14 +72,9 @@ function [gofStatistics,iToCopula] = tsCopulaGOF(copulaAnalysis,varargin)
 
 % setting the default parameters
 
-args.smoothInd=1;
-% parsing of input parameters, overrides if different with the default
-args = tsEasyParseNamedArgs(varargin, args);
-
-smoothInd=args.smoothInd;
-
+smoothInd = copulaAnalysis.copulaParam.smoothInd;
 copulaFamily = copulaAnalysis.copulaParam.family;
-copulaParam=copulaAnalysis.copulaParam;
+copulaParam = copulaAnalysis.copulaParam;
 
 %read non-stationary joint extremes
 jointExtremes=copulaAnalysis.jointExtremes;

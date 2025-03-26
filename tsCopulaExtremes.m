@@ -95,11 +95,10 @@ args.minPeakDistanceInDaysMonovarSampling=[3,3];
 args.maxPeakDistanceInDaysMultivarSampling=3;
 args.peakType='allexceedthreshold';
 args.samplingOrder=0;
-args.smoothInd=1;
+args.smoothInd=-1;
 % parsing of input parameters, overrides if different with the default
 args = tsEasyParseNamedArgs(varargin, args);
 
-smoothInd=args.smoothInd;
 copulaFamily = args.copulaFamily;
 marginalDistributions=args.marginalDistributions;
 timewindow = args.timewindow;
@@ -111,6 +110,10 @@ minPeakDistanceInDaysMonovarSampling=args.minPeakDistanceInDaysMonovarSampling;
 maxPeakDistanceInDaysMultivarSampling=args.maxPeakDistanceInDaysMultivarSampling;
 peakType=args.peakType;
 samplingOrder=args.samplingOrder;
+smoothInd=args.smoothInd;
+if smoothInd == -1
+    smoothInd = ceil(timewindow/365.23/4);
+end
 
 % number of monovariate time series
 nSeries = size(inputtimeseries, 2);
@@ -251,6 +254,7 @@ switch timeVaryingCopula
 
         end
         copulaParam.rho=rhoC;
+        copulaParam.rhoRaw=copulaParam.rho;
     case true
         %apply a non-stationary copula
        
@@ -336,6 +340,8 @@ switch timeVaryingCopula
             cell2mat(arrayfun(@(k) x(y(:,k), k), 1:nSeries, 'UniformOutput', false)), ...
             inputtimeseriesC, IndexWindowCell, 'UniformOutput', false);
 
+        rhoTotalRaw=rhoTotal;
+
         % smoothing
         N = length(rhoTotal); % Number of NxN cell arrays
         for iSeries1 = 1:nSeries
@@ -355,9 +361,12 @@ switch timeVaryingCopula
         end
 
         if strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
-            rhoTotal = num2cell(cellfun(@(m) m(1,2), rhoTotal));; % only bivariate archimedean is supported for now
+            rhoTotal = num2cell(cellfun(@(m) m(1,2), rhoTotal)); % only bivariate archimedean is supported for now
+            rhoTotalRaw = num2cell(cellfun(@(m) m(1,2), rhoTotalRaw));
         end
         copulaParam.rho = rhoTotal;                   
+        copulaParam.rhoRaw = rhoTotalRaw;
+        copulaParam.smoothInd = smoothInd;
     
         cellTimePeaks=vertcat(timePeaksCell{:});
         [yMax,iB,~] = unique(vertcat(jointExtremesNS{:}),'stable','rows');

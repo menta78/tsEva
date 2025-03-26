@@ -107,8 +107,7 @@ samplingOrder=[2,1];
     'copulaFamily',copulaFamily,...
     'transfType',transfType,'timeWindow',timeWindowJointDist,...
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
-    'marginalDistributions',marginalDistributions,'samplingOrder',samplingOrder,...
-    'smoothInd',10);
+    'marginalDistributions',marginalDistributions,'samplingOrder',samplingOrder);
 
 [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     'nResample',1000,'timeIndex','middle');
@@ -120,7 +119,7 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis.(fields{ii}); 
 end
 
-[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis,'smoothInd',10);
+[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis);
 
 if length(copulaFamily)>1
     copulaAnalysis.copulaParam.family=copulaFamily{iToCopula};
@@ -144,7 +143,7 @@ if length(copulaFamily)>1
 end
 
 axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
-    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'smoothInd',10);
+    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'});
     
 [rpAnalysis,~]=tsCopulaComputeandPlotBivarRP(copulaAnalysis,'axxArray',axxArray);
 
