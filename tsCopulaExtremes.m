@@ -229,7 +229,6 @@ switch timeVaryingCopula
     case false
         %apply a stationary copula
         rhoC=cell(1,length(copulaFamily));
-        nuC=cell(1,length(copulaFamily));
 
         for iFamily=1:length(copulaFamily)
             if strcmpi(copulaFamily{iFamily}, 'gaussian')
@@ -252,7 +251,6 @@ switch timeVaryingCopula
 
         end
         copulaParam.rho=rhoC;
-        copulaParam.nu=nuC;
     case true
         %apply a non-stationary copula
        
@@ -313,8 +311,14 @@ switch timeVaryingCopula
                     % here we estimated dependency based on Kendall
                     % correlation that then converts to dependency
                     % parameter throguh copulaparam function
-                    kendalT = corr(monovarProbJointExtrWindow(:,1),monovarProbJointExtrWindow(:,2), 'type', 'Kendall');
-                    alpha=copulaparam(copulaFamily{iFamily},kendalT);
+                    alpha = ones(nSeries);
+                    kendalT = corr(monovarProbJointExtrWindow, 'type', 'Kendall');
+                    for iSeries1 = 1:nSeries
+                        for iSeries2 = iSeries1+1:nSeries
+                            alpha(iSeries1, iSeries2) = copulaparam(copulaFamily{iFamily},kendalT(iSeries1,iSeries2));
+                            alpha(iSeries2, iSeries1) = alpha(iSeries1, iSeries2);
+                        end
+                    end
                     rho0{iFamily}=alpha;
 
                 else
@@ -325,56 +329,35 @@ switch timeVaryingCopula
 
             rhoTotal=[rhoTotal,rho0];
 
-            % smoothing
-            % THE SMOOTHING SHOULD BE DONE HERE BASED ON the timewindow
-            % parameter, separately for each copula
         end
  
         inputtimeseriesC=repmat({inputtimeseries},1,size(IndexWindowCell,2));
-        if nSeries==2
-            jointExtremesNS=cellfun(@(x,y) [x(y(:,1),1),x(y(:,2),2)],inputtimeseriesC,IndexWindowCell,'UniformOutput',0);
-        elseif nSeries==3
-            jointExtremesNS=cellfun(@(x,y) [x(y(:,1),1),x(y(:,2),2),x(y(:,3),3)],inputtimeseriesC,IndexWindowCell,'UniformOutput',0);
+        jointExtremesNS = cellfun(@(x, y) ...
+            cell2mat(arrayfun(@(k) x(y(:,k), k), 1:nSeries, 'UniformOutput', false)), ...
+            inputtimeseriesC, IndexWindowCell, 'UniformOutput', false);
+
+        % smoothing
+        N = length(rhoTotal); % Number of NxN cell arrays
+        for iSeries1 = 1:nSeries
+            for iSeries2 = iSeries1+1:nSeries
+                cmpPrm = ones(nSeries);
+                comp = zeros(1, N);
+                for it = 1:N
+                    comp(it) = rhoTotal{it}(iSeries1,iSeries2); % Extract the component
+                end
+                comp = smoothdata(comp,'movmean',smoothInd);
+                for it = 1:N
+                    rhoTotal{it}(iSeries1,iSeries2) = comp(it); % Extract the component
+                    rhoTotal{it}(iSeries2,iSeries1) = comp(it); % Extract the component
+                end
+
+            end
         end
-        if nSeries==2
-            rhoTotal=num2cell(smoothdata(cell2mat(rhoTotal),'movmean',smoothInd));
-            copulaParam.rho=rhoTotal;
-        elseif nSeries==3
-            N = length(rhoTotal); % Number of 3x3 cell arrays
 
-            % Preallocate arrays to store extracted values
-            comp_12 = cell(1, N);
-            comp_13 = cell(1, N);
-            comp_23 = cell(1, N);
-
-            % Extract the required components
-            for ij = 1:N
-                comp_12{ij} = rhoTotal{ij}(1,2); % Extract (1,2) component
-                comp_13{ij} = rhoTotal{ij}(1,3); % Extract (1,3) component
-                comp_23{ij} = rhoTotal{ij}(2,3); % Extract (2,3) component
-            end
-            comp_12=num2cell(smoothdata(cell2mat(comp_12),'movmean',smoothInd));
-            comp_13=num2cell(smoothdata(cell2mat(comp_13),'movmean',smoothInd));
-            comp_23=num2cell(smoothdata(cell2mat(comp_23),'movmean',smoothInd));
-            for ij = 1:N
-                rhoTotal{ij}(1,2)=comp_12{ij} ; % Extract (1,2) component
-                rhoTotal{ij}(1,3)=comp_13{ij} ; % Extract (1,3) component
-                rhoTotal{ij}(2,3)=comp_23{ij} ; % Extract (2,3) component
-            end
-
-            for ij = 1:N
-                % Extract the current 3x3 matrix
-                M = rhoTotal{ij};
-
-                % Copy the upper triangular part to the lower triangular part
-                M = triu(M) + triu(M,1)';  % triu(M,1)' copies the upper part to lower
-
-                % Store back in the cell array
-                rhoTotal{ij} = M;
-            end
-            copulaParam.rho=rhoTotal;
+        if strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
+            rhoTotal = num2cell(cellfun(@(m) m(1,2), rhoTotal));; % only bivariate archimedean is supported for now
         end
-       
+        copulaParam.rho = rhoTotal;                   
     
         cellTimePeaks=vertcat(timePeaksCell{:});
         [yMax,iB,~] = unique(vertcat(jointExtremesNS{:}),'stable','rows');
