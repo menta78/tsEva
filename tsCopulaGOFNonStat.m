@@ -1,4 +1,4 @@
-function [gofStatistics,iToCopula] = tsCopulaGOF(copulaAnalysis,varargin)
+function [gofStatistics] = tsCopulaGOF(copulaAnalysis,varargin)
 %tsCopulaGOFNonStat estimation of copula goodness-of-fit and other battery
 %of statistics
 
@@ -87,45 +87,42 @@ else
     uSample= cellfun(@(x) tsPseudoObservations(x),{jointExtremes},'UniformOutput',0);
 end
 
-for iFamily=1:length(copulaFamily)
-    rhoC=cell(1,length(copulaFamily));
 
-    if strcmpi(copulaFamily{iFamily},'Gaussian')
+    
+
+    if strcmpi(copulaFamily,'Gaussian')
 
         %obtain an estimation of rho based on psudo-observations
 
-        rho=  cellfun(@(x) copulafit('gaussian',x),uSample,'UniformOutput',0);
-        rhoC{iFamily}=rho;
+        rhoC=  cellfun(@(x) copulafit('gaussian',x),uSample,'UniformOutput',0);
+       
 
-    elseif strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
+    elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
 
-        alpha=  cellfun(@(x) copulafit(copulaFamily{iFamily},x),uSample,'UniformOutput',0);
-        rhoC{iFamily}=alpha;
+        rhoC=  cellfun(@(x) copulafit(copulaFamily,x),uSample,'UniformOutput',0);
+        
     end
     copulaParam.rho=rhoC;
 
-    if strcmpi(copulaParam.family{iFamily}, 'gaussian')
+    if strcmpi(copulaParam.family, 'gaussian')
 
-        Y=cellfun(@(x,y) copulacdf('gaussian',x,y),uSample,copulaParam.rho{iFamily},'UniformOutput',0);
+        Y=cellfun(@(x,y) copulacdf('gaussian',x,y),uSample,copulaParam.rho,'UniformOutput',0);
 
-    elseif strcmpi(copulaParam.family{iFamily}, 'clayton') || strcmpi(copulaParam.family{iFamily}, 'frank') || strcmpi(copulaParam.family{iFamily}, 'gumbel')
+    elseif strcmpi(copulaParam.family, 'clayton') || strcmpi(copulaParam.family, 'frank') || strcmpi(copulaParam.family, 'gumbel')
 
-        Y=cellfun(@(x,y) copulacdf(copulaParam.family{iFamily},x,y),uSample,copulaParam.rho{iFamily},'UniformOutput',0);
+        Y=cellfun(@(x,y) copulacdf(copulaParam.family,x,y),uSample,copulaParam.rho,'UniformOutput',0);
     end
 
     snSample=cellfun(@(x,y) sum((tsEmpirical(x) - y) .^ 2),uSample,Y);
 
-    gofStatistics(iFamily).snSample=mean((snSample));
-    gofStatistics(iFamily).copulaFamily=copulaFamily{iFamily};
+    gofStatistics.snSample=mean((snSample));
+    gofStatistics.copulaFamily=copulaFamily;
 
     % calculate correlations in probability space
     jointExtremeMonovariateProbNS=copulaAnalysis.jointExtremeMonovariateProbNS;
-    if copulaAnalysis.timeVaryingCopula==1
-        jointExtremesResampled=copulaAnalysis.resampleProb(iFamily,:); %from Monte-Carlo simulations
-    else
-        jointExtremesResampled=copulaAnalysis.resampleProb(iFamily); %from Monte-Carlo simulations
-
-    end
+   
+        jointExtremesResampled=copulaAnalysis.resampleProb; %from Monte-Carlo simulations
+    
     if iscell(jointExtremeMonovariateProbNS)
         corrKendallSample=cellfun(@(x) nonzeros(triu(corr(x,'type','Kendall'),1)),jointExtremeMonovariateProbNS,'UniformOutput',0);
 
@@ -193,59 +190,13 @@ for iFamily=1:length(copulaFamily)
     kendallDelta=cellfun(@(x,y) abs(x-y),corrKendallSample,corrKendallMonte,'UniformOutput',0);
     spearmanDelta=cellfun(@(x,y) abs(x-y),corrSpearmanSample,corrSpearmanMonte,'UniformOutput',0);
 
-    gofStatistics(iFamily).corrKendallSampleDelta=mean(cellfun(@(x) (mean(x)),kendallDelta,'UniformOutput',1));
-    gofStatistics(iFamily).corrSpearmanSampleDelta=mean(cellfun(@(x) (mean(x)),spearmanDelta));
+    gofStatistics.corrKendallSampleDelta=mean(cellfun(@(x) (mean(x)),kendallDelta,'UniformOutput',1));
+    gofStatistics.corrSpearmanSampleDelta=mean(cellfun(@(x) (mean(x)),spearmanDelta));
 
-    gofStatistics(iFamily).corrSpearmanSamplex=corrSpearmanSample;
-    gofStatistics(iFamily).corrSpearmanMontex=corrSpearmanMonte;
-    gofStatistics(iFamily).corrKendallSamplex=corrKendallSample;
-    gofStatistics(iFamily).corrKendallMontex=corrKendallMonte;
-end
-
-fields = fieldnames(gofStatistics);
-igd=find(cellfun(@(x) isempty(regexp(x,'copulaFamily')),fields));
-imnst={};
-for ifields=igd'
-    if  strcmpi(fields{ifields},'snsample') || strcmpi(fields{ifields},'corrkendallsampledelta')  || strcmpi(fields{ifields},'corrspearmansampledelta')
-
-        ser0=extractfield(gofStatistics,fields{ifields});
-        [~,ixx]=sort(ser0,'ascend');
-        imnst=[imnst;copulaFamily(ixx)];
-
-    end
-end
-
-[~, cols] = size(imnst);
-
-% Loop over the columns incrementally
-for col = 1:cols
-    % Take the first `col` columns of the array
-    currentNames = imnst(:, 1:col);
-    
-    % Flatten the array to a 1D cell array
-    flattenedNames = currentNames(:);
-    
-    % Get unique names and their counts
-    [uniqueNames, ~, idx] = unique(flattenedNames);
-    counts = histcounts(idx, 1:numel(uniqueNames) + 1);
-    
-    % Find the most frequent name and its count
-    [maxCountForCol, maxIdx] = max(counts);
-    mostFrequentName = uniqueNames{maxIdx};
-
-    % Check if this name is the only most frequent one
-    if sum(counts == maxCountForCol) == 1 % Ensure it's unique
-        fprintf(['\nThe best performing copula is: \n', mostFrequentName]);
-        iToCopula=find(strcmpi(copulaFamily,mostFrequentName));
-
-        break; 
-    end
-end
-
-if sum(counts == maxCountForCol) ~=1
-    fprintf(['\nAll copulas performed equally well, the following copulas was selected \n', copulaFamily{1}]);
-    iToCopula=1;
-end
+    gofStatistics.corrSpearmanSamplex=corrSpearmanSample;
+    gofStatistics.corrSpearmanMontex=corrSpearmanMonte;
+    gofStatistics.corrKendallSamplex=corrKendallSample;
+    gofStatistics.corrKendallMontex=corrKendallMonte;
 
 end
 

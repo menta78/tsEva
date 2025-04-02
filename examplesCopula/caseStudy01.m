@@ -119,28 +119,9 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis.(fields{ii}); 
 end
 
-[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis);
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis);
 
-if length(copulaFamily)>1
-    copulaAnalysis.copulaParam.family=copulaFamily{iToCopula};
-    if copulaAnalysis.timeVaryingCopula==1
-        copulaAnalysis.copulaParam.rho=copulaAnalysis.copulaParam.rho(iToCopula,:);
-    else
-        copulaAnalysis.copulaParam.rho=copulaAnalysis.copulaParam.rho(iToCopula);
 
-    end
-    
-    for ii = 1:numel(fields)
-        if strcmpi(fields{ii},'resamplelevel') || strcmpi(fields{ii},'resampleprob')
-            if copulaAnalysis.timeVaryingCopula==1
-                copulaAnalysis.(fields{ii}) = monteCarloAnalysis.(fields{ii})(iToCopula,:);
-            else
-                copulaAnalysis.(fields{ii}) = monteCarloAnalysis.(fields{ii})(iToCopula);
-            end
-
-        end
-    end
-end
 
 axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
     'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'});

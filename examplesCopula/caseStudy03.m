@@ -90,7 +90,7 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis1.(fields{ii}); 
 end
 
-[gofStatistics,iToCopula] = tsCopulaGOFNonStat(copulaAnalysis,'smoothInd',10);
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'smoothInd',10);
 
 fields = fieldnames(monteCarloAnalysis2); %
 
@@ -98,28 +98,6 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii}); 
 end
 
-if length(copulaFamily)>1
-    copulaAnalysis.copulaParam.family=copulaFamily{iToCopula};
-    if copulaAnalysis.timeVaryingCopula==1
-        copulaAnalysis.copulaParam.rho=copulaAnalysis.copulaParam.rho(iToCopula,:);
-        copulaAnalysis.copulaParam.rhoMean=copulaAnalysis.copulaParam.rhoMean(iToCopula,:);
-    else
-        copulaAnalysis.copulaParam.rho=copulaAnalysis.copulaParam.rho(iToCopula);
-         copulaAnalysis.copulaParam.rhoMean=copulaAnalysis.copulaParam.rhoMean(iToCopula,:);
-
-    end
-    
-    for ii = 1:numel(fields)
-        if strcmpi(fields{ii},'resamplelevel') || strcmpi(fields{ii},'resampleprob')
-            if copulaAnalysis.timeVaryingCopula==1
-                copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii})(iToCopula,:);
-            else
-                copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii})(iToCopula);
-            end
-
-        end
-    end
-end
 
 axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
     'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'smoothInd',10);

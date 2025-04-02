@@ -78,53 +78,42 @@ timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
 %resampling from the copula function using the copularnd function
 switch timeVaryingCopula
     case false
-        resampleProb=cell(1,length(copulaFamily));
-        for iFamily=1:length(copulaFamily)
-            if strcmpi(copulaFamily{iFamily}, 'Gaussian')
+        
+        
+            if strcmpi(copulaFamily, 'Gaussian')
 
-                resampleProb{iFamily} = copularnd('gaussian', copulaParam.rho{iFamily}, nResample);
+                resampleProb = copularnd('gaussian', copulaParam.rho, nResample);
 
-            elseif strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
+            elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
 
-                resampleProb{iFamily} = copularnd(copulaFamily{iFamily}, copulaParam.rho{iFamily}, nResample);
+                resampleProb = copularnd(copulaFamily, copulaParam.rho, nResample);
 
             else
                 error(['copulaFamily not supported: ' copulaFamily]);
             end
-        end
+        
     case true
         %for the case of a time-varying copula
         
         rhoCell=copulaParam.rho;
+        nResampleC=repmat({nResample},1,size(rhoCell,2));
         resampleProb=cell(size(rhoCell));
-        for iFamily=1:length(copulaFamily)
-            if strcmpi(nonStationarity,'margins') & strcmpi(copulaFamily{iFamily}, 'Gaussian')
-                rhoCell(iFamily,:)={mean(cellfun(@(x) x(triu(true(size(x)),1)),rhoCell(iFamily,:),'UniformOutput',1))};
+        copulaFamilyC=repmat(copulaFamily,1,size(rhoCell,2));
+            if strcmpi(nonStationarity,'margins') & strcmpi(copulaFamily, 'Gaussian')
+                rhoCell={mean(cellfun(@(x) x(triu(true(size(x)),1)),rhoCell,'UniformOutput',1))};
             elseif strcmpi(nonStationarity,'margins') 
-                rhoCell(iFamily,:)={mean([rhoCell{iFamily,:}])};
+                rhoCell=repmat({mean([rhoCell{:}])},1,size(resampleProb,2));
             end
-        end
-        for iFamily=1:length(copulaFamily)
-            if strcmpi(copulaFamily{iFamily}, 'Gaussian') || strcmpi(copulaFamily{iFamily}, 'Gumbel') || strcmpi(copulaFamily{iFamily}, 'Clayton') || strcmpi(copulaFamily{iFamily}, 'Frank')
-               
-                for ij=1:size(rhoCell,2)
-                    if strcmpi(nonStationarity,'marginsandcoupling')
-                        resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
-                    elseif strcmpi(nonStationarity,'margins')
-                        
-                        resampleProb{iFamily,ij} = copularnd(copulaFamily{iFamily}, rhoCell{iFamily,ij}, nResample);
-                    end
-                end
+                   
+                    resampleProb=cellfun(@(x,y,z) copularnd(x,y,z),copulaFamilyC,rhoCell,nResampleC,'UniformOutput',0);     
+              
                 if strcmpi(nonStationarity,'margins') 
                     monteCarloAnalysis.copulaParam=copulaParam;
                     monteCarloAnalysis.copulaParam.rhoMean=rhoCell;
                 end
 
-            else
-                error(['copulaFamily not supported: ' copulaFamily{iFamily}]);
-            end
 
-        end
+        
 end
 
 
@@ -134,7 +123,7 @@ end
 switch timeVaryingCopula
     case false
         resampleLevel=cell(1,length(copulaFamily));
-        for iFamily=1:length(copulaFamily)
+       
             for ivar = 1:nSeries
                 %if no timeindex is set by the user use time-index to assess
                 % non-stationarity parameters at half the length of the time series
@@ -165,10 +154,10 @@ switch timeVaryingCopula
                 % transfrom probabilities to data scale using inverse sampling law
                 % no scaling is needed since thrshld parameter already transforms data with
                 % lowest probability corresponding with thrshld value
-                resampleLevel{iFamily}(:,ivar) = computeResampledLevels(resampleProb{iFamily}(:,ivar), nonStatEvaParams, timeIndex,methodology);
+                resampleLevel{1}(:,ivar) = computeResampledLevels(resampleProb{1}(:,ivar), nonStatEvaParams, timeIndex,methodology);
 
             end
-        end
+        
     case true
 
         %in case of a time-varying copula
