@@ -1,4 +1,4 @@
-function handles = tsCopulaYearExtrPlotSctrTrivar(resampleLevel, yMaxLevel, varargin)
+function handles = tsCopulaYearExtrPlotSctrTrivar(monteCarloRsmpl, yMaxLevel, varargin)
 
 args.xlbl = 'X';
 args.ylbl = 'Y';
@@ -28,12 +28,12 @@ title = args.title;
 titleFontSize = args.titleFontSize;
 markerTranspAlpha = args.markerTranspAlpha;
 
-if (size(resampleLevel, 2) ~= 3) || (size(yMaxLevel, 2) ~= 3)
-  error(['tsCopulaYearExtrPlotSctrTrivar: resampleLevel and yMaxLevel must be Nx3 arrays']);
+if (size(monteCarloRsmpl, 2) ~= 3) || (size(yMaxLevel, 2) ~= 3)
+  error(['tsCopulaYearExtrPlotSctrTrivar: monteCarloRsmpl and yMaxLevel must be Nx3 arrays']);
 end
 
 fig = figure('position', figPosition, 'color', 'w');
-rsmplSctr = scatter3(resampleLevel(:, 1), resampleLevel(:, 2), resampleLevel(:, 3), 'MarkerFaceAlpha', markerTranspAlpha, 'MarkerEdgeAlpha', markerTranspAlpha);
+rsmplSctr = scatter3(monteCarloRsmpl(:, 1), monteCarloRsmpl(:, 2), monteCarloRsmpl(:, 3), 'MarkerFaceAlpha', markerTranspAlpha, 'MarkerEdgeAlpha', markerTranspAlpha);
 hold on;
 ymaxSctr = scatter3(yMaxLevel(:,1), yMaxLevel(:,2), yMaxLevel(:, 3), 'markerfacecolor', 'r');
 view(azimuth, elevation);
@@ -51,7 +51,7 @@ lgnd = legend([ymaxSctr, rsmplSctr], {'Yearly Maxima', ['Joint Distribution' new
 lgnd.Position = [.08, .85, .25, .12];
 
 axHist1 = axes('position', [.55, .11, .4, .25]);
-h1 = histogram(resampleLevel(:, 1));
+h1 = histogram(monteCarloRsmpl(:, 1));
 axHist1.XAxis.Color = xaxiscolor;
 axHist1.YAxis.Visible = 'off';
 axHist1.FontSize = fontSize;
@@ -63,7 +63,7 @@ text(xxlbl, yylbl, xlbl, 'HorizontalAlignment', 'center', 'VerticalAlignment', '
 box off;
 
 axHist2 = axes('position', [.1, .15, .4, .25]);
-h2 = histogram(resampleLevel(:, 2));
+h2 = histogram(monteCarloRsmpl(:, 2));
 axHist2.XAxis.Color = yaxiscolor;
 axHist2.YAxis.Visible = 'off';
 axHist2.FontSize = fontSize;
@@ -76,7 +76,7 @@ box off;
 
 
 axHist3 = axes('position', [.04, .45, .25, .35]);
-h3 = histogram(resampleLevel(:, 3));
+h3 = histogram(monteCarloRsmpl(:, 3));
 axHist3.XAxis.Color = yaxiscolor;
 axHist3.YAxis.Visible = 'off';
 axHist3.XAxis.Visible = 'off';

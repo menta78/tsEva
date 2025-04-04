@@ -150,7 +150,7 @@ set(axxArray(2),'FontSize',fontSize)
 %%% one at the ending of the series
 %%
 %read relevant input data
-resampleLevel=copulaAnalysis.resampleLevel;
+monteCarloRsmpl=copulaAnalysis.monteCarloRsmpl;
 if copulaAnalysis.timeVaryingCopula==1
 
     yMaxLevel=copulaAnalysis.jointExtremes;
@@ -165,13 +165,13 @@ couplingParam=copulaAnalysis.copulaParam.rho;
 couplingParamRaw=copulaAnalysis.copulaParam.rhoRaw; % used to compute the Mann-Kendall test
 copulaFamily=copulaAnalysis.copulaParam.family;
 %perform plotting
-scatterMontCarl01=scatter(axxArray(4),resampleLevel{1}(:,1), resampleLevel{1}(:,2));
+scatterMontCarl01=scatter(axxArray(4),monteCarloRsmpl{1}(:,1), monteCarloRsmpl{1}(:,2));
 set(scatterMontCarl01,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6,'HandleVisibility', 'off')
 hold(axxArray(4),'on')
 scatter(axxArray(4),yMaxLevel{1}(:,1), yMaxLevel{1}(:,2),[],RGB(Locb,:),'filled','HandleVisibility', 'off');
 
-scatterMontCarl02=scatter(axxArray(5),resampleLevel{end}(:,1), resampleLevel{end}(:,2));
+scatterMontCarl02=scatter(axxArray(5),monteCarloRsmpl{end}(:,1), monteCarloRsmpl{end}(:,2));
 set(scatterMontCarl02,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6,'HandleVisibility', 'off')
 hold(axxArray(5),'on')

@@ -1,4 +1,4 @@
-function [handles] = tsCopulaYearExtrPlotSctrBivar(resampleLevel, yMaxLevel, varargin)
+function [handles] = tsCopulaYearExtrPlotSctrBivar(monteCarloRsmpl, yMaxLevel, varargin)
 
 args.xlbl = 'X';
 args.ylbl = 'Y';
@@ -10,12 +10,12 @@ ylbl = args.ylbl;
 figPosition = args.figPosition;
 fontSize = args.fontSize;
 
-if (size(resampleLevel, 2) ~= 2) || (size(yMaxLevel, 2) ~= 2)
-  error(['tsCopulaYearExtrPlotSctrBivar: resampleLevel and yMaxLevel must be Nx2 arrays']);
+if (size(monteCarloRsmpl, 2) ~= 2) || (size(yMaxLevel, 2) ~= 2)
+  error(['tsCopulaYearExtrPlotSctrBivar: monteCarloRsmpl and yMaxLevel must be Nx2 arrays']);
 end
 
 fig = figure('position', figPosition);
-rsmplSctr = scatterhist(resampleLevel(:,1), resampleLevel(:,2), 'direction', 'out');
+rsmplSctr = scatterhist(monteCarloRsmpl(:,1), monteCarloRsmpl(:,2), 'direction', 'out');
 rsmplSctrObj = findall(rsmplSctr(1), 'type', 'line');
 rsmplDist1Ax = rsmplSctr(2);
 rsmplDist2Ax = rsmplSctr(3);

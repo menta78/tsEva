@@ -89,7 +89,7 @@ end
 [gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'pValSn',0);
 
 axxArray = tsCopulaPlotTrivariate(copulaAnalysis,gofStatistics, ...
-    'ylbl', {'SWH (m)','SWH (m)','SWH (m)'},'locString',locString,'latlon',latlon);
+    'varLabels', {'{Loc 1}_{SWH (m)}','{Loc 2}_{SWH (m)}','{Loc 3}_{SWH (m)}'});
 
 
 

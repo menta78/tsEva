@@ -188,44 +188,44 @@ text(axxArray(5),0.65, 0.2, latexString2 ,'units','normalized','HorizontalAlignm
 %read relevant input data
 
 yMaxLevel=copulaAnalysis.jointExtremes;
-resampleLevel=copulaAnalysis.resampleLevel;
+monteCarloRsmpl=copulaAnalysis.monteCarloRsmpl;
 
 couplingParam=copulaAnalysis.copulaParam.rho;
 copulaFamily=copulaAnalysis.copulaParam.family;
 %perform plotting
 
-scatterMontCarl01=scatter(axxArray(3),resampleLevel{1}(:,1), resampleLevel{1}(:,2));
+scatterMontCarl01=scatter(axxArray(3),monteCarloRsmpl{1}(:,1), monteCarloRsmpl{1}(:,2));
 set(scatterMontCarl01,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
 hold(axxArray(3),'on')
 sca3=scatter(axxArray(3),yMaxLevel{1}(:,1), yMaxLevel{1}(:,2),[],yMaxLevel{1}(:,1),'filled');
 
-scatterMontCarl02=scatter(axxArray(7),resampleLevel{1}(:,1), resampleLevel{1}(:,3));
+scatterMontCarl02=scatter(axxArray(7),monteCarloRsmpl{1}(:,1), monteCarloRsmpl{1}(:,3));
 set(scatterMontCarl02,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
 hold(axxArray(7),'on')
 sca7=scatter(axxArray(7),yMaxLevel{1}(:,1), yMaxLevel{1}(:,3),[],yMaxLevel{1}(:,1),'filled');
 
-scatterMontCarl03=scatter(axxArray(11),resampleLevel{1}(:,2), resampleLevel{1}(:,3));
+scatterMontCarl03=scatter(axxArray(11),monteCarloRsmpl{1}(:,2), monteCarloRsmpl{1}(:,3));
 set(scatterMontCarl03,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
 hold(axxArray(11),'on')
 sca11=scatter(axxArray(11),yMaxLevel{1}(:,2), yMaxLevel{1}(:,3),[],yMaxLevel{1}(:,1),'filled');
 
 
-scatterMontCarl01e=scatter(axxArray(4),resampleLevel{end}(:,1), resampleLevel{end}(:,2));
+scatterMontCarl01e=scatter(axxArray(4),monteCarloRsmpl{end}(:,1), monteCarloRsmpl{end}(:,2));
 set(scatterMontCarl01e,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
 hold(axxArray(4),'on')
 sca4=scatter(axxArray(4),yMaxLevel{end}(:,1), yMaxLevel{end}(:,2),[],yMaxLevel{end}(:,1),'filled');
 
-scatterMontCarl02e=scatter(axxArray(8),resampleLevel{end}(:,1), resampleLevel{end}(:,3));
+scatterMontCarl02e=scatter(axxArray(8),monteCarloRsmpl{end}(:,1), monteCarloRsmpl{end}(:,3));
 set(scatterMontCarl02e,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
 hold(axxArray(8),'on')
 sca8=scatter(axxArray(8),yMaxLevel{end}(:,1), yMaxLevel{end}(:,3),[],yMaxLevel{end}(:,1),'filled');
 
-scatterMontCarl03e=scatter(axxArray(12),resampleLevel{end}(:,2), resampleLevel{end}(:,3));
+scatterMontCarl03e=scatter(axxArray(12),monteCarloRsmpl{end}(:,2), monteCarloRsmpl{end}(:,3));
 set(scatterMontCarl03e,'LineWidth',1,'Marker','o','MarkerEdgeColor',[0.5,0.5,0.5],'MarkerFaceColor',[0.65,0.65,0.65],...
     'MarkerFaceAlpha',0.5,'MarkerEdgeAlpha',0.6)
 hold(axxArray(12),'on')
@@ -356,7 +356,7 @@ RGB = squeeze(ind2rgb(index,cmap));
 % %%% the initial and ending of the time series using a pre-defined time window
 %
 %read relevant input data
-resampleLevel=copulaAnalysis.resampleLevel;
+monteCarloRsmpl=copulaAnalysis.monteCarloRsmpl;
 yMaxLevel=copulaAnalysis.jointExtremes;
 [~,Locb]=ismember(yMaxLevel{1},yMax,'rows');
 [~,Locb2]=ismember(yMaxLevel{end},yMax,'rows');

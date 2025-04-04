@@ -6,7 +6,7 @@ function [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis, va
 % [copulaAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,varargin)
 %                    returns results of Monte-Carlo simulation including
 %                    resampled data in probability and data space
-%                    (i.e., resampleLevel, and resampleProb)
+%                    (i.e., monteCarloRsmpl, and resampleProb)
 
 
 
@@ -26,7 +26,7 @@ function [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis, va
 
 %  CopulaAnalysis:                           - A variable of type structure same as the input with two additional appended variables:
 
-%                                               resampleLevel        -- Resampled return levels. in case of a time-varying copula, a 1d cell array of length
+%                                               monteCarloRsmpl        -- Resampled return levels. in case of a time-varying copula, a 1d cell array of length
 %                                                                       matching with the number of time windows adopted for copula calculation;
 %                                                                       in case of a stationary copula, a 2d array of size [nResample x nVar], where 
 %                                                                       nVar indicates number of variables (e.g, 3 for trivariate case)
@@ -122,7 +122,7 @@ end
 
 switch timeVaryingCopula
     case false
-        resampleLevel=cell(1,length(copulaFamily));
+        monteCarloRsmpl=cell(1,length(copulaFamily));
        
             for ivar = 1:nSeries
                 %if no timeindex is set by the user use time-index to assess
@@ -154,14 +154,14 @@ switch timeVaryingCopula
                 % transfrom probabilities to data scale using inverse sampling law
                 % no scaling is needed since thrshld parameter already transforms data with
                 % lowest probability corresponding with thrshld value
-                resampleLevel{1}(:,ivar) = computeResampledLevels(resampleProb{1}(:,ivar), nonStatEvaParams, timeIndex,methodology);
+                monteCarloRsmpl{1}(:,ivar) = computeResampledLevels(resampleProb{1}(:,ivar), nonStatEvaParams, timeIndex,methodology);
 
             end
         
     case true
 
         %in case of a time-varying copula
-        resampleLevelCell=cell(size(resampleProb));
+        monteCarloRsmplCell=cell(size(resampleProb));
         inputtimestampsWindowCell=copulaParam.inputtimestampsWindowCell;
 
         timeStamps = marginalAnalysis{1}{2}.timeStamps;
@@ -199,18 +199,18 @@ switch timeVaryingCopula
 
                    for ivar = 1:nSeries
                        nonStatEvaParams = marginalAnalysis{ivar}{1};
-                       resampleLevelCell{ik,ij}(:,ivar) = computeResampledLevels(resampleProbTemp(:,ivar), nonStatEvaParams, timeIndexArray(ij),methodology);
+                       monteCarloRsmplCell{ik,ij}(:,ivar) = computeResampledLevels(resampleProbTemp(:,ivar), nonStatEvaParams, timeIndexArray(ij),methodology);
 
                    end
                   
                end
            end
-        resampleLevel=resampleLevelCell;
+        monteCarloRsmpl=monteCarloRsmplCell;
 
 end
-%append resampleLevel and resampleProb to the copulaAnalysis file of type
+%append monteCarloRsmpl and resampleProb to the copulaAnalysis file of type
 %structure
-monteCarloAnalysis.resampleLevel=resampleLevel;
+monteCarloAnalysis.monteCarloRsmpl=monteCarloRsmpl;
 
 monteCarloAnalysis.resampleProb=resampleProb;
 
@@ -219,18 +219,18 @@ monteCarloAnalysis.timeIndexArray=timeIndexArray;
 end
 
 
-function resampleLevels = computeResampledLevels(resampleProb, nonStatEvaParams, timeIndex,methodology)
+function monteCarloRsmpls = computeResampledLevels(resampleProb, nonStatEvaParams, timeIndex,methodology)
 
 if strcmpi(methodology,'gpd')
     thrshld = nonStatEvaParams(2).parameters.threshold(timeIndex);
     scaleParam = nonStatEvaParams(2).parameters.sigma(timeIndex);
     shapeParam = nonStatEvaParams(2).parameters.epsilon;
-    resampleLevels = gpinv(resampleProb, shapeParam, scaleParam, thrshld);
+    monteCarloRsmpls = gpinv(resampleProb, shapeParam, scaleParam, thrshld);
 elseif strcmpi(methodology,'gev')
    mu = nonStatEvaParams(1).parameters.mu(timeIndex);
     scaleParam = nonStatEvaParams(1).parameters.sigma(timeIndex);
     shapeParam = nonStatEvaParams(1).parameters.epsilon;
-    resampleLevels = gevinv(resampleProb, shapeParam, scaleParam, mu);
+    monteCarloRsmpls = gevinv(resampleProb, shapeParam, scaleParam, mu);
 end
 
 end
