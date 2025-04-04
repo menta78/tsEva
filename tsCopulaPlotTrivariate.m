@@ -51,7 +51,7 @@ fontSize = args.fontSize;
 locString=args.locString;
 latlon=args.latlon;
 % set some parameters
-labelMark=(["_","(b)","(c)","(d)","(e)","(f)","(g)","(h)","(i)","(j)","(k)","(l)"]);
+labelMark=(["_","(b)","(c)","(d)","(a)","(f)","(g)","(h)","(e)","(i)","(j)","(k)"]);
 
 %read some parameters
 
