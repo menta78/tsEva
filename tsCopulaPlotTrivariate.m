@@ -26,7 +26,7 @@ function [axxArray] = tsCopulaPlotTrivariate(copulaAnalysis, gofStatistics, vara
 %
 %
 
-% M.H.Bahmanpour, 2025
+% M.H.Bahmanpour 2025
 
 %REFERENCES
 
