@@ -1,5 +1,9 @@
 % An example script related to case study 02 of Bahmanpour, et al., 2025
-% (under review)
+%
+
+% this example reproduces figure 3 of Bahmanpour et al. 2025, which
+% includes a m_map chart.
+% This script needs the m_map toolbox. 
 
 % The second case study evaluated the spatial relationship of SWH across
 % three locations scattered around the Marshall Islands. Wave data
@@ -37,6 +41,7 @@ close all;
 clc
 clearvars;
 addpath('../');
+% addpath('../../../matlabToolboxes/m_map1.4/');
 
 %load data
 load caseStudy02_data
@@ -88,7 +93,7 @@ for ii = 1:numel(fields)
 end
 [gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'pValSn',0);
 
-axxArray = tsCopulaPlotTrivariate(copulaAnalysis,gofStatistics, ...
+axxArray = tsCopulaPlotTrivariateWithMap(copulaAnalysis,gofStatistics, ...
     'ylbl', {'SWH (m)','SWH (m)','SWH (m)'},'locString',locString,'latlon',latlon);
 
 

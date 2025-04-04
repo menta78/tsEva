@@ -1,10 +1,12 @@
-function [axxArray] = tsCopulaPlotTrivariate(copulaAnalysis,gofStatistics,varargin)
+function [axxArray] = tsCopulaPlotTrivariateWithMap(copulaAnalysis,gofStatistics,varargin)
 % tsCopulaPlotTrivariate  plotting joint peaks and Monte-Carlo resampled
 %values
 
 % [axxArray] = tsCopulaPlotTrivariate(copulaAnalysis,gofStatistics,varargin)
 % used for trivariate plotting of joint extremes and time-variation of the
-% coupling parameter
+% coupling parameter.
+% used to plot figure 3 of Bahmanpour et al. 2025, creates a map in the
+% topleft panel, needs the m_map toolbox.
 
 
 
@@ -51,7 +53,7 @@ fontSize = args.fontSize;
 locString=args.locString;
 latlon=args.latlon;
 % set some parameters
-labelMark=(["_","(b)","(c)","(d)","(e)","(f)","(g)","(h)","(i)","(j)","(k)","(l)"]);
+labelMark=(["(a)","(b)","(c)","(d)","(e)","(f)","(g)","(h)","(i)","(j)","(k)","(l)"]);
 
 %read some parameters
 
@@ -67,23 +69,58 @@ spMan = tsLcSubplotManager(hf, wf, 'CellXSize', round(27*rt), 'CellYSize', round
 spMan.initFigure;
 h=[repmat(5,1,12)];
 b=[repmat(7.5,1,12)];%
-b(9)=15;
-%h0=[repmat([5,12,19,26],1,3)];
-h0=[5,12,19,26,5,12,19,26,5,12,19,26];
+h0=[repmat([5,12,19,26],1,3)];
 b0=[2,2,2,2,11.5,11.5,11.5,11.5,21,21,21,21];
-b0(5)=2;
-b0(9)=11.5;
-hNone=gobjects(1,1);
 for ij=1:length(h0)
     % format    [top left height width]   unlike the usual MATLAB
     % format of [left bottom width height]
-    if ij == 1
-        axx=hNone;
-    else
-        axx=spMan.createAxes(num2str(ij),h0(ij),b0(ij),h(ij),b(ij));
+    axx=spMan.createAxes(num2str(ij),h0(ij),b0(ij),h(ij),b(ij));
+    if ij==1
+
+        m_proj('azimuthal equidistant','lon',[150], ...
+            'lat',[-10],'rad',30);
+        m_gshhs_f('save','coastLinePacific','patch',[.7 .9 .7])
+        m_usercoast('coastLinePacific','color','k')
+        m_grid('linestyle','none','linewidth',2,'tickdir','out',...
+            'xaxisloc','bottom','yaxisloc','left','fontsize',6);
+
+        for ii=1:size(latlon,2)
+            m_line(latlon(1,ii),latlon(2,ii),'marker','square','markersize',4,'color','r');
+        end
+        m_ruler([.2 .5],.8,1,'fontsize',8);
+        set(gca,'position',[-0.02    0.7959    0.2611    0.1741])
+
+        axx_=spMan.createAxes(num2str(19),2.7,6.45,3,3.75);
+
+        m_proj('albers equal-area','longitudes',[floor(min(latlon(1,:)))-2 ceil(max(latlon(1,:)))+2], ...
+            'latitudes',[floor(min(latlon(2,:)))-1 ceil(max(latlon(2,:)))+1],'rect','on');
+        m_gshhs_f('save','coastlineZoomed','patch',[.7 .9 .7]);
+        m_usercoast('coastlineZoomed','color','k')
+        m_grid('linestyle','none','linewidth',2,'tickdir','in',...
+            'xaxisloc','top','yaxisloc','left','fontsize',6);
+        for ii=1:size(latlon,2)
+            m_line(latlon(1,ii),latlon(2,ii),'marker','square','markersize',4,'color','r');
+            m_text(latlon(1,ii),latlon(2,ii),locString(ii),'color','k','vertical','top','fontweight','bold');
+        end
+        m_ruler([.2 .5],.8,1,'fontsize',8);
+        xll=axx_.XLim;
+        yll=axx_.YLim;
+        [longx,latx]=m_xy2ll(xll,yll);
+        m_proj('azimuthal equidistant','lon',[150], ...
+            'lat',[-10],'rad',30);
+        [xx,yy]=m_ll2xy(longx,latx);
+        set(axx,'NextPlot','add')
+        plot(axx,[xx(1) xx(2) xx(2) xx(1) xx(1)],[yy(1) yy(1) yy(2) yy(2) yy(1)],'LineStyle','-','LineWidth',1,'Color','k')
+
+        annotation(gcf,'line',[0.152202937249666 0.218958611481976],...
+            [0.945595460614152 0.974632843791722]);
+        annotation(gcf,'line',[0.154873164218959 0.218958611481976],...
+            [0.934579439252336 0.881174899866489]);
     end
     axxArray=[axxArray,axx];
 end
+
+set(axxArray(1),'FontSize',fontSize)
 
 %%% plot time series, joint peaks and threshold curves
 
