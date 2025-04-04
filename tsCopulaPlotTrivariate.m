@@ -145,7 +145,6 @@ pairs = [1 2; 1 3; 2 3];
 inputtimestampsWindowCell = copulaAnalysis.copulaParam.inputtimestampsWindowCell;
 couplingParam = copulaAnalysis.copulaParam.rho;
 couplingParamRaw = copulaAnalysis.copulaParam.rhoRaw; % used to compute the Mann-Kendall test
-copulaFamily = copulaAnalysis.copulaParam.family;
 t1xStrt = datestr(inputtimestampsWindowCell{1}(1),'yyyy');
 t2xStrt = datestr(inputtimestampsWindowCell{1}(end),'yyyy');
 t1xEnd=datestr(inputtimestampsWindowCell{end}(1),'yyyy');
