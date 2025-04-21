@@ -121,12 +121,12 @@ end
 
 [gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis);
 
-
+[rpAnalysis]=tsCopulaComputeBivarRP(copulaAnalysis);
 
 axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
-    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'});
+    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'rpPlot',rpAnalysis);
     
-[rpAnalysis,~]=tsCopulaComputeandPlotBivarRP(copulaAnalysis,'axxArray',axxArray);
 
+% [rpAnalysis,~]=tsCopulaComputeBivarRP(copulaAnalysis,'axxArray',axxArray);
 % saveas(gcf, ['testcase01','.png'], 'png');
 

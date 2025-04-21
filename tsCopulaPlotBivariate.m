@@ -41,14 +41,17 @@ function [axxArray] = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics,varargi
 args.xlbl = 'Date (time)';
 args.ylbl = 'Y';
 args.fontSize = 14;
+args.rpPlot=[];
 
 args = tsEasyParseNamedArgs(varargin, args);
 
 xlbl = args.xlbl;
 ylbl = args.ylbl;
 fontSize = args.fontSize;
+rpPlot=args.rpPlot;
 % set some parameters
 labelMark=(["(a)","(b)","(c)","(d)","(e)"]);
+colorPool='rgbcmyk';
 
 %read some parameters
 
@@ -382,6 +385,72 @@ else
         'AutoUpdate','off','String',{yll.String,"\rho_{Spearman, S}","\rho_{Spearman, MC}"});
 end
 
+if isstruct(rpPlot)
+    rpp=[rpPlot.jointAndRP];
+    curveBegin={};curveEnd={};
+    cRL=colorPool(1:length(rpp));
+
+    for ij=1:length(rpp)
+    IUUcell=rpPlot(ij).X;
+    IVVCell=rpPlot(ij).Y;
+ % construct x, y
+    X=cellfun(@(x1) [x1';x1'],IUUcell,'UniformOutput',0);
+    Y=cellfun(@(x1) [x1';x1'],IVVCell,'UniformOutput',0);
+    
+    for jk=1:length(X)
+        [xd,ixd]=unique(X{jk}(:));
+        yd=Y{jk}(:);
+        yd=yd(ixd);
+        [yd,ixd]=unique(yd);
+        xd=xd(ixd);
+        if copulaAnalysis.timeVaryingCopula==1
+            if jk==1
+                % Define the new area (xrange and yrange) for extrapolation
+                x_range = get(axxArray(4),'xlim'); % New x-limits for extrapolation
+                x_extended=linspace(x_range(1),x_range(end),100);
+                y_extended=interp1(xd,yd,x_extended,'linear','extrap');
+
+                plot(axxArray(4),x_extended,y_extended,cRL(ij),'LineWidth',2,'DisplayName',[num2str(rpp(ij)),[' - year R.P.']])
+                set(axxArray(4),'NextPlot','add')
+                curveBegin=[curveBegin,{[x_extended;y_extended]}];
+            elseif jk==length(X)
+
+                x_range = get(axxArray(5),'xlim'); % New x-limits for extrapolation
+                x_extended=linspace(x_range(1),x_range(end),100);
+                y_extended=interp1(xd,yd,x_extended,'linear','extrap');
+                plot(axxArray(5),x_extended,y_extended,cRL(ij),'LineWidth',2,'DisplayName',[num2str(rpp(ij)),[' - year R.P.']])
+                set(axxArray(5),'NextPlot','add')
+                curveEnd=[curveEnd,{[x_extended;y_extended]}];
+
+            end
+        elseif copulaAnalysis.timeVaryingCopula==0
+            
+                x_range = get(axxArray(4),'xlim'); % New x-limits for extrapolation
+                x_extended=linspace(x_range(1),x_range(end),100);
+                y_extended=interp1(xd,yd,x_extended,'linear','extrap');
+
+                plot(axxArray(4),x_extended,y_extended,cRL(ij),'LineWidth',2,'DisplayName',[num2str(rpp(ij)),[' - year R.P.']])
+                set(axxArray(4),'NextPlot','add')
+                curveBegin=[curveBegin,{[x_extended;y_extended]}];           
+
+                x_range = get(axxArray(5),'xlim'); % New x-limits for extrapolation
+                x_extended=linspace(x_range(1),x_range(end),100);
+                y_extended=interp1(xd,yd,x_extended,'linear','extrap');
+                plot(axxArray(5),x_extended,y_extended,cRL(ij),'LineWidth',2,'DisplayName',[num2str(rpp(ij)),[' - year R.P.']])
+                set(axxArray(5),'NextPlot','add')
+                curveEnd=[curveEnd,{[x_extended;y_extended]}];
+            
+        end
+    end
+    end
+    legend(axxArray(4),'show')
+legend(axxArray(5),'show')
+
+%prepare output
+% rpAnalysis.curveBegin=curveBegin;
+% rpAnalysis.curveEnd=curveEnd;
+% hFig=get(gcf,'Children');
+end
 end
 
 

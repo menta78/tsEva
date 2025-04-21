@@ -98,10 +98,11 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii}); 
 end
 
+[rpAnalysis]=tsCopulaComputeBivarRP(copulaAnalysis);
+
 
 axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
-    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'smoothInd',10);
+    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'smoothInd',10,'rpPlot',rpAnalysis);
 
-[rpAnalysis,~]=tsCopulaComputeandPlotBivarRP(copulaAnalysis,'axxArray',axxArray);
 
 
