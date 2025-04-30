@@ -247,13 +247,15 @@ switch timeVaryingCopula
                 error(['copulaFamily not supported: ' copulaFamily{iFamily}]);
             end
         
-        copulaParam.rho=rho;
-        copulaParam.rhoRaw=copulaParam.rho;
+        copulaParam.rho = rho;
+        copulaParam.rhoRaw = copulaParam.rho;
+        copulaParam.rhoTimeStamps = [inputtimestamps(1) inputtimestamps(end)];
+        copulaParam.timeStampsByTimeWindow = {inputtimestamps, inputtimestamps};
     case true
         %apply a non-stationary copula
        
         monovarProbJointExtrCell={};
-        inputtimestampsWindowCell={};
+        timeStampsByTimeWindow={};
         IndexWindowCell={};
         timePeaksCell={};
         rhoTotal={}; % handling with a cell, because we don't know in advance what each copula needs
@@ -276,8 +278,7 @@ switch timeVaryingCopula
                 inputtimestampsWindow=inputtimestamps(beginIndex+1:beginIndex+timeWindowIndices,:);
             end
 
-            inputtimestampsWindowCell=[inputtimestampsWindowCell,inputtimestampsWindow];
-            copulaParam.inputtimestampsWindowCell=inputtimestampsWindowCell;
+            timeStampsByTimeWindow=[timeStampsByTimeWindow,inputtimestampsWindow];
             % of all joint peaks, find ones that fall within the time
             % window, use this index to also select probabilities that
             % belong to this window
@@ -328,7 +329,11 @@ switch timeVaryingCopula
             rhoTotal=[rhoTotal,rho];
 
         end
- 
+        copulaParam.timeStampsByTimeWindow=timeStampsByTimeWindow;
+        copulaParam.rhoTimeStamps = linspace(timeStampsByTimeWindow{1}(1), ...
+            timeStampsByTimeWindow{end}(end), ...
+            length(timeStampsByTimeWindow));
+
         inputtimeseriesC=repmat({inputtimeseries},1,size(IndexWindowCell,2));
         jointExtremesNS = cellfun(@(x, y) ...
             cell2mat(arrayfun(@(k) x(y(:,k), k), 1:nSeries, 'UniformOutput', false)), ...

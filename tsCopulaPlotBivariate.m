@@ -196,17 +196,17 @@ elseif strcmpi(copulaFamily,'Frank') || strcmpi(copulaFamily,'Clayton') ||strcmp
 end
 if copulaAnalysis.timeVaryingCopula==1
 
-    inputtimestampsWindowCell=copulaAnalysis.copulaParam.inputtimestampsWindowCell;
+    timeStampsByTimeWindow=copulaAnalysis.copulaParam.timeStampsByTimeWindow;
 
 elseif copulaAnalysis.timeVaryingCopula==0
-    inputtimestampsWindowCell=cellfun(@(x) x{2}.timeStamps,copulaAnalysis.marginalAnalysis,'UniformOutput',0);
+    timeStampsByTimeWindow=cellfun(@(x) x{2}.timeStamps,copulaAnalysis.marginalAnalysis,'UniformOutput',0);
 
 end
 
-t1x=datestr(inputtimestampsWindowCell{1}(1),'yyyy');
-t2x=datestr(inputtimestampsWindowCell{1}(end),'yyyy');
-t1x2=datestr(inputtimestampsWindowCell{end}(1),'yyyy');
-t2x2=datestr(inputtimestampsWindowCell{end}(end),'yyyy');
+t1x=datestr(timeStampsByTimeWindow{1}(1),'yyyy');
+t2x=datestr(timeStampsByTimeWindow{1}(end),'yyyy');
+t1x2=datestr(timeStampsByTimeWindow{end}(1),'yyyy');
+t2x2=datestr(timeStampsByTimeWindow{end}(end),'yyyy');
 if strcmpi(copulaFamily,'Gaussian')
     ht=title(axxArray(4),{[t1x,' - ',t2x];['Gaussian (\rho = ',num2str(par01),')']});
     ht2=title(axxArray(5),{[t1x2,' - ',t2x2];['Gaussian (\rho = ',num2str(par02),')']});
@@ -242,7 +242,7 @@ set(axxArray(4),'ylim',ylimsnew)
 set(axxArray(5),'ylim',ylimsnew)
 %%
 
-ttRho=linspace(inputtimestampsWindowCell{1}(1),inputtimestampsWindowCell{end}(end),length(inputtimestampsWindowCell));
+ttRho=linspace(timeStampsByTimeWindow{1}(1),timeStampsByTimeWindow{end}(end),length(timeStampsByTimeWindow));
 positionLabel2=[];
 yLabel2=[];
 corrSpearmanSamplex=gofStatistics.corrSpearmanSamplex;

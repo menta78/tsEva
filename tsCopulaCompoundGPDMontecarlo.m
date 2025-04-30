@@ -162,11 +162,11 @@ switch timeVaryingCopula
 
         %in case of a time-varying copula
         monteCarloRsmplCell=cell(size(resampleProb));
-        inputtimestampsWindowCell=copulaParam.inputtimestampsWindowCell;
+        timeStampsByTimeWindow=copulaParam.timeStampsByTimeWindow;
 
         timeStamps = marginalAnalysis{1}{2}.timeStamps;
         timeStampsCell=repmat({timeStamps},1,size(rhoCell,2));
-        iixCell=cellfun(@(x,y) find(x>=min(y)&x<=max(y)),timeStampsCell,inputtimestampsWindowCell,'UniformOutput',0);
+        iixCell=cellfun(@(x,y) find(x>=min(y)&x<=max(y)),timeStampsCell,timeStampsByTimeWindow,'UniformOutput',0);
         timeIndexArray=cellfun(@(x) x(round(length(x)/2)),iixCell);
         if ~any(strcmpi(varargin,'timeindex'))
             disp('no timeindex set - middle timeindex (for each time-window) selected automatically')

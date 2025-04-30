@@ -295,7 +295,7 @@ axis(axxArray(12),'tight')
 
 %%
 %
-inputtimestampsWindowCell=copulaAnalysis.copulaParam.inputtimestampsWindowCell;
+timeStampsByTimeWindow=copulaAnalysis.copulaParam.timeStampsByTimeWindow;
 
 thresholdPotNS=copulaAnalysis.thresholdPotNS;   %curves representing non-stationary threshold
 %
@@ -373,10 +373,10 @@ sca4.CData=RGB(Locb2,:);
 sca8.CData=RGB(Locb2,:);
 sca12.CData=RGB(Locb2,:);
 
-t1x=datestr(inputtimestampsWindowCell{1}(1),'yyyy');
-t2x=datestr(inputtimestampsWindowCell{1}(end),'yyyy');
-t1x2=datestr(inputtimestampsWindowCell{end}(1),'yyyy');
-t2x2=datestr(inputtimestampsWindowCell{end}(end),'yyyy');
+t1x=datestr(timeStampsByTimeWindow{1}(1),'yyyy');
+t2x=datestr(timeStampsByTimeWindow{1}(end),'yyyy');
+t1x2=datestr(timeStampsByTimeWindow{end}(1),'yyyy');
+t2x2=datestr(timeStampsByTimeWindow{end}(end),'yyyy');
 %
 ht=title(axxArray(3),{[t1x,' - ',t2x];['Gaussian (\rho = ',num2str(par01, '%.2f'),')']});
 ht2=title(axxArray(4),{[t1x2,' - ',t2x2];['Gaussian (\rho = ',num2str(par01e, '%.2f'),')']});
@@ -393,7 +393,7 @@ ht5.VerticalAlignment='top';
 ht6.VerticalAlignment='top';
 %
 %%
-ttRho=linspace(inputtimestampsWindowCell{1}(1),inputtimestampsWindowCell{end}(end),length(inputtimestampsWindowCell));
+ttRho=linspace(timeStampsByTimeWindow{1}(1),timeStampsByTimeWindow{end}(end),length(timeStampsByTimeWindow));
 positionLabel2=[];
 yLabel2=[];
 

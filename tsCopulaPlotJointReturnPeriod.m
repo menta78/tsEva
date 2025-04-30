@@ -100,7 +100,7 @@ if ~iscell(PAR)
 
     end
 elseif iscell(PAR)
-inputtimestampsWindowCell=copulaAnalysis.copulaParam.inputtimestampsWindowCell;
+timeStampsByTimeWindow=copulaAnalysis.copulaParam.timeStampsByTimeWindow;
 
     switch plotType
 
@@ -108,12 +108,12 @@ inputtimestampsWindowCell=copulaAnalysis.copulaParam.inputtimestampsWindowCell;
           
             rPCell=cellfun(@(x) 1./(1-x),pCell,'UniformOutput',0);
            
-            jointReturnPeriodPlot(sCell,rPCell,Scl2,PL,margDist,eps,sig,thr,Family,PAR,jMax,plotType,copulaAnalysis,'timeStampWindowCell',inputtimestampsWindowCell);
+            jointReturnPeriodPlot(sCell,rPCell,Scl2,PL,margDist,eps,sig,thr,Family,PAR,jMax,plotType,copulaAnalysis,'timeStampWindowCell',timeStampsByTimeWindow);
         case 'AND'
            
             rPCell=cellfun(@(x,y) 1./(1-y(:,1)-y(:,2)+x),pCell,sCell,'UniformOutput',0);
             
-            jointReturnPeriodPlot(sCell,rPCell,Scl2,PL,margDist,eps,sig,thr,Family,PAR,jMax,plotType,copulaAnalysis,'timeStampWindowCell',inputtimestampsWindowCell);
+            jointReturnPeriodPlot(sCell,rPCell,Scl2,PL,margDist,eps,sig,thr,Family,PAR,jMax,plotType,copulaAnalysis,'timeStampWindowCell',timeStampsByTimeWindow);
 
     end
 
@@ -127,7 +127,7 @@ args.timeStampWindowCell = {};
 
 args = tsEasyParseNamedArgs(varargin, args);
 
-inputtimestampsWindowCell = args.timeStampWindowCell;
+timeStampsByTimeWindow = args.timeStampWindowCell;
 
 if ~iscell(EBVP)
     hold on;
@@ -379,8 +379,8 @@ elseif iscell(EBVP) %time-varying joint return periods
                     nr=round(PAR{jk}(1));
                 end
               
-                t1x=datestr(inputtimestampsWindowCell{jk}(1),'yyyy');
-                t2x=datestr(inputtimestampsWindowCell{jk}(end),'yyyy');
+                t1x=datestr(timeStampsByTimeWindow{jk}(1),'yyyy');
+                t2x=datestr(timeStampsByTimeWindow{jk}(end),'yyyy');
                 ht=title(axxcell(jk),{[t1x,' - ',t2x];['Rho = ',num2str(nr)]});
                 ht.VerticalAlignment='top';
             end

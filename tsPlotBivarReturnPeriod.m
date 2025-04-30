@@ -87,7 +87,7 @@ yCell=cellfun(@(x,y,z) copulacdf(z,x,y),uCell,PAR,familyCell,'UniformOutput',0);
 
 % % extract window information
 %
-% inputtimestampsWindowCell=copulaAnalysis.copulaParam.inputtimestampsWindowCell;
+% timeStampsByTimeWindow=copulaAnalysis.copulaParam.timeStampsByTimeWindow;
 
 
 % calculate the OR return period

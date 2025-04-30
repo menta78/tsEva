@@ -79,7 +79,7 @@ else
     tMax = copulaAnalysis.jointExtremeTimeStamps;
 end
 
-[~, iyMax] = sort(mean(yMax,2), 'descend');
+[~, iyMax] = sort(mean(yMax,2), 'ascend');
 yMax = yMax(iyMax,:);
 tMax = tMax(iyMax,:);
 
@@ -94,7 +94,7 @@ for iVrbl = 1:3
             xlabel(axxArray(5), axisLabel);
         case 2
             ylabel(axxArray(5), axisLabel);
-        case 3
+        case 3rho
             zlabel(axxArray(5), axisLabel);
     end
 end
@@ -130,7 +130,7 @@ for iVrbl = 1:3
     scatter(datetime(datevec(tMax(:,iVrbl))), yMax(:,iVrbl), [], mean(yMax,2), 'filled');
     ylabel(varLabels{iVrbl});
     set(gca, 'FontSize', fontSize);
-    text(0.05, 0.9, labelMark(iVrbl), 'Units','normalized');
+    text(0.05, 0.9, labelMark(iAx(iVrbl)), 'Units','normalized');
     if iVrbl == 3
         xlabel(xlbl);
     end
@@ -142,13 +142,13 @@ yMaxLevel=copulaAnalysis.jointExtremes;
 mc = copulaAnalysis.monteCarloRsmpl;
 pairs = [1 2; 1 3; 2 3];
 
-inputtimestampsWindowCell = copulaAnalysis.copulaParam.inputtimestampsWindowCell;
+timeStampsByTimeWindow = copulaAnalysis.copulaParam.timeStampsByTimeWindow;
 couplingParam = copulaAnalysis.copulaParam.rho;
 couplingParamRaw = copulaAnalysis.copulaParam.rhoRaw; % used to compute the Mann-Kendall test
-t1xStrt = datestr(inputtimestampsWindowCell{1}(1),'yyyy');
-t2xStrt = datestr(inputtimestampsWindowCell{1}(end),'yyyy');
-t1xEnd=datestr(inputtimestampsWindowCell{end}(1),'yyyy');
-t2xEnd=datestr(inputtimestampsWindowCell{end}(end),'yyyy');
+t1xStrt = datestr(timeStampsByTimeWindow{1}(1),'yyyy');
+t2xStrt = datestr(timeStampsByTimeWindow{1}(end),'yyyy');
+t1xEnd=datestr(timeStampsByTimeWindow{end}(1),'yyyy');
+t2xEnd=datestr(timeStampsByTimeWindow{end}(end),'yyyy');
 
 iAx = [3, 7, 11];
 for iCpl = 1:3
@@ -193,9 +193,7 @@ for iCpl = 1:3
     ttl.VerticalAlignment = 'top';
 end
 
-ttRho = linspace(inputtimestampsWindowCell{1}(1),...
-                 inputtimestampsWindowCell{end}(end), ...
-                 length(inputtimestampsWindowCell));
+ttRho = copulaAnalysis.copulaParam.rhoTimeStamps;
 
 axes(axxArray(9));
 couplingParamMat = (cell2mat(cellfun(@(x) x(find(tril(x,-1))), couplingParam, 'UniformOutput', 0)))';
