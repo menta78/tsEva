@@ -94,7 +94,7 @@ for iVrbl = 1:3
             xlabel(axxArray(5), axisLabel);
         case 2
             ylabel(axxArray(5), axisLabel);
-        case 3rho
+        case 3
             zlabel(axxArray(5), axisLabel);
     end
 end
