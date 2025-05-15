@@ -61,7 +61,7 @@ minDeltaUnivarSampli=[30,30];
 maxDeltaMultivarSampli=12*30; %12
 
 %copula family; Gumbel, gaussian and Frank are possible choices
-copulaFamily={'gumbel'};  
+copulaFamily={'gaussian'};  
 
 %methodology to perform univariate transformation from non-stationary to
 %stationary

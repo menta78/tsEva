@@ -100,7 +100,7 @@ switch timeVaryingCopula
         resampleProb=cell(size(rhoCell));
         copulaFamilyC=repmat(copulaFamily,1,size(rhoCell,2));
             if strcmpi(nonStationarity,'margins') & strcmpi(copulaFamily, 'Gaussian')
-                rhoCell={mean(cellfun(@(x) x(triu(true(size(x)),1)),rhoCell,'UniformOutput',1))};
+                rhoCell=repmat({mean(cellfun(@(x) x(triu(true(size(x)),1)),rhoCell,'UniformOutput',1))},1,size(resampleProb,2));
             elseif strcmpi(nonStationarity,'margins') 
                 rhoCell=repmat({mean([rhoCell{:}])},1,size(resampleProb,2));
             end
