@@ -78,31 +78,21 @@ marginalDistributions='gev';
     'peakType',peakType, ...
     'marginalDistributions',marginalDistributions,'smoothInd',10);
 
+% large montecarlo good for statistics computation
 [monteCarloAnalysis1] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
-    'nResample',10000,'timeIndex','middle','nonStationarity','margins');%'nonStationarity','margins'
+    'nResample',10000,'timeIndex','middle','nonStationarity','margins');
+% small montecarlo good for plotting
 [monteCarloAnalysis2] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
-    'nResample',1000,'timeIndex','middle','nonStationarity','margins');%'nonStationarity','margins'
+    'nResample',1000,'timeIndex','middle','nonStationarity','margins');
 
-% append monteCarloAnalysis to copulaAnalysis 
-fields = fieldnames(monteCarloAnalysis1); %
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis1, 'smoothInd',10);
 
-for ii = 1:numel(fields)
-    copulaAnalysis.(fields{ii}) = monteCarloAnalysis1.(fields{ii}); 
-end
+[retPerAnalysis] = tsCopulaComputeBivarRP(copulaAnalysis, monteCarloAnalysis1);
 
-[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'smoothInd',10);
-
-fields = fieldnames(monteCarloAnalysis2); %
-
-for ii = 1:numel(fields)
-    copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii}); 
-end
-
-[rpAnalysis] = tsCopulaComputeBivarRP(copulaAnalysis);
-
-
-axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
-    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'smoothInd',10,'rpPlot',rpAnalysis);
+axxArray = tsCopulaPlotBivariate(copulaAnalysis, monteCarloAnalysis2, ...
+    'gofStatistics', gofStatistics, ...
+    'retPerAnalysis', retPerAnalysis, ...
+    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'smoothInd',10,'rpPlot');
 
 
 

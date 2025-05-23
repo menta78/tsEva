@@ -112,19 +112,13 @@ samplingOrder=[2,1];
 [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
     'nResample',1000,'timeIndex','middle');
 
-% append monteCarloAnalysis to copulaAnalysis 
-fields = fieldnames(monteCarloAnalysis); %
+gofStatistics = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis);
 
-for ii = 1:numel(fields)
-    copulaAnalysis.(fields{ii}) = monteCarloAnalysis.(fields{ii}); 
-end
-
-[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis);
-
-[rpAnalysis]=tsCopulaComputeBivarRP(copulaAnalysis);
-
+retPerAnalysis = tsCopulaComputeBivarRP(copulaAnalysis, monteCarloAnalysis);
     
-axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...
-    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'},'rpPlot',rpAnalysis);
+axxArray = tsCopulaPlotBivariate(copulaAnalysis, monteCarloAnalysis, ...
+    'gofStatistics', gofStatistics, ...
+    'retPerAnalysis', retPerAnalysis, ...
+    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'});
 
 

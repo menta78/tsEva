@@ -1,4 +1,4 @@
-function  [rpAnalysis]=tsCopulaComputeBivarRP(copulaAnalysis,varargin)
+function  [rpAnalysis] = tsCopulaComputeBivarRP(copulaAnalysis, monteCarloAnalysis, varargin)
 %tsCopulaComputeBivarRP computing of bivariate return
 %period of type "AND"
 
@@ -54,8 +54,8 @@ else
     PAR=copulaAnalysis.copulaParam.rho;
 end
 
-timeIndexArray=copulaAnalysis.timeIndexArray;
-timeIndexArray=num2cell(timeIndexArray);
+timeIndexArray = monteCarloAnalysis.timeIndexArray;
+timeIndexArray = num2cell(timeIndexArray);
 
 if strcmpi(margDist,'gpd')
     margDist='gp';

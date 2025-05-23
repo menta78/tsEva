@@ -1,4 +1,4 @@
-function  [copulaAnalysis,hFig1]=tsCopulaJointReturnPeriod(copulaAnalysis,axxArray,varargin)
+function  [copulaAnalysis,hFig1] = tsPlotBivarReturnPeriod(copulaAnalysis,axxArray,varargin)
 %tsCopulaPlotJointReturnPeriod plotting of multivariate return periods
 
 % tsCopulaPlotJointReturnPeriod(copulaAnalysis,varargin)

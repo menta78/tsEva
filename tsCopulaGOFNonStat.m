@@ -1,4 +1,4 @@
-function [gofStatistics] = tsCopulaGOF(copulaAnalysis,varargin)
+function [gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis, varargin)
 %tsCopulaGOFNonStat estimation of copula goodness-of-fit and other battery
 %of statistics
 
@@ -121,7 +121,7 @@ end
     % calculate correlations in probability space
     jointExtremeMonovariateProbNS=copulaAnalysis.jointExtremeMonovariateProbNS;
    
-        jointExtremesResampled=copulaAnalysis.resampleProb; %from Monte-Carlo simulations
+    jointExtremesResampled = monteCarloAnalysis.resampleProb; %from Monte-Carlo simulations
     
     if iscell(jointExtremeMonovariateProbNS)
         corrKendallSample=cellfun(@(x) nonzeros(triu(corr(x,'type','Kendall'),1)),jointExtremeMonovariateProbNS,'UniformOutput',0);

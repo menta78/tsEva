@@ -1,4 +1,4 @@
-function [axxArray] = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics,varargin)
+function [axxArray] = tsCopulaPlotBivariate(copulaAnalysis, monteCarloAnalysis, varargin)
 % tsCopulaPlotBivariate  plotting of joint peaks fitted by a copula
 
 % [axxArray] = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics,varargin)
@@ -39,16 +39,27 @@ function [axxArray] = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics,varargi
 args.xlbl = 'Date (time)';
 args.ylbl = {'Y1','Y2'};
 args.fontSize = 14;
-args.rpPlot=[];
+args.gofStatistics = [];
+args.retPerAnalysis = [];
 
 args = tsEasyParseNamedArgs(varargin, args);
 
 xlbl = args.xlbl;
 ylbl = args.ylbl;
 fontSize = args.fontSize;
-rpPlot=args.rpPlot;
 % set some parameters
 labelMark=(["(a)","(b)","(c)","(d)","(e)"]);
+gofStatistics = args.gofStatistics;
+retPerAnalysis = args.retPerAnalysis;
+
+if isempty(gofStatistics)
+    gofStatistics = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis);
+end
+
+if isempty(retPerAnalysis)
+    retPerAnalysis = tsCopulaComputeBivarRP(copulaAnalysis, monteCarloAnalysis);
+end
+
 
 %% Unpack key variables
 % Extract peaks and timestamps
@@ -102,7 +113,6 @@ axxArray = gobjects(1,0);
 %% Plot 1: time series 1 (panel a)
 axx = spMan.createAxes('ts1', h0(1), b0(1), h(1), b(1));
 axes(axx); axxArray(end+1) = axx;
-
 plotTimeSeries(timeStamps(:,1),nonStatSeries(:,1),methodology,thresholdPotNS(:,1),...
     tMax(:,1),yMax(:,1),ylbl{1},...
     labelMark(1),xlbl,pval(1),fontSize,scatterColor);
@@ -117,18 +127,20 @@ plotTimeSeries(timeStamps(:,2),nonStatSeries(:,2),methodology,thresholdPotNS(:,2
 %% Plot 3; goodness-of-fit statistics
 axx = spMan.createAxes('gof', h0(3), b0(3), h(3), b(3));
 axes(axx); axxArray(end+1) = axx;
-gofPlot(copulaAnalysis,gofStatistics)
+gofPlot(copulaAnalysis, gofStatistics)
 
 %% Plot Montecarlo at the beginning of the series (panel d)
 axx = spMan.createAxes('mc1', h0(4), b0(4), h(4), b(4));
 axes(axx); axxArray(end+1) = axx;
-[xll,yll] = plotMonteCarlo(copulaAnalysis,1,scatterColor,yMax,ylbl,'(d)');
+[xll,yll] = plotMonteCarlo(copulaAnalysis, monteCarloAnalysis, ...
+    1, scatterColor, yMax, ylbl, '(d)');
 
 
 %% Plot Montecarlo at the ending of the series (panel e)
 axx = spMan.createAxes('mc2', h0(5), b0(5), h(5), b(5));
 axes(axx); axxArray(end+1) = axx;
-[xll1,yll1] = plotMonteCarlo(copulaAnalysis,nWindow,scatterColor,yMax,ylbl,'(e)');
+[xll1,yll1] = plotMonteCarlo(copulaAnalysis, monteCarloAnalysis, ...
+    nWindow, scatterColor, yMax, ylbl,'(e)');
 
 %% fix limits of panels (d-e)
 xlims = ([xll;xll1]);
@@ -140,13 +152,12 @@ ylims = ([yll;yll1]);
 ylimsnew = [min(ylims(:,1)),max(ylims(:,2))];
 set(axxArray(4),'ylim',ylimsnew)
 set(axxArray(5),'ylim',ylimsnew)
-%% overplot return levels (if existing)
-if isstruct(rpPlot)
-    axes(axxArray(4))
-    jointRPPlot(rpPlot,1)
-    axes(axxArray(5))
-    jointRPPlot(rpPlot,nWindow)
-end
+
+%% overplot return levels
+axes(axxArray(4))
+jointRPPlot(retPerAnalysis, 1)
+axes(axxArray(5))
+jointRPPlot(retPerAnalysis ,nWindow)
 
 end
 
@@ -175,7 +186,8 @@ text(0.5,0.1,['{\it p-value}_{MK}= ',sprintf('%0.3g',pval)],'units','normalized'
 grid on;
 end
 
-function [xll,yll] = plotMonteCarlo(copulaAnalysis,jx,scatterColor,yMax,ylbl,labelMark)
+function [xll,yll] = plotMonteCarlo(copulaAnalysis, monteCarloAnalysis, ...
+    jx, scatterColor, yMax, ylbl, labelMark)
 
 copulaFamily=copulaAnalysis.copulaParam.family;
 couplingParam=copulaAnalysis.copulaParam.rho;
@@ -195,7 +207,7 @@ else
 
 end
 
-monteCarloRsmpl=copulaAnalysis.monteCarloRsmpl;
+monteCarloRsmpl = monteCarloAnalysis.monteCarloRsmpl;
 
 cmap = jet(256);
 minC = min(scatterColor);

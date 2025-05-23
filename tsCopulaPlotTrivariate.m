@@ -1,4 +1,4 @@
-function [axxArray] = tsCopulaPlotTrivariate(copulaAnalysis, gofStatistics, varargin)
+function [axxArray] = tsCopulaPlotTrivariate(copulaAnalysis, monteCarloAnalysis, varargin)
 
 % tsCopulaPlotTrivariate  plotting joint peaks and Monte-Carlo resampled
 %values
@@ -41,11 +41,17 @@ function [axxArray] = tsCopulaPlotTrivariate(copulaAnalysis, gofStatistics, vara
 args.xlbl = 'Date (time)';
 args.fontSize = 12;
 args.varLabels = ["Var1","Var2","Var3"];
+args.gofStatistics = [];
 args = tsEasyParseNamedArgs(varargin, args);
 
 xlbl = args.xlbl;
 fontSize = args.fontSize;
 varLabels = args.varLabels;
+gofStatistics = args.gofStatistics;
+
+if isempty(gofStatistics)
+    [gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis);
+end
 
 labelMark = (['_','(b)','(c)','(d)','(a)','(f)','(g)','(h)','(e)','(i)','(j)','(k)']);
 methodology = copulaAnalysis.methodology;
@@ -139,7 +145,7 @@ for iVrbl = 1:3
 end
 
 yMaxLevel=copulaAnalysis.jointExtremes;
-mc = copulaAnalysis.monteCarloRsmpl;
+mc = monteCarloAnalysis.monteCarloRsmpl;
 pairs = [1 2; 1 3; 2 3];
 
 timeStampsByTimeWindow = copulaAnalysis.copulaParam.timeStampsByTimeWindow;

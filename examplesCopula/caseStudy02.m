@@ -79,16 +79,14 @@ peakType='allExceedThreshold';
     'peakType',peakType);
 
 [monteCarloAnalysis1] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
-    'nResample',300,'timeIndex','middle');
-% append monteCarloAnalysis to copulaAnalysis 
-fields = fieldnames(monteCarloAnalysis1); %
+    'nResample',10000,'timeIndex','middle'); % large montecarlo good for statistics
+[monteCarloAnalysis2] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+    'nResample',300,'timeIndex','middle'); % smaller montecarlo good for plotting
 
-for ii = 1:numel(fields)
-    copulaAnalysis.(fields{ii}) = monteCarloAnalysis1.(fields{ii}); 
-end
-[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis,'pValSn',0);
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis1, 'smoothInd',10);
 
-axxArray = tsCopulaPlotTrivariate(copulaAnalysis,gofStatistics, ...
+axxArray = tsCopulaPlotTrivariate(copulaAnalysis, monteCarloAnalysis2, ...
+    'gofStatistics', gofStatistics, ...
     'varLabels', {'{Loc 1}_{SWH (m)}','{Loc 2}_{SWH (m)}','{Loc 3}_{SWH (m)}'});
 
 
