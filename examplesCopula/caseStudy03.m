@@ -98,7 +98,7 @@ for ii = 1:numel(fields)
     copulaAnalysis.(fields{ii}) = monteCarloAnalysis2.(fields{ii}); 
 end
 
-[rpAnalysis]=tsCopulaComputeBivarRP(copulaAnalysis);
+[rpAnalysis] = tsCopulaComputeBivarRP(copulaAnalysis);
 
 
 axxArray = tsCopulaPlotBivariate(copulaAnalysis,gofStatistics, ...

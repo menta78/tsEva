@@ -98,6 +98,7 @@ h0 = [7,16,25,11.5,24.5];
 b0 = [2,2,2,17.5,17.5];
 % initialize empty array of axes
 axxArray = gobjects(1,0);
+
 %% Plot 1: time series 1 (panel a)
 axx = spMan.createAxes('ts1', h0(1), b0(1), h(1), b(1));
 axes(axx); axxArray(end+1) = axx;
@@ -105,6 +106,7 @@ axes(axx); axxArray(end+1) = axx;
 plotTimeSeries(timeStamps(:,1),nonStatSeries(:,1),methodology,thresholdPotNS(:,1),...
     tMax(:,1),yMax(:,1),ylbl{1},...
     labelMark(1),xlbl,pval(1),fontSize,scatterColor);
+
 %% Plot 2: time series 2 (panel b)
 axx = spMan.createAxes('ts2', h0(2), b0(2), h(2), b(2));
 axes(axx); axxArray(end+1) = axx;
@@ -116,24 +118,26 @@ plotTimeSeries(timeStamps(:,2),nonStatSeries(:,2),methodology,thresholdPotNS(:,2
 axx = spMan.createAxes('gof', h0(3), b0(3), h(3), b(3));
 axes(axx); axxArray(end+1) = axx;
 gofPlot(copulaAnalysis,gofStatistics)
+
 %% Plot Montecarlo at the beginning of the series (panel d)
 axx = spMan.createAxes('mc1', h0(4), b0(4), h(4), b(4));
 axes(axx); axxArray(end+1) = axx;
+[xll,yll] = plotMonteCarlo(copulaAnalysis,1,scatterColor,yMax,ylbl,'(d)');
 
-[xll,yll]=plotMonteCarlo(copulaAnalysis,1,scatterColor,yMax,ylbl,'(d)');
+
 %% Plot Montecarlo at the ending of the series (panel e)
 axx = spMan.createAxes('mc2', h0(5), b0(5), h(5), b(5));
 axes(axx); axxArray(end+1) = axx;
+[xll1,yll1] = plotMonteCarlo(copulaAnalysis,nWindow,scatterColor,yMax,ylbl,'(e)');
 
-[xll1,yll1]=plotMonteCarlo(copulaAnalysis,nWindow,scatterColor,yMax,ylbl,'(e)');
 %% fix limits of panels (d-e)
-xlims=([xll;xll1]);
-xlimsnew=[min(xlims(:,1)),max(xlims(:,2))];
+xlims = ([xll;xll1]);
+xlimsnew = [min(xlims(:,1)),max(xlims(:,2))];
 set(axxArray(4),'xlim',xlimsnew)
 set(axxArray(5),'xlim',xlimsnew)
 
-ylims=([yll;yll1]);
-ylimsnew=[min(ylims(:,1)),max(ylims(:,2))];
+ylims = ([yll;yll1]);
+ylimsnew = [min(ylims(:,1)),max(ylims(:,2))];
 set(axxArray(4),'ylim',ylimsnew)
 set(axxArray(5),'ylim',ylimsnew)
 %% overplot return levels (if existing)
@@ -171,7 +175,7 @@ text(0.5,0.1,['{\it p-value}_{MK}= ',sprintf('%0.3g',pval)],'units','normalized'
 grid on;
 end
 
-function [xll,yll]=plotMonteCarlo(copulaAnalysis,jx,scatterColor,yMax,ylbl,labelMark)
+function [xll,yll] = plotMonteCarlo(copulaAnalysis,jx,scatterColor,yMax,ylbl,labelMark)
 
 copulaFamily=copulaAnalysis.copulaParam.family;
 couplingParam=copulaAnalysis.copulaParam.rho;
@@ -249,7 +253,7 @@ yll=ylim;
 
 end
 
-function []=gofPlot(copulaAnalysis,gofStatistics)
+function [] = gofPlot(copulaAnalysis,gofStatistics)
 
 copulaFamily=copulaAnalysis.copulaParam.family;
 couplingParam=copulaAnalysis.copulaParam.rho;
