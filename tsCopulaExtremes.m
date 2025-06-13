@@ -85,7 +85,7 @@ function [CopulaAnalysis] = tsCopulaExtremes(inputtimestamps,inputtimeseries, va
 
 % setting the default parameters
 args.copulaFamily = 'gaussian';
-args.marginalDistributions = 'gpd';
+args.marginalDistributions = 'gpd'; % can be gev or gpd
 args.timewindow = 100*365.25; %long enough that in most cases a time-invariant copula be adopted as default
 args.potPercentiles = cell(1,size(inputtimeseries,2));
 args.transfType = 'trendCiPercentile';
@@ -134,8 +134,11 @@ marginalAnalysis = cell(1,nSeries);
 
 for ii = 1:nSeries
 
-    [nonStatEvaParams, statTransfData] = tsEvaNonStationary([inputtimestamps,inputtimeseries(:,ii)],timewindow,'transfType',transfType,...
-        'ciPercentile',ciPercentile(ii),'potPercentiles',potPercentiles{ii},'minPeakDistanceInDays',minPeakDistanceInDaysMonovarSampling(ii));
+    [nonStatEvaParams, statTransfData] = tsEvaNonStationary([inputtimestamps,...
+        inputtimeseries(:,ii)],timewindow,'transfType',transfType,...
+        'ciPercentile',ciPercentile(ii),'potPercentiles',potPercentiles{ii},...
+        'minPeakDistanceInDays',minPeakDistanceInDaysMonovarSampling(ii), ...
+        'evdType', args.marginalDistributions);
     marginalAnalysis{ii} = {nonStatEvaParams, statTransfData};
     samplingThresholdPrct(ii) = nonStatEvaParams(2).parameters.percentile;
 end
