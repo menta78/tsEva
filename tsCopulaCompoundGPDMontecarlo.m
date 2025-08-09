@@ -82,11 +82,12 @@ switch timeVaryingCopula
         
             if strcmpi(copulaFamily, 'Gaussian')
 
-                resampleProb = copularnd('gaussian', copulaParam.rho, nResample);
+                resampleProb = tsCopulaRnd('gaussian', copulaParam.rho, nResample, []);
 
             elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
 
-                resampleProb = copularnd(copulaFamily, copulaParam.rho, nResample);
+                resampleProb = tsCopulaRnd(copulaFamily, copulaParam.rho, nResample,...
+                    copulaAnalysis.jointExtremeMonovariateProbNS);
 
             else
                 error(['copulaFamily not supported: ' copulaFamily]);
@@ -98,14 +99,15 @@ switch timeVaryingCopula
         rhoCell=copulaParam.rho;
         nResampleC=repmat({nResample},1,size(rhoCell,2));
         resampleProb=cell(size(rhoCell));
-        copulaFamilyC=repmat(copulaFamily,1,size(rhoCell,2));
             if strcmpi(nonStationarity,'margins') & strcmpi(copulaFamily, 'Gaussian')
                 rhoCell=repmat({mean(cellfun(@(x) x(triu(true(size(x)),1)),rhoCell,'UniformOutput',1))},1,size(resampleProb,2));
             elseif strcmpi(nonStationarity,'margins') 
                 rhoCell=repmat({mean([rhoCell{:}])},1,size(resampleProb,2));
             end
                    
-                    resampleProb=cellfun(@(x,y,z) copularnd(x,y,z),copulaFamilyC,rhoCell,nResampleC,'UniformOutput',0);     
+                    resampleProb=cellfun(@(x,y,uSmpl) tsCopulaRnd(copulaFamily,x,y,uSmpl),...
+                        rhoCell, nResampleC, copulaAnalysis.jointExtremeMonovariateProbNS, ...
+                        'UniformOutput', 0);     
               
                 if strcmpi(nonStationarity,'margins') 
                     monteCarloAnalysis.copulaParam=copulaParam;

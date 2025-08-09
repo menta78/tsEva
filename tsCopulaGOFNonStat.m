@@ -94,12 +94,12 @@ end
 
         %obtain an estimation of rho based on psudo-observations
 
-        rhoC=  cellfun(@(x) copulafit('gaussian',x),uSample,'UniformOutput',0);
+        rhoC=  cellfun(@(x) tsCopulaFit('gaussian',x),uSample,'UniformOutput',0);
        
 
     elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
 
-        rhoC=  cellfun(@(x) copulafit(copulaFamily,x),uSample,'UniformOutput',0);
+        rhoC=  cellfun(@(x) tsCopulaFit(copulaFamily,x),uSample,'UniformOutput',0);
         
     end
     copulaParam.rho=rhoC;
@@ -110,7 +110,12 @@ end
 
     elseif strcmpi(copulaParam.family, 'clayton') || strcmpi(copulaParam.family, 'frank') || strcmpi(copulaParam.family, 'gumbel')
 
-        Y=cellfun(@(x,y) copulacdf(copulaParam.family,x,y),uSample,copulaParam.rho,'UniformOutput',0);
+       % Y=cellfun(@(x,y) copulacdf(copulaParam.family,x,y),uSample,copulaParam.rho,'UniformOutput',0);
+       fakemtx = ones(size(copulaParam.rho{1}))*0.5;
+       fakemtx(1,1) = 1;
+       fakemtx(2,2) = 1;
+       fakemtx(3,3) = 1;
+        Y=cellfun(@(x,y) copulacdf('gaussian',x,fakemtx),uSample,copulaParam.rho,'UniformOutput',0);
     end
 
     snSample=cellfun(@(x,y) sum((tsEmpirical(x) - y) .^ 2),uSample,Y);

@@ -234,21 +234,7 @@ copulaParam.nSeries = nSeries;
 switch timeVaryingCopula
     case false
         %apply a stationary copula
-        
-            if strcmpi(copulaFamily, 'gaussian')
-                % normal copula
-                % rho = copulafit('gaussian', gpdCDFCopula);
-                rho = corr(gpdCDFCopula, 'type', 'Spearman'); % apparently works bettern than copulafit
-                %rho = copulaparam('Gaussian',corr(gpdCDFCopula, 'type', 'kendall'));   
-
-            elseif strcmpi(copulaFamily, 'gumbel') || strcmpi(copulaFamily, 'clayton') || strcmpi(copulaFamily, 'frank')
-                % Bi-variate Archimedean copulas supported by MATLAB
-
-                rho = copulafit(copulaFamily, gpdCDFCopula);
-               
-            else
-                error(['copulaFamily not supported: ' copulaFamily{iFamily}]);
-            end
+        rho = tsCopulaFit(copulaFamily, gpdCDFCopula);
         
         copulaParam.rho = rho;
         copulaParam.rhoRaw = copulaParam.rho;
@@ -300,34 +286,7 @@ switch timeVaryingCopula
             %increase the beginIndex which controls the while loop
             beginIndex=beginIndex+timeSlideIndices;
 
-            
-                if strcmpi(copulaFamily, 'Gaussian')
-                    % for a Gaussian copula, instead of using copulafit
-                    % function, spearman correlation was used as a measure
-                    % of dependency
-                    rho = corr(monovarProbJointExtrWindow, 'type', 'Spearman');
-                   
-
-                elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
-                    % one of the archimedean copulas
-                    % here we estimated dependency based on Kendall
-                    % correlation that then converts to dependency
-                    % parameter throguh copulaparam function
-                    rho = ones(nSeries);
-                    kendalT = corr(monovarProbJointExtrWindow, 'type', 'Kendall');
-                    for iSeries1 = 1:nSeries
-                        for iSeries2 = iSeries1+1:nSeries
-                            rho(iSeries1, iSeries2) = copulaparam(copulaFamily,kendalT(iSeries1,iSeries2));
-                            rho(iSeries2, iSeries1) = rho(iSeries1, iSeries2);
-                        end
-                    end
-                   
-
-                else
-                    error(['copulaFamily not supported: ' copulaFamily]);
-                end
-
-            
+            rho = tsCopulaFit(copulaFamily, monovarProbJointExtrWindow);
 
             rhoTotal=[rhoTotal,rho];
 
@@ -362,10 +321,10 @@ switch timeVaryingCopula
             end
         end
 
-        if strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
-            rhoTotal = num2cell(cellfun(@(m) m(1,2), rhoTotal)); % only bivariate archimedean is supported for now
-            rhoTotalRaw = num2cell(cellfun(@(m) m(1,2), rhoTotalRaw));
-        end
+%        if strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
+%             rhoTotal = num2cell(cellfun(@(m) m(1,2), rhoTotal)); % only bivariate archimedean is supported for now
+%             rhoTotalRaw = num2cell(cellfun(@(m) m(1,2), rhoTotalRaw));
+%        end
         copulaParam.rho = rhoTotal;                   
         copulaParam.rhoRaw = rhoTotalRaw;
         copulaParam.smoothInd = smoothInd;
