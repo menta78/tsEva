@@ -103,20 +103,7 @@ end
         
     end
     copulaParam.rho=rhoC;
-
-    if strcmpi(copulaParam.family, 'gaussian')
-
-        Y=cellfun(@(x,y) copulacdf('gaussian',x,y),uSample,copulaParam.rho,'UniformOutput',0);
-
-    elseif strcmpi(copulaParam.family, 'clayton') || strcmpi(copulaParam.family, 'frank') || strcmpi(copulaParam.family, 'gumbel')
-
-       % Y=cellfun(@(x,y) copulacdf(copulaParam.family,x,y),uSample,copulaParam.rho,'UniformOutput',0);
-       fakemtx = ones(size(copulaParam.rho{1}))*0.5;
-       fakemtx(1,1) = 1;
-       fakemtx(2,2) = 1;
-       fakemtx(3,3) = 1;
-        Y=cellfun(@(x,y) copulacdf('gaussian',x,fakemtx),uSample,copulaParam.rho,'UniformOutput',0);
-    end
+    Y = cellfun(@(usmpl, umontecarlo) tsCopulaCdfFromSamples(usmpl, umontecarlo), uSample, monteCarloAnalysis.resampleProb,'UniformOutput',0);
 
     snSample=cellfun(@(x,y) sum((tsEmpirical(x) - y) .^ 2),uSample,Y);
 
