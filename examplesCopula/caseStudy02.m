@@ -61,9 +61,9 @@ minDeltaUnivarSampli=[0.5,0.5,0.5];
  %trivariate case, and so on
 maxDeltaMultivarSampli=0.5; 
 
-%copula family; Gaussian is the only choice since it can handle trivariate
-%input
-copulaFamily='gumbel';  
+%copula family; can be gaussian or gumbel
+%copulaFamily = 'Gaussian';
+copulaFamily = 'Gumbel';  
 
 %methodology to perform univariate transformation from non-stationary to
 %stationary

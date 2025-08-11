@@ -156,6 +156,13 @@ t2xStrt = datestr(timeStampsByTimeWindow{1}(end),'yyyy');
 t1xEnd=datestr(timeStampsByTimeWindow{end}(1),'yyyy');
 t2xEnd=datestr(timeStampsByTimeWindow{end}(end),'yyyy');
 
+family = copulaAnalysis.copulaParam.family;
+if strcmpi(family, "gaussian")
+    cplSymbol='\rho'; 
+else 
+    cplSymbol='\alpha'; 
+end;
+
 iAx = [3, 7, 11];
 for iCpl = 1:3
     axes(axxArray(iAx(iCpl)));
@@ -173,7 +180,8 @@ for iCpl = 1:3
     text(0.05, 0.9, labelMark(5 + iCpl), 'Units','normalized');
     grid on;
     pr = couplingParam{1}(pairs(iCpl, 1), pairs(iCpl, 2));
-    ttl = title( {[t1xStrt,' - ',t2xStrt]; ['Gaussian (\rho = ',num2str(pr, '%.2f'),')']});
+    ttl = title( {[t1xStrt,' - ',t2xStrt]; [family ' (' cplSymbol ' = ',num2str(pr, '%.2f'),')']}, ...
+        'fontsize', fontSize);
     ttl.VerticalAlignment = 'top';
 end
 
@@ -194,8 +202,8 @@ for iCpl = 1:3
     text(0.05, 0.9, labelMark(5 + iCpl), 'Units','normalized');
     grid on;
     pr = couplingParam{end}(pairs(iCpl, 1), pairs(iCpl, 2));
-    ttl = title( {[t1xEnd,' - ',t2xEnd]; ['Gaussian (\rho = ',num2str(pr, '%.2f'),')']},...
-        "fontsize", fontSize);
+    ttl = title( {[t1xEnd,' - ',t2xEnd]; [family ' (' cplSymbol ' = ',num2str(pr, '%.2f'),')']}, ...
+        'fontsize', fontSize);
     ttl.VerticalAlignment = 'top';
 end
 
