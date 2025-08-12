@@ -157,6 +157,7 @@ t1xEnd=datestr(timeStampsByTimeWindow{end}(1),'yyyy');
 t2xEnd=datestr(timeStampsByTimeWindow{end}(end),'yyyy');
 
 family = copulaAnalysis.copulaParam.family;
+if iscell(family), family = family{1}; end
 if strcmpi(family, "gaussian")
     cplSymbol='\rho'; 
 else 

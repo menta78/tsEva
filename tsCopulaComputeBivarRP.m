@@ -91,7 +91,9 @@ familyCell=repmat({Family},1,size(PAR,2));
 
 % calculate copula cdf across each window
 
-yCell=cellfun(@(x,y,z) copulacdf(z,x,y),uCell,PAR,familyCell,'UniformOutput',0);
+% in this case we can use copulacdf because we are in the bivariate case
+yCell=cellfun(@(x,y,z) copulacdf(z,x,y(1,2)),uCell,PAR,familyCell,'UniformOutput',0);
+% yCell = cellfun(@(usmpl, umontecarlo) tsCopulaCdfFromSamples(usmpl, umontecarlo), uCell, monteCarloAnalysis.resampleProb,'UniformOutput',0);
 
 % calculate the AND return period since this type of return period is a
 % better representation of "hazard" in the context of hazard mapping

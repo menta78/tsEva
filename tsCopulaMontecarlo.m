@@ -1,5 +1,5 @@
 
-function [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis, varargin)
+function [monteCarloAnalysis] = tsCopulaMontecarlo(copulaAnalysis, varargin)
 %tsCopulaCompoundGPDMontecarlo pefrom Monte-Carlo simulation (resampling) from a
 %pre-determined copula function
 
@@ -57,11 +57,9 @@ function [monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis, va
 
 args.timeIndex = 'middle'; 
 args.nResample=1000;
-args.nonStationarity = 'marginsandcoupling'; %two switches: "margins" ; "marginsandcoupling" 
 
 args = tsEasyParseNamedArgs(varargin, args);
 
-nonStationarity=args.nonStationarity;
 timeIndex = args.timeIndex;
 nResample=args.nResample;
 
@@ -76,91 +74,21 @@ timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
 %differentiate between the way time-varying and time-invariant copula need
 %to be dealt with
 %resampling from the copula function using the copularnd function
-switch timeVaryingCopula
-    case false
-        
-        
-            if strcmpi(copulaFamily, 'Gaussian')
-
-                resampleProb = tsCopulaRnd('gaussian', copulaParam.rho, nResample, []);
-
-            elseif strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
-
-                resampleProb = tsCopulaRnd(copulaFamily, copulaParam.rho, nResample,...
-                    copulaAnalysis.jointExtremeMonovariateProbNS);
-
-            else
-                error(['copulaFamily not supported: ' copulaFamily]);
-            end
-        
-    case true
         %for the case of a time-varying copula
         
         rhoCell=copulaParam.rho;
         nResampleC=repmat({nResample},1,size(rhoCell,2));
         resampleProb=cell(size(rhoCell));
-            if strcmpi(nonStationarity,'margins') & strcmpi(copulaFamily, 'Gaussian')
-                rhoCell=repmat({mean(cellfun(@(x) x(triu(true(size(x)),1)),rhoCell,'UniformOutput',1))},1,size(resampleProb,2));
-            elseif strcmpi(nonStationarity,'margins') 
-                rhoCell=repmat({mean([rhoCell{:}])},1,size(resampleProb,2));
-            end
                    
                     resampleProb=cellfun(@(x,y,uSmpl) tsCopulaRnd(copulaFamily,x,y,uSmpl),...
                         rhoCell, nResampleC, copulaAnalysis.jointExtremeMonovariateProbNS, ...
                         'UniformOutput', 0);     
-              
-                if strcmpi(nonStationarity,'margins') 
-                    monteCarloAnalysis.copulaParam=copulaParam;
-                    monteCarloAnalysis.copulaParam.rhoMean=rhoCell;
-                end
 
-
-        
-end
 
 
 % on the basis of the timeIndex, find the non-stationary values of the
 % thresold and scale parameter
 
-switch timeVaryingCopula
-    case false
-        monteCarloRsmpl=cell(1,length(copulaFamily));
-       
-            for ivar = 1:nSeries
-                %if no timeindex is set by the user use time-index to assess
-                % non-stationarity parameters at half the length of the time series
-                nonStatEvaParams = marginalAnalysis{ivar}{1};
-                % statTransData = marginalAnalysis{ivar}{2};
-
-                if strcmpi(timeIndex,'first') & ivar==1
-                    timeIndex=1;
-                    fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
-                        'based on non-stationary values evaluated at\n' ...
-                        'the first timeindex'])
-                elseif strcmpi(timeIndex,'last') & ivar==1
-                    fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
-                        'based on non-stationary values evaluated at\n' ...
-                        'the last timeindex'])
-                    timeIndex=(length(nonStatEvaParams(2).parameters.threshold));
-                elseif strcmpi(timeIndex,'middle') & ivar==1
-                    fprintf(['conversion of Monte-Carlo probabilities to data space is \n',...
-                        'based on non-stationary values evaluated at\n' ...
-                        'the middle timeindex'])
-                    timeIndex=ceil(length(nonStatEvaParams(2).parameters.threshold)/2);
-                elseif isnumeric(timeIndex) & ivar==1
-                    if timeIndex<1 || timeIndex>length(nonStatEvaParams(2).parameters.threshold)
-                        error('timeIndex parameter must be chosen from {"first","last","middle"} or a valid index')
-                    end
-                end
-                timeIndexArray=timeIndex;
-                % transfrom probabilities to data scale using inverse sampling law
-                % no scaling is needed since thrshld parameter already transforms data with
-                % lowest probability corresponding with thrshld value
-                monteCarloRsmpl{1}(:,ivar) = computeResampledLevels(resampleProb{1}(:,ivar), nonStatEvaParams, timeIndex,methodology);
-
-            end
-        
-    case true
 
         %in case of a time-varying copula
         monteCarloRsmplCell=cell(size(resampleProb));
@@ -208,8 +136,6 @@ switch timeVaryingCopula
                end
            end
         monteCarloRsmpl=monteCarloRsmplCell;
-
-end
 %append monteCarloRsmpl and resampleProb to the copulaAnalysis file of type
 %structure
 monteCarloAnalysis.monteCarloRsmpl=monteCarloRsmpl;

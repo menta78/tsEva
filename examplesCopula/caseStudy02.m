@@ -63,7 +63,7 @@ maxDeltaMultivarSampli=0.5;
 
 %copula family; can be gaussian or gumbel
 %copulaFamily = 'Gaussian';
-copulaFamily = 'Gumbel';  
+copulaFamily = {'Gumbel'};  
 
 %methodology to perform univariate transformation from non-stationary to
 %stationary
@@ -78,9 +78,9 @@ peakType='allExceedThreshold';
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
     'peakType',peakType);
 
-[monteCarloAnalysis1] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+[monteCarloAnalysis1] = tsCopulaMontecarlo(copulaAnalysis,...
     'nResample',10000,'timeIndex','middle'); % large montecarlo good for statistics
-[monteCarloAnalysis2] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+[monteCarloAnalysis2] = tsCopulaMontecarlo(copulaAnalysis,...
     'nResample',300,'timeIndex','middle'); % smaller montecarlo good for plotting
 
 [gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis1, 'smoothInd',10);

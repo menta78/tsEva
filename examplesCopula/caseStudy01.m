@@ -90,7 +90,7 @@ minDeltaUnivarSampli=[30,30]; %30, 30
 maxDeltaMultivarSampli=45; %45   
 
 %copula family; Gumbel, gaussian and Frank are possible choices
-copulaFamily={'gumbel'};  
+copulaFamily='gumbel';  
 
 %methodology to perform univariate transformation from non-stationary to
 %stationary
@@ -109,7 +109,7 @@ samplingOrder=[2,1];
     'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
     'marginalDistributions',marginalDistributions,'samplingOrder',samplingOrder);
 
-[monteCarloAnalysis] = tsCopulaCompoundGPDMontecarlo(copulaAnalysis,...
+[monteCarloAnalysis] = tsCopulaMontecarlo(copulaAnalysis,...
     'nResample',1000,'timeIndex','middle');
 
 gofStatistics = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis);

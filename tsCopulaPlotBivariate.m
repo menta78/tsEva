@@ -63,16 +63,9 @@ end
 
 %% Unpack key variables
 % Extract peaks and timestamps
-if copulaAnalysis.timeVaryingCopula
-
-    yMax=copulaAnalysis.yMax;
-    tMax=copulaAnalysis.tMax;
-    nWindow=length(copulaAnalysis.jointExtremes);
-else
-    yMax=copulaAnalysis.jointExtremes;
-    tMax=copulaAnalysis.jointExtremeTimeStamps;
-    nWindow=1;
-end
+yMax=copulaAnalysis.yMax;
+tMax=copulaAnalysis.tMax;
+nWindow=length(copulaAnalysis.jointExtremes);
 methodology=copulaAnalysis.methodology; %***
 
 % since we use non-stationary peaks as a way of color-coding the data,
@@ -300,10 +293,10 @@ if strcmpi(copulaFamily,'gaussian')
 
         rho=cellfun(@(x) x(2),couplingParam);
         x11=datetime(datevec(ttRho));
-        y11=[rho;rho];
+        y11cpar=[rho;rho];
         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
         y22=[[corrSpearmanSamplex{:};corrSpearmanSamplex{:}],[corrSpearmanMontex{:};corrSpearmanMontex{:}]];
-        [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11,x22,y22);
+        [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11cpar,x22,y22);
         set(hAx,{'ycolor'},{'k';'k'})
         hLine1.LineWidth=1;
         hLine2(1).LineWidth=1;
@@ -318,10 +311,10 @@ if strcmpi(copulaFamily,'gaussian')
         rho=cellfun(@(x) x(2),couplingParam);
         rhoRaw=cellfun(@(x) x(2),couplingParamRaw);
         x11=datetime(datevec(ttRho));
-        y11=rho;
+        y11cpar=rho;
         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
         y22=[cell2mat(corrSpearmanSamplex)', cell2mat(corrSpearmanMontex)'];
-        [hAx,hLine1,hLine2]=plotyy(x11,y11,x22,y22);
+        [hAx,hLine1,hLine2]=plotyy(x11,y11cpar,x22,y22);
 
         if isfield(copulaAnalysis.copulaParam,'rhoMean')
             set(hAx(1),'NextPlot','add')
@@ -386,28 +379,28 @@ if strcmpi(copulaFamily,'gaussian')
 
     end
 elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strcmpi(copulaFamily,'frank')
-    if copulaAnalysis.timeVaryingCopula==0
-
+%     if copulaAnalysis.timeVaryingCopula==0
+% 
+%         x11=datetime(datevec(ttRho));
+%         y11cpar=[cell2mat(couplingParam);cell2mat(couplingParam)];
+%         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
+%         y22=[[corrSpearmanSamplex{:};corrSpearmanSamplex{:}],[corrSpearmanMontex{:};corrSpearmanMontex{:}]];
+%         [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11cpar,x22,y22);
+%         set(hAx,{'ycolor'},{'k';'k'})
+%         hLine1.LineWidth=1;
+%         hLine2(1).LineWidth=1;
+%         hLine2(2).LineWidth=1;
+%         str=lower(char(copulaFamily));
+%         idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
+%         str(idx)=upper(str(idx));
+%         yll=ylabel(hAx(1),sprintf('\\theta_{%s}', str));
+% 
+%     elseif copulaAnalysis.timeVaryingCopula==1
         x11=datetime(datevec(ttRho));
-        y11=[cell2mat(couplingParam);cell2mat(couplingParam)];
-        x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
-        y22=[[corrSpearmanSamplex{:};corrSpearmanSamplex{:}],[corrSpearmanMontex{:};corrSpearmanMontex{:}]];
-        [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11,x22,y22);
-        set(hAx,{'ycolor'},{'k';'k'})
-        hLine1.LineWidth=1;
-        hLine2(1).LineWidth=1;
-        hLine2(2).LineWidth=1;
-        str=lower(char(copulaFamily));
-        idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
-        str(idx)=upper(str(idx));
-        yll=ylabel(hAx(1),sprintf('\\theta_{%s}', str));
-
-    elseif copulaAnalysis.timeVaryingCopula==1
-        x11=datetime(datevec(ttRho));
-        y11=cell2mat(couplingParam);
+        y11cpar=cellfun(@(cpar) cpar(1,2), couplingParam);
         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
         y22=[cell2mat(corrSpearmanSamplex)', cell2mat(corrSpearmanMontex)'];
-        [hAx,hLine1,hLine2]=plotyy(x11,y11,x22,y22);
+        [hAx,hLine1,hLine2]=plotyy(x11,y11cpar,x22,y22);
 
         if isfield(copulaAnalysis.copulaParam,'rhoMean')
             set(hAx(1),'NextPlot','add')
@@ -417,7 +410,7 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
         hLine1.LineWidth=1;
         hLine2(1).LineWidth=1;
         hLine2(2).LineWidth=1;
-        [~,p_value]=tsMann_Kendall(cell2mat(couplingParamRaw),0.05);
+        [~,p_value]=tsMann_Kendall(y11cpar,0.05);
 
         str=lower(char(copulaFamily));
         idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
@@ -469,7 +462,7 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
                 'Color','none',...
                 'AutoUpdate','off','String',{yll.String,"\rho_{Spearman, S}","\rho_{Spearman, MC}"});
         end
-    end
+%    end
 end
 end
 

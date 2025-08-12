@@ -18,10 +18,11 @@ if strcmpi(family, 't')
 end
 
 cndCopulaRnd0 = strcmpi(family, 'gaussian');
-cndCopulaRnd1 = isscalar(copulaPar);
+cndCopulaRnd1 = isscalar(copulaPar) || size(copulaPar, 1) == 2;
 cndCopulaRnd = cndCopulaRnd0 | cndCopulaRnd1;
 
 if cndCopulaRnd
+    if ~isscalar(copulaPar), copulaPar = copulaPar(1,2); end
     u = copularnd(family, copulaPar, N);
 else
     if ~strcmpi(family, 'gumbel')

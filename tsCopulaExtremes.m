@@ -96,6 +96,7 @@ args.maxPeakDistanceInDaysMultivarSampling=3;
 args.peakType='allexceedthreshold';
 args.samplingOrder=0;
 args.smoothInd=-1;
+args.timeVaryingCopula = 1;
 % parsing of input parameters, overrides if different with the default
 args = tsEasyParseNamedArgs(varargin, args);
 
@@ -111,6 +112,7 @@ maxPeakDistanceInDaysMultivarSampling=args.maxPeakDistanceInDaysMultivarSampling
 peakType=args.peakType;
 samplingOrder=args.samplingOrder;
 smoothInd=args.smoothInd;
+timeVaryingCopula = args.timeVaryingCopula;
 if smoothInd == -1
     smoothInd = ceil(timewindow/365.23/4);
 end
@@ -121,10 +123,10 @@ nSeries = size(inputtimeseries, 2);
 % determine whether or not a time-varying copula should be adopted
 durationSeriesInYears=(inputtimestamps(end)-inputtimestamps(1))/365.25;
 
-if timewindow/365.25<durationSeriesInYears
-    timeVaryingCopula=1;
+if timeVaryingCopula
+    copulaTimeWindow = timewindow;
 else
-    timeVaryingCopula=0;
+    copulaTimeWindow = durationSeriesInYears*365.25*2;
 end
 
 % perform transformation (from non-stationary to stationary) and obtain
@@ -231,156 +233,119 @@ end
 % estimating the copula
 copulaParam.family = copulaFamily;
 copulaParam.nSeries = nSeries;
-switch timeVaryingCopula
-    case false
-        %apply a stationary copula
-        rho = tsCopulaFit(copulaFamily, gpdCDFCopula);
-        
-        copulaParam.rho = rho;
-        copulaParam.rhoRaw = copulaParam.rho;
-        copulaParam.rhoTimeStamps = [inputtimestamps(1) inputtimestamps(end)];
-        copulaParam.timeStampsByTimeWindow = {inputtimestamps, inputtimestamps};
-    case true
-        %apply a non-stationary copula
-       
-        monovarProbJointExtrCell={};
-        timeStampsByTimeWindow={};
-        IndexWindowCell={};
-        timePeaksCell={};
-        rhoTotal={}; % handling with a cell, because we don't know in advance what each copula needs
-  
-        beginIndex=0;
 
-        timePeaks=jointextremes(:,:,1);
-        dt = tsEvaGetTimeStep(inputtimestamps);
-        timeWindowIndices = round(timewindow/dt);
-        timeSlideIndices = round(timeSlide/dt);
+%apply a non-stationary copula
 
-        while beginIndex+timeWindowIndices<=length(inputtimestamps)
-            % select portion that falls in each window and store it in a cell array
-            % for the last timeWindow, the duration is changed to cover
-            % until the end of the inputtimestamps (this ensures no peak is
-            % left behind)
-            if beginIndex+timeSlideIndices+timeWindowIndices>length(inputtimestamps)
-                inputtimestampsWindow=inputtimestamps(beginIndex+1:end,:);
-            else
-                inputtimestampsWindow=inputtimestamps(beginIndex+1:beginIndex+timeWindowIndices,:);
-            end
+monovarProbJointExtrCell={};
+timeStampsByTimeWindow={};
+IndexWindowCell={};
+timePeaksCell={};
+rhoTotal={}; % handling with a cell, because we don't know in advance what each copula needs
 
-            timeStampsByTimeWindow=[timeStampsByTimeWindow,inputtimestampsWindow];
-            % of all joint peaks, find ones that fall within the time
-            % window, use this index to also select probabilities that
-            % belong to this window
-            [Lia,~] = ismember(timePeaks,inputtimestampsWindow);
-            WindowIndex=all(Lia,2);
-            timePeaksCell=[timePeaksCell,timePeaks(WindowIndex,:)];           
+beginIndex=0;
 
-            %keep probability of extremes (i.e., CDF in an unscaled manner)
-            monovarProbJointExtrWindow=gpdCDFCopula(WindowIndex,:);
-            monovarProbJointExtrCell=[monovarProbJointExtrCell,monovarProbJointExtrWindow];
-            % global indexing of the window in the inputtimestamps
-            [~,Locb2] = ismember(timePeaks(WindowIndex,:),inputtimestamps);
+timePeaks=jointextremes(:,:,1);
+dt = tsEvaGetTimeStep(inputtimestamps);
+timeWindowIndices = min(round(copulaTimeWindow/dt), length(inputtimestamps));
+timeSlideIndices = round(timeSlide/dt);
 
-            IndexWindowCell=[IndexWindowCell,Locb2];
+while beginIndex+timeWindowIndices<=length(inputtimestamps)
+    % select portion that falls in each window and store it in a cell array
+    % for the last timeWindow, the duration is changed to cover
+    % until the end of the inputtimestamps (this ensures no peak is
+    % left behind)
+    if beginIndex+timeSlideIndices+timeWindowIndices>length(inputtimestamps)
+        inputtimestampsWindow=inputtimestamps(beginIndex+1:end,:);
+    else
+        inputtimestampsWindow=inputtimestamps(beginIndex+1:beginIndex+timeWindowIndices,:);
+    end
 
-            %increase the beginIndex which controls the while loop
-            beginIndex=beginIndex+timeSlideIndices;
+    timeStampsByTimeWindow=[timeStampsByTimeWindow,inputtimestampsWindow];
+    % of all joint peaks, find ones that fall within the time
+    % window, use this index to also select probabilities that
+    % belong to this window
+    [Lia,~] = ismember(timePeaks,inputtimestampsWindow);
+    WindowIndex=all(Lia,2);
+    timePeaksCell=[timePeaksCell,timePeaks(WindowIndex,:)];           
 
-            rho = tsCopulaFit(copulaFamily, monovarProbJointExtrWindow);
+    %keep probability of extremes (i.e., CDF in an unscaled manner)
+    monovarProbJointExtrWindow=gpdCDFCopula(WindowIndex,:);
+    monovarProbJointExtrCell=[monovarProbJointExtrCell,monovarProbJointExtrWindow];
+    % global indexing of the window in the inputtimestamps
+    [~,Locb2] = ismember(timePeaks(WindowIndex,:),inputtimestamps);
 
-            rhoTotal=[rhoTotal,rho];
+    IndexWindowCell=[IndexWindowCell,Locb2];
 
+    %increase the beginIndex which controls the while loop
+    beginIndex=beginIndex+timeSlideIndices;
+
+    rho = tsCopulaFit(copulaFamily, monovarProbJointExtrWindow);
+
+    rhoTotal=[rhoTotal,rho];
+
+end
+copulaParam.timeStampsByTimeWindow=timeStampsByTimeWindow;
+copulaParam.rhoTimeStamps = linspace(timeStampsByTimeWindow{1}(1), ...
+    timeStampsByTimeWindow{end}(end), ...
+    length(timeStampsByTimeWindow));
+
+inputtimeseriesC=repmat({inputtimeseries},1,size(IndexWindowCell,2));
+jointExtremesNS = cellfun(@(x, y) ...
+    cell2mat(arrayfun(@(k) x(y(:,k), k), 1:nSeries, 'UniformOutput', false)), ...
+    inputtimeseriesC, IndexWindowCell, 'UniformOutput', false);
+
+rhoTotalRaw=rhoTotal;
+
+% smoothing
+N = length(rhoTotal); % Number of NxN cell arrays
+for iSeries1 = 1:nSeries
+    for iSeries2 = iSeries1+1:nSeries
+        cmpPrm = ones(nSeries);
+        comp = zeros(1, N);
+        for it = 1:N
+            comp(it) = rhoTotal{it}(iSeries1,iSeries2); % Extract the component
         end
-        copulaParam.timeStampsByTimeWindow=timeStampsByTimeWindow;
-        copulaParam.rhoTimeStamps = linspace(timeStampsByTimeWindow{1}(1), ...
-            timeStampsByTimeWindow{end}(end), ...
-            length(timeStampsByTimeWindow));
-
-        inputtimeseriesC=repmat({inputtimeseries},1,size(IndexWindowCell,2));
-        jointExtremesNS = cellfun(@(x, y) ...
-            cell2mat(arrayfun(@(k) x(y(:,k), k), 1:nSeries, 'UniformOutput', false)), ...
-            inputtimeseriesC, IndexWindowCell, 'UniformOutput', false);
-
-        rhoTotalRaw=rhoTotal;
-
-        % smoothing
-        N = length(rhoTotal); % Number of NxN cell arrays
-        for iSeries1 = 1:nSeries
-            for iSeries2 = iSeries1+1:nSeries
-                cmpPrm = ones(nSeries);
-                comp = zeros(1, N);
-                for it = 1:N
-                    comp(it) = rhoTotal{it}(iSeries1,iSeries2); % Extract the component
-                end
-                comp = smoothdata(comp,'movmean',smoothInd);
-                for it = 1:N
-                    rhoTotal{it}(iSeries1,iSeries2) = comp(it); % Extract the component
-                    rhoTotal{it}(iSeries2,iSeries1) = comp(it); % Extract the component
-                end
-
-            end
+        comp = smoothdata(comp,'movmean',smoothInd);
+        for it = 1:N
+            rhoTotal{it}(iSeries1,iSeries2) = comp(it); % Extract the component
+            rhoTotal{it}(iSeries2,iSeries1) = comp(it); % Extract the component
         end
+
+    end
+end
 
 %        if strcmpi(copulaFamily, 'Gumbel') || strcmpi(copulaFamily, 'Clayton') || strcmpi(copulaFamily, 'Frank')
 %             rhoTotal = num2cell(cellfun(@(m) m(1,2), rhoTotal)); % only bivariate archimedean is supported for now
 %             rhoTotalRaw = num2cell(cellfun(@(m) m(1,2), rhoTotalRaw));
 %        end
-        copulaParam.rho = rhoTotal;                   
-        copulaParam.rhoRaw = rhoTotalRaw;
-        copulaParam.smoothInd = smoothInd;
-    
-        cellTimePeaks=vertcat(timePeaksCell{:});
-        [yMax,iB,~] = unique(vertcat(jointExtremesNS{:}),'stable','rows');
-        tMax=cellTimePeaks(iB,:);
+copulaParam.rho = rhoTotal;                   
+copulaParam.rhoRaw = rhoTotalRaw;
+copulaParam.smoothInd = smoothInd;
 
-end
+cellTimePeaks=vertcat(timePeaksCell{:});
+[yMax,iB,~] = unique(vertcat(jointExtremesNS{:}),'stable','rows');
+tMax=cellTimePeaks(iB,:);
 
 CopulaAnalysis.copulaParam=copulaParam;
 CopulaAnalysis.marginalAnalysis=marginalAnalysis;
 CopulaAnalysis.methodology=marginalDistributions;
 CopulaAnalysis.timeVaryingCopula=timeVaryingCopula;
 
-switch timeVaryingCopula
-    case false
-
-        % CopulaAnalysis.jointExtremeMonovariateProb=gpdCDFCopula;
-        CopulaAnalysis.jointExtremeTimeStamps=jointextremes(:,:,1);
-        % CopulaAnalysis.jointExtremesStationary=jointextremes(:,:,2);
-        CopulaAnalysis.jointExtremeMonovariateProbNS=gpdCDFCopula;
-        CopulaAnalysis.timeWindow=inputtimestamps(end)-inputtimestamps(1);
-        if strcmpi(marginalDistributions,'gpd')
-            CopulaAnalysis.jointExtremes=samplingAnalysis.jointExtremesNS;
-            CopulaAnalysis.jointExtremeIndices=samplingAnalysis.jointExtremeIndices;
-            CopulaAnalysis.peakIndicesAll=samplingAnalysis.peakIndicesAll;
-            CopulaAnalysis.stationaryThresholdSampling=samplingAnalysis.thresholdsC;
-            CopulaAnalysis.thresholdPotNS=[samplingAnalysis.thresholdsNonStation{:}];
-        elseif strcmpi(marginalDistributions,'gev')
-            CopulaAnalysis.jointExtremes=jointExtremesNS;
-            CopulaAnalysis.jointExtremeIndices=jointExtremeIndices;
-            CopulaAnalysis.peakIndicesAll=nan(1,nSeries);
-            CopulaAnalysis.stationaryThresholdSampling=nan(1,nSeries);
-            CopulaAnalysis.thresholdPotNS=nan(1,nSeries);
-        end
-
-    case true
-        
-        CopulaAnalysis.jointExtremes=jointExtremesNS;
-        CopulaAnalysis.jointExtremeTimeStamps=timePeaksCell;
-        CopulaAnalysis.jointExtremeIndices=IndexWindowCell;
-        CopulaAnalysis.jointExtremeMonovariateProbNS=monovarProbJointExtrCell;
-        CopulaAnalysis.yMax=yMax;
-        CopulaAnalysis.tMax=tMax;
-        CopulaAnalysis.timeWindow=timewindow;
-        if strcmpi(marginalDistributions,'gpd')
-            CopulaAnalysis.peakIndicesAll=samplingAnalysis.peakIndicesAll;
-            CopulaAnalysis.stationaryThresholdSampling=samplingAnalysis.thresholdsC;
-            CopulaAnalysis.thresholdPotNS=[samplingAnalysis.thresholdsNonStation{:}];
-        elseif strcmpi(marginalDistributions,'gev')
-            CopulaAnalysis.peakIndicesAll=nan(1,nSeries);
-            CopulaAnalysis.stationaryThresholdSampling=nan(1,nSeries);
-            CopulaAnalysis.thresholdPotNS=nan(1,nSeries);
-        end
-
+CopulaAnalysis.jointExtremes=jointExtremesNS;
+CopulaAnalysis.jointExtremeTimeStamps=timePeaksCell;
+CopulaAnalysis.jointExtremeIndices=IndexWindowCell;
+CopulaAnalysis.jointExtremeMonovariateProbNS=monovarProbJointExtrCell;
+CopulaAnalysis.yMax=yMax;
+CopulaAnalysis.tMax=tMax;
+CopulaAnalysis.timeWindow=timewindow;
+if strcmpi(marginalDistributions,'gpd')
+    CopulaAnalysis.peakIndicesAll=samplingAnalysis.peakIndicesAll;
+    CopulaAnalysis.stationaryThresholdSampling=samplingAnalysis.thresholdsC;
+    CopulaAnalysis.thresholdPotNS=[samplingAnalysis.thresholdsNonStation{:}];
+elseif strcmpi(marginalDistributions,'gev')
+    CopulaAnalysis.peakIndicesAll=nan(1,nSeries);
+    CopulaAnalysis.stationaryThresholdSampling=nan(1,nSeries);
+    CopulaAnalysis.thresholdPotNS=nan(1,nSeries);
 end
 
 
