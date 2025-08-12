@@ -379,23 +379,23 @@ if strcmpi(copulaFamily,'gaussian')
 
     end
 elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strcmpi(copulaFamily,'frank')
-%     if copulaAnalysis.timeVaryingCopula==0
-% 
-%         x11=datetime(datevec(ttRho));
-%         y11cpar=[cell2mat(couplingParam);cell2mat(couplingParam)];
-%         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
-%         y22=[[corrSpearmanSamplex{:};corrSpearmanSamplex{:}],[corrSpearmanMontex{:};corrSpearmanMontex{:}]];
-%         [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11cpar,x22,y22);
-%         set(hAx,{'ycolor'},{'k';'k'})
-%         hLine1.LineWidth=1;
-%         hLine2(1).LineWidth=1;
-%         hLine2(2).LineWidth=1;
-%         str=lower(char(copulaFamily));
-%         idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
-%         str(idx)=upper(str(idx));
-%         yll=ylabel(hAx(1),sprintf('\\theta_{%s}', str));
-% 
-%     elseif copulaAnalysis.timeVaryingCopula==1
+    if copulaAnalysis.timeVaryingCopula==0
+
+        x11=datetime(datevec(ttRho));
+        y11cpar=[cell2mat(couplingParam);cell2mat(couplingParam)];
+        x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
+        y22=[[corrSpearmanSamplex{:};corrSpearmanSamplex{:}],[corrSpearmanMontex{:};corrSpearmanMontex{:}]];
+        [hAx,hLine1,hLine2]=plotyy(axxArray(3),x11,y11cpar,x22,y22);
+        set(hAx,{'ycolor'},{'k';'k'})
+        hLine1.LineWidth=1;
+        hLine2(1).LineWidth=1;
+        hLine2(2).LineWidth=1;
+        str=lower(char(copulaFamily));
+        idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
+        str(idx)=upper(str(idx));
+        yll=ylabel(hAx(1),sprintf('\\theta_{%s}', str));
+
+    elseif copulaAnalysis.timeVaryingCopula==1
         x11=datetime(datevec(ttRho));
         y11cpar=cellfun(@(cpar) cpar(1,2), couplingParam);
         x22=[datetime(datevec(ttRho)),datetime(datevec(ttRho))];
@@ -462,7 +462,7 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
                 'Color','none',...
                 'AutoUpdate','off','String',{yll.String,"\rho_{Spearman, S}","\rho_{Spearman, MC}"});
         end
-%    end
+    end
 end
 end
 
