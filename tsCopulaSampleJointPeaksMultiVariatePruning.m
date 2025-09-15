@@ -331,8 +331,10 @@ indexJointPeaksColumnWise=jointIdTotal(idPeaksArtificial==1,:);
 indexJointNonPeaksColumnWise=jointIdTotal(idPeaksArtificial==2,:);
 
 jointExtremeIndices=combinedPeaksIndex(indexJointPeaksColumnWise);
-if size(combinedPeaksIndex(indexJointNonPeaksColumnWise),2)~=1
+if size(combinedPeaksIndex(indexJointNonPeaksColumnWise),2)~=1 & size(combinedPeaksIndex(indexJointPeaksColumnWise),2)~=1 
     peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)];
+elseif size(combinedPeaksIndex(indexJointNonPeaksColumnWise),2)~=1 
+  peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise)';combinedPeaksIndex(indexJointNonPeaksColumnWise)];
 else
     peakIndicesAll=[combinedPeaksIndex(indexJointPeaksColumnWise);combinedPeaksIndex(indexJointNonPeaksColumnWise)'];
 end
