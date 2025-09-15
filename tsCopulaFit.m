@@ -6,6 +6,12 @@ function copulaParam = tsCopulaFit(copulaFamily, uProb)
         nSeries = size(uProb, 2);
         copulaParam = ones(nSeries);
         kendalT = corr(uProb, 'type', 'Kendall');
+        if strcmpi(copulaFamily, 'gumbel')
+            kendalT(triu(kendalT) < 0) = 0;
+
+            % Replace negatives in the lower triangle
+            kendalT(tril(kendalT) < 0) = 0;
+        end
         for iSeries1 = 1:nSeries
             for iSeries2 = iSeries1+1:nSeries
                 copulaParam(iSeries1, iSeries2) = copulaparam(copulaFamily,kendalT(iSeries1,iSeries2));
