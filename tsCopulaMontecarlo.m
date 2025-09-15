@@ -57,12 +57,12 @@ function [monteCarloAnalysis] = tsCopulaMontecarlo(copulaAnalysis, varargin)
 
 args.timeIndex = 'middle'; 
 args.nResample=1000;
-
+args.nonStationarity="";
 args = tsEasyParseNamedArgs(varargin, args);
 
 timeIndex = args.timeIndex;
 nResample=args.nResample;
-
+nonStationarity=args.nonStationarity;
 %read input data
 methodology=copulaAnalysis.methodology;
 copulaParam=copulaAnalysis.copulaParam;
@@ -77,6 +77,15 @@ timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
         %for the case of a time-varying copula
         
         rhoCell=copulaParam.rho;
+        if nonStationarity=='margins'
+            mRho=repmat({mean(cell2mat(cellfun(@(x) x(find(triu(x,1))),rhoCell,'UniformOutput',0)))},size(rhoCell));
+            rhoMean=repmat({ones(copulaParam.nSeries)},size(rhoCell));
+            indicesToReplace=cellfun(@(x) find(triu(x,1) | tril(x,-1)),rhoCell,'UniformOutPut',0)
+            rhoCell = cellfun(@(x,ix,z) setValues(x,ix,z),rhoCell,indicesToReplace,mRho,'UniformOutput', 0);
+
+% helper function
+
+        end
         nResampleC=repmat({nResample},1,size(rhoCell,2));
         resampleProb=cell(size(rhoCell));
                    
@@ -163,3 +172,6 @@ end
 
 end
 
+function M = setValues(M, idx, vals)
+    M(idx)=vals;
+end
