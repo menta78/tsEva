@@ -226,7 +226,7 @@ elseif strcmpi(copulaFamily,'Frank') || strcmpi(copulaFamily,'Clayton') ||strcmp
         par01=round(couplingParamMean{jx}(1)*100)/100;
 
     else
-        par01=round(couplingParam{jx}(1)*100)/100;
+        par01=round(couplingParam{jx}(2)*100)/100;
 
     end
 end
