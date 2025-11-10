@@ -60,6 +60,17 @@ stdDevSeries=(PercentileSeriesTotal-trendSeries);
 
 % calculae stationary series and its 
 statSeries=detrendSeries./(stdDevSeries);
+for ij=1:length(iAA)-1
+
+   
+
+    statSeriesYear=statSeries(iAA(ij):iAA(ij+1)-1);
+
+   
+    percentileSeriesStat(ij)=prctile(statSeriesYear, percentile);
+    
+end
+[~,p_valueStat]=tsMann_Kendall(percentileSeriesStat,0.05);
 
 %assess error in regression model used for percentiles
 [~,ErrorPercentile] = polyval(p1,filledTimeStamps,S1);
@@ -87,4 +98,5 @@ trasfData.nonStatSeries = filledSeries;
 trasfData.statSer3Mom = statSer3Mom;
 trasfData.statSer4Mom = statSer4Mom;
 trasfData.pValueChange=p_value;
+trasfData.pValueChangeStat=p_valueStat;
 end

@@ -172,6 +172,7 @@ if ~isempty(eva(1).parameters)
   gevObj.paramErr = gevParamStdErr;
   gevObj.stationaryParams = eva(1);
   gevObj.objs.monthlyMaxIndexes = pointData.monthlyMaxIndexes;
+  gevObj.objs.annualMaxIndexes = pointData.annualMaxIndexes;
 else
   gevObj.method = eva(1).method;
   gevObj.parameters = [];

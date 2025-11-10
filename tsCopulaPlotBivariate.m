@@ -52,9 +52,6 @@ labelMark=(["(a)","(b)","(c)","(d)","(e)"]);
 gofStatistics = args.gofStatistics;
 retPerAnalysis = args.retPerAnalysis;
 
-if isempty(gofStatistics)
-    gofStatistics = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis);
-end
 
 if isempty(retPerAnalysis)
     retPerAnalysis = tsCopulaComputeBivarRP(copulaAnalysis, monteCarloAnalysis);
@@ -86,6 +83,7 @@ nonStatSeries=cell2mat(nonStatSeriesCell);
 timeStamps=cell2mat(timeStampsCell);
 thresholdPotNS=copulaAnalysis.thresholdPotNS;   %curves representing non-stationary threshold
 pval=cellfun(@(x) x{2}.pValueChange,copulaAnalysis.marginalAnalysis);
+pvalStat=cellfun(@(x) x{2}.pValueChangeStat,copulaAnalysis.marginalAnalysis);
 
 %% Initialize subplot manager and figure, set figure and axes properties;
 %keep axes handles as an array
@@ -108,14 +106,14 @@ axx = spMan.createAxes('ts1', h0(1), b0(1), h(1), b(1));
 axes(axx); axxArray(end+1) = axx;
 plotTimeSeries(timeStamps(:,1),nonStatSeries(:,1),methodology,thresholdPotNS(:,1),...
     tMax(:,1),yMax(:,1),ylbl{1},...
-    labelMark(1),xlbl,pval(1),fontSize,scatterColor);
+    labelMark(1),xlbl,pval(1),pvalStat(1),fontSize,scatterColor);
 
 %% Plot 2: time series 2 (panel b)
 axx = spMan.createAxes('ts2', h0(2), b0(2), h(2), b(2));
 axes(axx); axxArray(end+1) = axx;
 plotTimeSeries(timeStamps(:,2),nonStatSeries(:,2),methodology,thresholdPotNS(:,2),...
     tMax(:,2),yMax(:,2),ylbl{2},...
-    labelMark(2),xlbl,pval(2),fontSize,scatterColor);
+    labelMark(2),xlbl,pval(2),pvalStat(2),fontSize,scatterColor);
 
 %% Plot 3; goodness-of-fit statistics
 axx = spMan.createAxes('gof', h0(3), b0(3), h(3), b(3));
@@ -155,7 +153,7 @@ jointRPPlot(retPerAnalysis ,nWindow)
 end
 
 function plotTimeSeries(timeStamps,nonStatSeries,methodology,thresholdPotNS,tMax,yMax,ylbl,...
-    labelMark,xlbl,pval,fontSize,scatterColor)
+    labelMark,xlbl,pval,pvalStat,fontSize,scatterColor)
 
 hold on;box on;
 plot(datetime(datevec(timeStamps)),nonStatSeries)
@@ -175,7 +173,9 @@ xlabel(xlbl,'FontSize',fontSize)
 
 text(0.05,0.9,labelMark,'Units','normalized')
 
-text(0.5,0.1,['{\it p-value}_{MK}= ',sprintf('%0.3g',pval)],'units','normalized')
+text(0.15,0.8,['{\it p-value}_{nonStat}= ',sprintf('%0.3g',pval)],'units','normalized')
+text(0.15,0.9,['{\it p-value}_{Stat}= ',sprintf('%0.3g',pvalStat)],'units','normalized')
+
 grid on;
 end
 
@@ -416,10 +416,13 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
         idx=regexp([' ' str],'(?<=\s+)\S','start')-1;
         str(idx)=upper(str(idx));
         yll=ylabel(hAx(1),sprintf('\\theta_{%s}', str));
-
+        yll2=ylabel(hAx(2),sprintf('\\rho_{%s}', 'Spearman'));
+        yll2P=yll2.Position;
+        yll2P(1)=yll2P(1)-0.03*yll2P(1);
+        set(yll2,'Position',yll2P)
         grid on;
         if copulaAnalysis.timeVaryingCopula
-            text(0.65,0.1,['{\it p-value}_{MK}= ',sprintf('%0.3g',p_value)],'units','normalized',...
+            text(0.45,0.7,['{\it p-value}_{\theta}= ',sprintf('%0.3g',p_value)],'units','normalized',...
                 'HorizontalAlignment','left')
         end
         xlabel('Date (time)')
@@ -436,12 +439,45 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
             latexString2 = sprintf('${S_n} = %s$', formattedValue2);
             latexString3 = sprintf('${\\Delta \\tau}_{\\mathrm{Kendall}} = %s$', formattedValue3);
         end
-        text(0.65, 0.4, latexString,'units','normalized','HorizontalAlignment','left','Interpreter',...
-            'latex');
-        text(0.65, 0.3, latexString3,'units','normalized','HorizontalAlignment','left','Interpreter',...
-            'latex');
-        text(0.65, 0.2, latexString2 ,'units','normalized','HorizontalAlignment','left','Interpreter',...
-            'latex');
+        t1=text(0.65, 0.35, latexString,'units','normalized','HorizontalAlignment','left','Interpreter',...
+            'latex','FontSize',12);
+        t2=text(0.65, 0.25, latexString3,'units','normalized','HorizontalAlignment','left','Interpreter',...
+            'latex','FontSize',12);
+        t3=text(0.65, 0.15, latexString2 ,'units','normalized','HorizontalAlignment','left','Interpreter',...
+            'latex','FontSize',12);
+        texts = [t1 t2 t3];
+        drawnow;
+
+        % --- combine text extents (still in axes-normalized units) ---
+        extents = cell2mat(get(texts,'Extent'));
+        xMin = min(extents(:,1));
+        yMin = min(extents(:,2));
+        xMax = max(extents(:,1)+extents(:,3));
+        yMax = max(extents(:,2)+extents(:,4));
+        pad = 0.01;
+        posAxNorm = [xMin-pad, yMin-pad, (xMax-xMin)+2*pad, (yMax-yMin)+2*pad];
+
+        % --- convert axes-normalized -> figure-normalized coordinates ---
+        ax = ancestor(t1,'axes');
+        fig = ancestor(ax,'figure');
+
+        % get pixel positions of axes and figure
+        axPix  = getpixelposition(ax, true);   % axes position in pixels (relative to figure)
+        figPix = getpixelposition(fig);        % figure position in pixels
+
+        % convert axes-normalized box to pixel coordinates in figure
+        rectPix = [ axPix(1) + posAxNorm(1)*axPix(3), ...
+            axPix(2) + posAxNorm(2)*axPix(4), ...
+            posAxNorm(3)*axPix(3), ...
+            posAxNorm(4)*axPix(4) ];
+
+        % convert pixels -> figure-normalized (0–1)
+        posFigNorm = [rectPix(1)/figPix(3), rectPix(2)/figPix(4), ...
+            rectPix(3)/figPix(3), rectPix(4)/figPix(4)];
+
+        % --- draw annotation rectangle in the right place ---
+        annotation('rectangle', posFigNorm, ...
+            'EdgeColor','k','LineWidth',1.5,'FaceColor','none');
 
         % set(axxArray(3),'FontSize',fontSize)
 

@@ -88,10 +88,15 @@ timeVaryingCopula=copulaAnalysis.timeVaryingCopula;
         end
         nResampleC=repmat({nResample},1,size(rhoCell,2));
         resampleProb=cell(size(rhoCell));
-                   
+                   if strcmpi(copulaFamily,'Frank') || strcmpi(copulaFamily,'Clayton') || strcmpi(copulaFamily,'Gumbel')
                     resampleProb=cellfun(@(x,y,uSmpl) tsCopulaRnd(copulaFamily,x,y,uSmpl),...
                         rhoCell, nResampleC, copulaAnalysis.jointExtremeMonovariateProbNS, ...
-                        'UniformOutput', 0);     
+                        'UniformOutput', 0);  
+                   elseif strcmpi(copulaFamily,'Gaussian') 
+                       resampleProb=cellfun(@(x,y,uSmpl) copularnd(copulaFamily,x,y,uSmpl),...
+                        rhoCell, nResampleC, copulaAnalysis.jointExtremeMonovariateProbNS, ...
+                        'UniformOutput', 0); 
+                   end
 
 
 
