@@ -287,7 +287,7 @@ corrSpearmanSamplex=gofStatistics.corrSpearmanSamplex;
 corrSpearmanMontex=gofStatistics.corrSpearmanMontex;
 ttRho=linspace(timeStampsByTimeWindow{1}(1),timeStampsByTimeWindow{end}(end),...
     length(timeStampsByTimeWindow));
-
+ttRhom=(cellfun(@(x) mean(x),timeStampsByTimeWindow));
 if strcmpi(copulaFamily,'gaussian')
     if copulaAnalysis.timeVaryingCopula==0
 
@@ -411,6 +411,11 @@ elseif strcmpi(copulaFamily,'clayton') || strcmpi(copulaFamily,'gumbel') || strc
         hLine2(1).LineWidth=1;
         hLine2(2).LineWidth=1;
         [~,p_value]=tsMann_Kendall(y11cpar,0.05);
+        %ttRhom
+
+        significance_value_tau = 0.05;
+        significance_value_ac = 0.05;
+        [~, ~, p_value, H] = tsModified_MannKendall_test(ttRho, y11cpar, significance_value_tau, significance_value_ac);
 
         str=lower(char(copulaFamily));
         idx=regexp([' ' str],'(?<=\s+)\S','start')-1;

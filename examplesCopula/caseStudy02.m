@@ -63,7 +63,7 @@ maxDeltaMultivarSampli=0.5;
 
 %copula family; can be gaussian or gumbel
 %copulaFamily = 'Gaussian';
-copulaFamily = {'Gumbel'};  
+copulaFamily = {'Gaussian'};  
 
 %methodology to perform univariate transformation from non-stationary to
 %stationary

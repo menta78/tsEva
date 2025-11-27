@@ -194,16 +194,16 @@ scatter2DPlot(mc{end},pairs(3,:),jointExtremes{end},varLabels,...
 end
 
 function [] = scatter3Plot(X,label,panelLabel,gofStatistics)
-scatter3(X(:,1),X(:,2),X(:,3), [], X(:,1), 'filled');
+scatter3(X(:,2),X(:,1),X(:,3), [], X(:,1), 'filled');
 view(57.5, 30);
 set(gca, 'XDir', 'reverse')
 hold('on');
 for iVrbl = 1:3
     axisLabel = label{iVrbl};
     switch iVrbl
-        case 1
-            xlabel(axisLabel);
         case 2
+            xlabel(axisLabel);
+        case 1
             ylabel(axisLabel);
         case 3
             zlabel(axisLabel);
@@ -236,7 +236,7 @@ yMax = max(extents(:,2)+extents(:,4));
 pad = 0.01;
 posAxNorm = [xMin-pad, yMin-pad, (xMax-xMin)+2*pad, (yMax-yMin)+2*pad];
 
-% convert axes-normalized -> figure-normalized coordinates 
+% convert axes-normalized -> figure-normalized coordinates
 ax = ancestor(th,'axes');
 fig = ancestor(ax,'figure');
 
@@ -288,7 +288,10 @@ for i=1:3
 
     pairLabel = sprintf('%d-%d', pairs(i,1), pairs(i,2));
 
-    [~, p_value] = tsMann_Kendall(couplingParamMatRaw(:, i), 0.05);
+    %[~, p_value] = tsMann_Kendall(couplingParamMatRaw(:, i), 0.05);
+    significance_value_tau = 0.05;
+    significance_value_ac = 0.05;
+    [~, ~, p_value, ~] = tsModified_MannKendall_test(ttRho, couplingParamMatRaw(:, i), significance_value_tau, significance_value_ac);
 
     text(0.2682, 0.4755+0.1*(i-1), ...
         ['$p$-value$_{', cplSymbol, ',', pairLabel, '}= ', sprintf('%0.3g', p_value), '$'], ...
@@ -311,7 +314,7 @@ ylbStr = "$" + cplSymbol + "_{" + familyname + "}$";
 
 % Use in ylabel
 ylabel(ylbStr, 'Interpreter','latex', 'Rotation',0, ...
-       'HorizontalAlignment','right', 'FontSize', fontSize);
+    'HorizontalAlignment','right', 'FontSize', fontSize);
 text(0.05, 0.9, labelMark, 'Units','normalized');
 
 end
