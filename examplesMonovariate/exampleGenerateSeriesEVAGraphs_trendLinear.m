@@ -10,13 +10,14 @@
 clearvars
 addpath('../');
 
-netcdf_filename = "jd_twl_ADRIATIC_NORTH.nc";
+% netcdf_filename = "jd_twl_ADRIATIC_NORTH.nc";
+load EOatSEE.mat
 seriesDescr = "Adriatic TWL";
 
-temp = ncread(netcdf_filename,'date');
-ref = datenum(1950,1,1,0,0,0);
-tm= ref + temp;
-twl= ncread(netcdf_filename,'TWL');
+% temp = ncread(netcdf_filename,'date');
+% ref = datenum(1950,1,1,0,0,0);
+% tm= ref + temp;
+% twl= ncread(netcdf_filename,'TWL');
 
 timeAndSeries =[tm,twl];
 extremesRange = [.5 2];

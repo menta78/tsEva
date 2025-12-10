@@ -18,6 +18,12 @@ function copulaParam = tsCopulaFit(copulaFamily, uProb)
                 copulaParam(iSeries2, iSeries1) = copulaParam(iSeries1, iSeries2);
             end
         end
+        if strcmpi(copulaFamily, 'gumbel')
+            copulaParam(triu(copulaParam) == Inf) = 1;
+
+            % Replace negatives in the lower triangle
+            copulaParam(tril(copulaParam) == Inf) = 1;
+        end
     else
         error('copulaFamily not supported: ' + copulaFamily);
     end
