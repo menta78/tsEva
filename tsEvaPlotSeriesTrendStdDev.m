@@ -18,6 +18,7 @@ args.figPosition = [0, 0, 1300, 700] + 10;
 args.verticalRange = [];
 args.statsTimeStamps = timeStamps;
 args.xtick = [];
+args.ax = [];
 
 args = tsEasyParseNamedArgs(varargin, args);
 
@@ -31,10 +32,16 @@ timeStamps = timeStamps( (timeStamps >= minTS) & (timeStamps <= maxTS) );
 
 upCI = trend + stdDev;
 downCI = trend - stdDev;
-
-f = figure;
-f.Position = args.figPosition;
-phandles{1} = f;
+  
+if isempty(args.ax)
+    f = figure;
+    phandles{1} = f;
+    f.Position = args.figPosition;
+else
+    axes(args.ax);
+    phandles{1} = args.ax;
+    f = [];
+end
 
 phandles{2} = plot(timeStamps, series, 'color', args.seriesColor, 'linewidth', .5);
 datetick('x', args.dateformat);
