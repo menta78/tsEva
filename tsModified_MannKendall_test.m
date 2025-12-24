@@ -113,7 +113,14 @@ function [tau, z, p, H] = Modified_MannKendall_test(t, X, alpha, alpha_ac)
     
     X_rank_order = tiedrank(X);
     z_ac = abs(norminv(alpha_ac / 2));  % norminv() is the inverse of the normcdf() function
-    [acf, ~, acf_bounds] = autocorr(X_rank_order, NumLags = n - 1, NumSTD = z_ac);
+    % [acf, ~, acf_bounds] = autocorr(X_rank_order, NumLags = n - 1, NumSTD = z_ac); % autocorr is only available in the econometrics toolbox. Avoid using it
+    % Compute autocorrelation using xcorr
+    [c, lags] = xcorr(X_rank_order - mean(X_rank_order), n-1, 'coeff');
+    % Extract positive lags only (including lag 0)
+    acf = c(lags >= 0);
+    
+    % Compute confidence bounds
+    acf_bounds = z_ac / sqrt(length(X_rank_order)) * [-1, 1];
     
     % Retain only those lags for which the autocorrelation value is statistically significant
     rho_lags = [];
