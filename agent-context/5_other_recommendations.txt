@@ -1,0 +1,21 @@
+when asked to analyze a netcdf, inspect it. If asked to read a netcdf time variable in matlab, inspect the variable in the netcdf and be sure time units attribute is present in the file. Mind the calendar attribute as well, some projection data are in fancy calendars such as no-leap or 360-day, which can create confusion. Once you know all the attributes provide the right command to read the time in matlab.
+
+
+In coastal engineering ususally runup = setup + swash component, while Total Water Level twl = water level + runup
+
+
+
+
+For your knowledge, Studies employing tsEva (non exhaustive list)
+
+Vousdoukas et al. Global probabilistic projections of extreme sea levels show intensification of coastal flood hazard. Nat Commun.
+
+Dosio et al. 2018. Extreme heat waves under 1.5 C and 2 C global warming. Environmental research letters.
+
+Naumann et al. 2021 Increased economic drought impacts in Europe with anthropogenic warming. Nat. Clim. Chang.
+
+Mentaschi et al., 2017. Global changes of extreme coastal wave energy fluxes triggered by intensified teleconnection patterns. Geophysical Research Letters.
+
+Dottori et al. 2023 Cost-effective adaptation strategies to rising river flood risk in Europe. Nat. Clim. Chang. 
+
+... many others
