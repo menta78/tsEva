@@ -18,6 +18,9 @@ function [nonStationaryEvaParams, stationaryTransformData, isValid] = tsEvaNonSt
 %                            with a running mean, the ci with the running xx percentile.
 %                            Using this option the argument ciPercentile is
 %                            mandatory.
+%                    4)  'trendlinear':long term variability. the trend is
+%                    computed with a linear fit, the ci with a linear fit
+%                    of percentile set by the user
 % 
 %
 %% sample calls
@@ -46,8 +49,8 @@ transfType = args.transfType;
 evdType = args.evdType;
 gevType = args.gevType;
 
-if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') )
-  error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile)');
+if ~( strcmpi(transfType, 'trend') || strcmpi(transfType, 'seasonal') || strcmpi(transfType, 'trendCIPercentile') || strcmpi(transfType, 'seasonalCIPercentile') || strcmpi(transfType, 'trendlinear') )
+  error('nonStationaryEvaJRCApproach: transfType can be in (trend, seasonal, trendCIPercentile, trendlinear)');
 end
 if minPeakDistanceInDays == -1
   error('label parameter ''minPeakDistanceInDays'' must be set')
@@ -69,6 +72,14 @@ elseif strcmpi(transfType, 'seasonal')
   trasfData = tsEvaTransformSeriesToStationaryMultiplicativeSeasonality( timeStamps, series, timeWindow, varargin{:}  );
   gevMaxima = 'monthly';
   potEventsPerYear = 12;
+elseif strcmpi(transfType, 'trendlinear')
+  if isnan(ciPercentile)
+    error('For trendLinear transformation the label parameter ''cipercentile'' is mandatory');
+  end
+  disp('estimating a linear long-term trend');
+  trasfData = tsEvaTransformSeriesToStationaryTrendLinear( timeStamps, series, timeWindow, ciPercentile, varargin{:}  );
+  gevMaxima = 'annual';
+  potEventsPerYear = 5;
 elseif strcmpi(transfType, 'trendCIPercentile') 
   if isnan(ciPercentile)
     error('For trendCIPercentile transformation the label parameter ''cipercentile'' is mandatory');
@@ -161,6 +172,7 @@ if ~isempty(eva(1).parameters)
   gevObj.paramErr = gevParamStdErr;
   gevObj.stationaryParams = eva(1);
   gevObj.objs.monthlyMaxIndexes = pointData.monthlyMaxIndexes;
+  gevObj.objs.annualMaxIndexes = pointData.annualMaxIndexes;
 else
   gevObj.method = eva(1).method;
   gevObj.parameters = [];
@@ -226,7 +238,7 @@ if ~isempty(eva(2).parameters)
   potObj.parameters = potParams;
   potObj.paramErr = potParamStdErr;
   potObj.stationaryParams = eva(2);
-  potObj.objs = [];
+  potObj.objs.peakIndexes = pointData.POT.ipeaks;
 else
   potObj.method = eva(2).method;
   potObj.parameters = [];

@@ -123,7 +123,7 @@ potParamStdErr.thresholdErr = errThresholdPotX;
 potObj.method = eva(2).method;
 potObj.parameters = potParams;
 potObj.paramErr = potParamStdErr;
-potObj.objs = [];
+potObj.objs = pointData.POT.ipeaks;
 
 %% setting output objects
 clear stationaryEvaParams;

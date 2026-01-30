@@ -13,12 +13,14 @@ function [EVmeta,EVdata,isValid] = tsEVstatistics(pointData, varargin)
   args.alphaCI = .95;
   args.gevMaxima = 'annual';
   args.gevType = 'GEV'; % can be 'GEV' or 'Gumbel'
+  args.gpdType = 'GPDNegShape' % can be 'GPD' or 'GPDNegShape'
   args.evdType = {'GEV', 'GPD'};
   args = tsEasyParseNamedArgs(varargin, args);
   gevMaxima = args.gevMaxima;
   gevType = args.gevType;
   alphaCI = args.alphaCI;
   evdType = args.evdType;
+  gpdType = args.gpdType;
 
   isValid = true;
 
@@ -107,7 +109,11 @@ function [EVmeta,EVdata,isValid] = tsEVstatistics(pointData, varargin)
       ik = 1;
       d1=pointData.POT(ik).peaks-pointData.POT(ik).threshold;
 
-      [paramEsts,paramCIs]=gpfit(d1, alphaCI);
+      if strcmpi(gpdType, 'GPD')
+        [paramEsts,paramCIs] = gpfit(d1, alphaCI);
+      elseif strcmpi(gpdType, 'GPDNegShape')
+        [paramEsts,paramCIs] = tsGpdNegShapeFit(d1, alphaCI);
+      end
       % shape parameter
       ksi=paramEsts(1);
       % scale parameter

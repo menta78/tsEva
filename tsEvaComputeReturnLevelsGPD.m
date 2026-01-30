@@ -18,7 +18,8 @@ function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon,
   sigmaStdErr_ = sigmaStdErr(:,ones(1,nt));
   threshold_ = threshold(:,ones(1,nt));
   thresholdStdErr_ = thresholdStdErr(:,ones(1,nt));
-  if epsilon ~= 0
+ %if epsilon ~= 0
+  if abs(epsilon) >= 1e-7
       %% estimating the return levels
       returnLevels = threshold_ + sigma_./epsilon.*( (XX_).^epsilon - 1 );
       %% estimating the error
@@ -45,7 +46,7 @@ function [returnLevels, returnLevelsErr] = tsEvaComputeReturnLevelsGPD( epsilon,
       dxm_u = 1;
       dxm_sigma = log(XX_);
       
-      returnLevelsErr = (  (dxm_u*thresholdStdErr_).^2  +  (dxm_sigma*sigmaStdErr_).^2  ).^.5;
+      returnLevelsErr = (  (dxm_u.*thresholdStdErr_).^2  +  (dxm_sigma.*sigmaStdErr_).^2  ).^.5;
       %%
   end
 end

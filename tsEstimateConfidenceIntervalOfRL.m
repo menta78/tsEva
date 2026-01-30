@@ -14,6 +14,8 @@ function [ lowCI, highCI ] = tsEstimateConfidenceIntervalOfRL( rl, stdErr, p )
   highCI = logninv(p, mu, sigma);
   lowCI = logninv((1 - p), mu, sigma);
   
-
+  highCI(stdErr == 0) = rl(stdErr == 0);
+  lowCI(stdErr == 0) = rl(stdErr == 0);
+  
 end
 

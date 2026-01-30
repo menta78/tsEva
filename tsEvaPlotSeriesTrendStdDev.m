@@ -18,6 +18,7 @@ args.figPosition = [0, 0, 1300, 700] + 10;
 args.verticalRange = [];
 args.statsTimeStamps = timeStamps;
 args.xtick = [];
+args.ax = [];
 
 args = tsEasyParseNamedArgs(varargin, args);
 
@@ -31,10 +32,16 @@ timeStamps = timeStamps( (timeStamps >= minTS) & (timeStamps <= maxTS) );
 
 upCI = trend + stdDev;
 downCI = trend - stdDev;
-
-f = figure;
-f.Position = args.figPosition;
-phandles{1} = f;
+  
+if isempty(args.ax)
+    f = figure;
+    phandles{1} = f;
+    f.Position = args.figPosition;
+else
+    axes(args.ax);
+    phandles{1} = args.ax;
+    f = [];
+end
 
 phandles{2} = plot(timeStamps, series, 'color', args.seriesColor, 'linewidth', .5);
 datetick('x', args.dateformat);
@@ -45,7 +52,7 @@ end
 xlim([min(timeStamps) max(timeStamps)]);
 hold on;
 
-xcibar = cat(1, statsTimeStamps, flip(statsTimeStamps));
+xcibar = cat(1, timeStamps, flip(timeStamps));
 ycibar = cat(1, upCI, flip(downCI));
 fl = fill(xcibar, ycibar, args.confidenceAreaColor);
 fl.FaceAlpha = .6;
@@ -57,9 +64,9 @@ phandles{3} = fl;
 %h(2).FaceColor = args.confidenceAreaColor;
 %alpha(.5);
 
-phandles{4} = plot(statsTimeStamps, trend, 'color', args.trendColor, 'linewidth', 3);
-phandles{5} = plot(statsTimeStamps, upCI, 'color', args.confidenceBarColor, 'linewidth', 2);
-phandles{6} = plot(statsTimeStamps, downCI, 'color', args.confidenceBarColor, 'linewidth', 2);
+phandles{4} = plot(timeStamps, trend, 'color', args.trendColor, 'linewidth', 3);
+phandles{5} = plot(timeStamps, upCI, 'color', args.confidenceBarColor, 'linewidth', 2);
+phandles{6} = plot(timeStamps, downCI, 'color', args.confidenceBarColor, 'linewidth', 2);
 grid on;
 
 if ~isempty(args.verticalRange)

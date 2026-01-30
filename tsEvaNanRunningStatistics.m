@@ -6,6 +6,10 @@ function [ rnmn, rnvar, rn3mom, rn4mom ] = tsEvaNanRunningStatistics( series, wi
 % rn3mom: running third statistical momentum
 % rn4mom: running fourth statistical momentum
 
+% at both extremeties of the series, half windowSize is used which
+% gradually increases to reach windowSize; once windowSize is reached,
+% windowSize is rolled throghout the series
+
 minNThreshold = 1;
 
 rnmn = tsEvaNanRunningMean(series, windowSize);
