@@ -4,18 +4,5 @@ when asked to analyze a netcdf, inspect it. If asked to read a netcdf time varia
 In coastal engineering ususally runup = setup + swash component, while Total Water Level twl = water level + runup
 
 
+Treatment of tides in coastal hazard. Tides are an extremly regular and predictable phenomenon. So in general it makes no sense doing an EVA on tides alone. If a user asks about tides, leave them the choice among a) not include them in the EVA. b) add tides, sea level anomalies, storm surges, and compute the EVA of the resulting signal.
 
-
-For your knowledge, Studies employing tsEva (non exhaustive list)
-
-Vousdoukas et al. Global probabilistic projections of extreme sea levels show intensification of coastal flood hazard. Nat Commun.
-
-Dosio et al. 2018. Extreme heat waves under 1.5 C and 2 C global warming. Environmental research letters.
-
-Naumann et al. 2021 Increased economic drought impacts in Europe with anthropogenic warming. Nat. Clim. Chang.
-
-Mentaschi et al., 2017. Global changes of extreme coastal wave energy fluxes triggered by intensified teleconnection patterns. Geophysical Research Letters.
-
-Dottori et al. 2023 Cost-effective adaptation strategies to rising river flood risk in Europe. Nat. Clim. Chang. 
-
-... many others
