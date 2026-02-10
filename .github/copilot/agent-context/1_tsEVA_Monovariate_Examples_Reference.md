@@ -28,18 +28,49 @@ This document contains all example scripts for monovariate extreme value analysi
 - `potThreshold` - fixed threshold for POT (optional)
 - `gevtype` - can specify 'gumbel' instead of full GEV
 
-**Code Structure:**
+**Code:**
 ```matlab
-% Load data
 load('timeAndSeriesHebrides.mat');
 timeAndSeries = timeAndSeriesHebrides;
 
-% Perform stationary analysis
+minPeakDistanceInDays = 3;
+
+disp('stationary fit of extreme value distributions (GEV, GPD) to a time series');
 statEvaParams = tsEvaStationary(timeAndSeries, 'minPeakDistanceInDays', minPeakDistanceInDays);
 
-% Compute and plot return levels
+%computing and plotting the return levels for a given times
 [rlevGEV, rlevGEVErr] = tsEvaComputeReturnLevelsGEVFromAnalysisObj(statEvaParams, [10, 20, 50, 100]);
+rlevGEV
 hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(statEvaParams, 1, 'ylim', [.5 1.5]);
+title('GEV');
+saveas(hndl{1}, 'GEV_ReturnLevels_STATIONARY.png', 'png');
+
+[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(statEvaParams, [10, 20, 50, 100]);
+rlevGPD
+hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(statEvaParams, 1, 'ylim', [.5 1.5]);
+title('GPD');
+saveas(hndl{1}, 'GPD_ReturnLevels_STATIONARY.png', 'png');
+
+disp('Same as before, but the POT is done with a fixed threshold');
+potThreshold = prctile(timeAndSeries(:,2), 98);
+statEvaParams = tsEvaStationary(timeAndSeries, 'minPeakDistanceInDays', minPeakDistanceInDays, 'doSampleData', false, 'potThreshold', potThreshold);
+
+%computing and plotting the return levels for a given times
+[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(statEvaParams, [10, 20, 50, 100]);
+rlevGPD
+hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(statEvaParams, 1, 'ylim', [.5 1.5]);
+title('GPD');
+saveas(hndl{1}, 'GPD_ReturnLevels_STATIONARY.png', 'png');
+
+disp('same thing as before, but with a gumbel instead of a GEV');
+statEvaParams = tsEvaStationary(timeAndSeries, 'minPeakDistanceInDays', minPeakDistanceInDays, 'gevtype', 'gumbel');
+
+%computing and plotting the return levels for a given times
+[rlevGEV, rlevGEVErr] = tsEvaComputeReturnLevelsGEVFromAnalysisObj(statEvaParams, [10, 20, 50, 100]);
+rlevGEV
+hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(statEvaParams, 1, 'ylim', [.5 1.5]);
+title('Gumbel');
+saveas(hndl{1}, 'GEV_ReturnLevels_STATIONARY.png', 'png');
 ```
 
 ---
@@ -65,30 +96,102 @@ hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(statEvaParams, 1, 'ylim', [.5 1.5
 - `tsEvaPlotGEV3DFromAnalysisObj()` - 3D plot of GEV
 - `tsEvaPlotReturnLevelsGEVFromAnalysisObj()` - return level plot at specific time
 - `tsEvaPlotTransfToStatFromAnalysisObj()` - plots transformed stationary series
-- `tsPlotSeriesPotGPDRetLevFromAnalysisObj` - plots the time series, the POT, and some return levels. Handy to diagnose
 
 **Key Parameters:**
 - `timeWindow` - time window for detecting non-stationarity (e.g., 365.25*6 for 6 years)
 - `transfType` - transformation type: 'trend' or 'seasonal'
 - `minPeakDistanceInDays` - minimum distance between peaks
 
-**Code Structure:**
+**Code:**
 ```matlab
-% Trend-only analysis
-[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 
-    'transfType', 'trend', 'minPeakDistanceInDays', minPeakDistanceInDays);
+load('timeAndSeriesHebrides.mat');
+timeAndSeries = timeAndSeriesHebrides;
+extremesRange = [.2 1.2];
+seasonalExtrRange = [.1 1.1];
+seriesDescr = 'Hebrides';
 
-% Plot series with trend
-hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData,
-    'ylabel', 'Lvl (m)', 'title', seriesDescr);
+timeWindow = 365.25*6; % 6 years
+minPeakDistanceInDays = 3;
 
-% Plot 2D time-varying distributions
-hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData);
-hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData);
+minTS = min(timeAndSeries(:,1));
+maxTS = max(timeAndSeries(:,1));
+axisFontSize = 20;
+axisFontSize3d = 16;
+labelFontSize = 28;
+titleFontSize = 30;
 
-% Return levels at specific time
+% preparing xticks
+years = (1980:2:2015)';
+months = ones(size(years));
+days = ones(size(years));
+dtns = cat(2, years, months, days);
+tickTmStmp = datenum(dtns);
+
+wr = linspace(min(extremesRange), max(extremesRange), 1501);
+
+disp('trend only statistics (transformation + eva + backtransformation)');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trend', 'minPeakDistanceInDays', minPeakDistanceInDays);
+disp('  plotting the series');
+hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData,...
+    'ylabel', 'Lvl (m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp);
+disp('  saving the series plot');
+saveas(hndl{1}, 'seriesTrendOnly.png');    
+% disp('  plotting and saving the 3D GEV graph');
+% hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlabel', 'Lvl (m)', 'axisfontsize', axisFontSize3d);
+% title('GEV 3D', 'fontsize', titleFontSize);
+% saveas(hndl{1}, 'GEV3DTrendOnly.png', 'png');
+disp('  plotting and saving the 2D GEV graph');
+hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
+title('GEV', 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GEV2DTrendOnly.png', 'png');
+disp('  plotting and saving the 2D GPD graph');
+hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
+title('GPD', 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GPD2DTrendOnly.png', 'png');
+
+%computing and plotting the return levels for a given times
 timeIndex = 1000;
-hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, timeIndex);
+timeStamps = statTransfData.timeStamps;
+disp(['  plotting return levels for time ' datestr(timeStamps(timeIndex))]);
+disp('  ... for GEV the sample is small and the confidence interval is broad');
+hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', [.5 1.5]);
+saveas(hndl{1}, 'GEV_ReturnLevels.png', 'png');
+hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', [.5 1.5]);
+saveas(hndl{1}, 'GPD_ReturnLevels.png', 'png');
+
+
+disp('plotting and saving stationary series');
+hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'dateformat', 'yy', 'xtick', tickTmStmp);
+saveas(hndl{1}, 'statSeriesTrendOnly.png', 'png');
+
+disp('seasonal statistics');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'seasonal', 'minPeakDistanceInDays', minPeakDistanceInDays);
+
+wr = linspace(min(seasonalExtrRange), max(seasonalExtrRange), 1501);
+
+disp('  plotting a slice of data ');
+slice = { 1988 1993};
+plotTitle = '1988-1993';
+disp('    plotting the series');
+hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData,...
+    'ylabel', 'Lvl (m)', 'title', plotTitle, 'minyear', slice{1}, 'maxyear', slice{2});
+disp('    saving the series plot');
+saveas(hndl{1}, 'seriesSeasonal.png');    
+disp('plotting and saving stationary series');
+hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'dateformat', 'yy', 'minyear', slice{1}, 'maxyear', slice{2});
+saveas(hndl{1}, 'statSeriesTrendOnly.png', 'png');
+disp('    plotting and saving the 3D GEV graph');
+hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlabel', 'Lvl (m)', 'minyear', slice{1}, 'maxyear', slice{2}, 'axisfontsize', axisFontSize3d);
+title(['GEV 3D, ' plotTitle], 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GEV3DSeasonal.png');
+disp('    plotting and saving the 2D GEV graph');
+hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'minyear', slice{1}, 'maxyear', slice{2}, 'dateformat', 'yy');
+title(['GEV ' plotTitle], 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GEV2DSeasonal.png');
+disp('    plotting and saving the 2D GPD graph');
+hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'minyear', slice{1}, 'maxyear', slice{2}, 'dateformat', 'yy');
+title(['GPD ' plotTitle], 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GPD2DSeasonal.png', 'png');
 ```
 
 ---
@@ -108,18 +211,109 @@ hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, timeIndex);
 **Additional Parameters:**
 - `ciPercentile` - percentile for confidence interval estimation (e.g., 98)
 
-**Code Structure:**
+**Code:**
 ```matlab
+load('timeAndSeriesHebrides.mat');
+timeAndSeries = timeAndSeriesHebrides;
+extremesRange = [.2 1.2];
+rlRange = [.6 1.1];
+seasonalExtrRange = [.1 1.1];
+seriesDescr = 'Hebrides';
+
+timeWindow = 365.25*6; % 6 years
+minPeakDistanceInDays = 3;
 ciPercentile = 98;
 
-[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 
-    'transfType', 'trendCiPercentile', 'ciPercentile', ciPercentile, 
-    'minPeakDistanceInDays', minPeakDistanceInDays);
+minTS = min(timeAndSeries(:,1));
+maxTS = max(timeAndSeries(:,1));
+axisFontSize = 20;
+axisFontSize3d = 16;
+labelFontSize = 28;
+titleFontSize = 30;
 
-% Compute return levels at specific time
+% preparing xticks
+years = (1980:2:2015)';
+months = ones(size(years));
+days = ones(size(years));
+dtns = cat(2, years, months, days);
+tickTmStmp = datenum(dtns);
+
+wr = linspace(min(extremesRange), max(extremesRange), 1501);
+
+disp('trend only statistics (transformation + eva + backtransformation)');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trendCiPercentile',... 
+  'ciPercentile', ciPercentile, 'minPeakDistanceInDays', minPeakDistanceInDays);
+disp('  plotting the series');
+hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData, 'legendLocation', 'northeast', ...
+    'ylabel', 'Lvl (m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp);
+disp('  saving the series plot');
+saveas(hndl{1}, 'seriesTrendOnly_ciPercentile.png');    
+% disp('  plotting and saving the 3D GEV graph');
+% hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlabel', 'Lvl (m)', 'axisfontsize', axisFontSize3d);
+% title('GEV 3D', 'fontsize', titleFontSize);
+% saveas(hndl{1}, 'GEV3DTrendOnly_ciPercentile.png', 'png');
+disp('  plotting and saving the 2D GEV graph');
+hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
+title('GEV', 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GEV2DTrendOnly_ciPercentile.png', 'png');
+disp('  plotting and saving the 2D GPD graph');
+hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
+title('GPD', 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GPD2DTrendOnly_ciPercentile.png', 'png');
+
+%computing and plotting the return levels for a given times
 timeIndex = 1000;
-[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(
-    nonStatEvaParams, [10, 20, 50, 100], 'timeindex', timeIndex);
+timeStamps = statTransfData.timeStamps;
+dtvc = datevec(timeStamps(timeIndex));
+tmstmpref = datenum(dtvc(1), dtvc(2), 1);
+disp(['  plotting return levels for time ' datestr(timeStamps(timeIndex))]);
+disp('  ... for GEV the sample is small and the confidence interval is broad');
+[rlevGEV, rlevGEVErr] = tsEvaComputeReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, [10, 20, 50, 100], 'timeindex', timeIndex);
+rlevGEV
+hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', rlRange);
+title(['GEV return levels for ' datestr(tmstmpref)]);
+saveas(hndl{1}, 'GEV_ReturnLevels_ciPercentile.png', 'png');
+[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, [10, 20, 50, 100], 'timeindex', timeIndex);
+rlevGPD
+hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', rlRange);
+title(['GPD return levels for ' datestr(tmstmpref)]);
+saveas(hndl{1}, 'GPD_ReturnLevels_ciPercentile.png', 'png');
+
+
+disp('plotting and saving stationary series');
+hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'dateformat', 'yy', 'xtick', tickTmStmp);
+saveas(hndl{1}, 'statSeriesTrendOnly_ciPercentile.png', 'png');
+
+
+disp('seasonal statistics');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'seasonalCiPercentile',... 
+  'ciPercentile', ciPercentile, 'minPeakDistanceInDays', minPeakDistanceInDays);
+
+wr = linspace(min(seasonalExtrRange), max(seasonalExtrRange), 1501);
+
+disp('  plotting a slice of data ');
+slice = { 1990 1995};
+plotTitle = '1990-1995';
+disp('    plotting the series');
+hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData,...
+    'ylabel', 'Lvl (m)', 'title', plotTitle, 'minyear', slice{1}, 'maxyear', slice{2});
+disp('    saving the series plot');
+saveas(hndl{1}, 'seriesSeasonal.png');    
+disp('plotting and saving stationary series');
+hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'dateformat', 'yy', 'minyear', slice{1}, 'maxyear', slice{2});
+saveas(hndl{1}, 'statSeriesTrendOnly.png', 'png');
+disp('    plotting and saving the 3D GEV graph');
+hndl = tsEvaPlotGEV3DFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'xlabel', 'Lvl (m)', 'minyear', slice{1}, 'maxyear', slice{2}, 'axisfontsize', axisFontSize3d);
+title(['GEV 3D, ' plotTitle], 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GEV3DSeasonal.png');
+disp('    plotting and saving the 2D GEV graph');
+hndl = tsEvaPlotGEVImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'minyear', slice{1}, 'maxyear', slice{2}, 'dateformat', 'yy');
+title(['GEV ' plotTitle], 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GEV2DSeasonal.png');
+disp('    plotting and saving the 2D GPD graph');
+hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'Lvl (m)', 'minyear', slice{1}, 'maxyear', slice{2}, 'dateformat', 'yy');
+title(['GPD ' plotTitle], 'fontsize', titleFontSize);
+saveas(hndl{1}, 'GPD2DSeasonal.png', 'png');
 ```
 
 ---
@@ -139,22 +333,102 @@ timeIndex = 1000;
 **Additional Parameters:**
 - `potPercentiles` - array of percentiles to test for POT threshold
 
-**Code Structure:**
+**Code:**
 ```matlab
-[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 
-    'transfType', 'trendlinear', 'ciPercentile', ciPercentile, 
-    'potPercentiles', [97:0.5:99], 'minPeakDistanceInDays', minPeakDistanceInDays);
+dt = load("timeAndSeries_waves_SouthChina.mat");
+timeAndSeries = dt.timeAndSeries;
 
-% Extract shape parameter
+extremesRange = [0 10]; 
+
+timeWindow = 365.25*30; % 30 years
+minPeakDistanceInDays = 3;
+% minPeakDistanceInDays = 14;
+
+axisFontSize = 20;
+axisFontSize3d = 16;
+labelFontSize = 28;
+titleFontSize = 30;
+
+% preparing xticks
+% years = (1980:2:2015)';
+years = (1950:5:2025)';
+months = ones(size(years));
+days = ones(size(years));
+dtns = cat(2, years, months, days);
+tickTmStmp = datenum(dtns);
+
+wr = linspace(min(extremesRange), max(extremesRange), 1501);
+
+ciPercentile = 99;
+
+minTS = min(timeAndSeries(:,1));
+maxTS = max(timeAndSeries(:,1));
+seriesDescr = 'pt10';  % 得到 'pt0' 到 'pt9'
+
+disp('trend only statistics (transformation + eva + backtransformation)');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trendlinear',... 
+  'ciPercentile', ciPercentile, 'potPercentiles',[97:0.5:99], 'minPeakDistanceInDays', minPeakDistanceInDays);
+disp('  plotting the series');
+
+
 epsilon = nonStatEvaParams(2).parameters.epsilon;
+pvalue = statTransfData.pValueChange;
 
-% Plot POT and return levels
-tsPlotSeriesPotGPDRetLevFromAnalysisObj(nonStatEvaParams, statTransfData);
 
-% Return levels at beginning and end
-timeIndex = 1; % beginning
-[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(
-    nonStatEvaParams, [5, 10, 30, 100], 'timeindex', timeIndex);
+aax=max(statTransfData.stdDevSeries);
+bbx=max(statTransfData.nonStatSeries);
+ul=bbx+aax;
+ll=bbx-2*aax;
+rlRange = [0 10];
+
+tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData, 'legendLocation', 'northeast', ...
+    'ylabel', 'SWH(m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp,'Interpreter','none');
+disp('  saving the series plot');
+filename1 = 'seriesTrendLinear_pt10.png';
+saveas(gcf, filename1);     
+
+disp('  plotting the POT and some return levels');
+tsPlotSeriesPotGPDRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
+title('PotAndReturnLevelsLinearTrend pt10d', 'fontsize', 10);
+filename2 = 'PotAndReturnLevelsLinearTrend_pt10.png';
+saveas(gcf, filename2); 
+
+disp('  plotting and saving the 2D GPD graph');
+tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'SWH(m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
+title('GPD pt10', 'fontsize', titleFontSize);
+filename3 = 'GPD2DTrendLinear_pt10.png';
+saveas(gcf, filename3);
+
+%computing and plotting the return levels for a given times
+timeIndex = 1; % 01/01/1950
+timeStamps = statTransfData.timeStamps;
+dtvc = datevec(timeStamps(timeIndex));
+tmstmpref = datenum(dtvc(1), dtvc(2), 1);
+disp(['  plotting return levels for time ' datestr(timeStamps(timeIndex))]);
+
+[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, [5, 10, 30, 100], 'timeindex', timeIndex);
+tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', rlRange,'maxReturnPeriodYears', 200);
+yticks(0:1.5:10); 
+    hold on;
+legend(sprintf('negative shapeparemeter = %.3e', epsilon), 'Location', 'northwest');
+title('pt10 GPD return levels-begin');
+filename4 = 'GPD_ReturnLevels_ciPercentile_pt10.png';
+saveas(gcf, filename4); 
+
+timeIndex = 216199; %last date
+timeStamps = statTransfData.timeStamps;
+dtvc = datevec(timeStamps(timeIndex));
+tmstmpref2 = datestr(timeStamps(timeIndex));
+disp(['  plotting return levels for time ' datestr(timeStamps(timeIndex))]);
+
+[rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, [5, 10, 30, 100], 'timeindex', timeIndex);
+tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', rlRange,'maxReturnPeriodYears', 200);
+yticks(0:1.5:10); 
+    hold on;
+legend(sprintf('negative shapeparemeter = %.3e', epsilon), 'Location', 'northwest');
+title('pt10 GPD return levels-end');
+filename5 = 'GPD_ReturnLevels_ciPercentile_pt10_2023.png';
+saveas(gcf,filename5); 
 ```
 
 ---
@@ -172,26 +446,99 @@ timeIndex = 1; % beginning
 - Plotting POT and return levels together
 
 **Main Functions Used:**
-- `tsPlotSeriesPotGPDRetLevFromAnalysisObj()` - combined POT and return level plot
+- `tsPlotSeriesPotGPDRetLevFromAnalysisObj` - plots the time series, the POT, and some return levels. Handy to diagnose
+- `tsPlotSeriesYearMaxGEVRetLevFromAnalysisObj` - plots the time series, the annual maxima, and some return levels. Handy to diagnose
 
-**Code Structure:**
+**Code:**
 ```matlab
-[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 
-    'transfType', 'trendlinear', 'ciPercentile', ciPercentile, 
-    'potPercentiles', [97:0.5:99], 'minPeakDistanceInDays', minPeakDistanceInDays);
+load EOatSEE.mat
+seriesDescr = "Adriatic TWL";
 
-% Compare return levels at different times
+% temp = ncread(netcdf_filename,'date');
+% ref = datenum(1950,1,1,0,0,0);
+% tm= ref + temp;
+% twl= ncread(netcdf_filename,'TWL');
+
+timeAndSeries =[tm,twl];
+extremesRange = [.5 2];
+seasonalExtrRange = [.1 1.1];
+
+timeWindow = 365.25*15; % 6 years
+minPeakDistanceInDays = 14;
+% minPeakDistanceInDays = 3;
+
+minTS = min(timeAndSeries(:,1));
+maxTS = max(timeAndSeries(:,1));
+axisFontSize = 20;
+axisFontSize3d = 16;
+labelFontSize = 28;
+titleFontSize = 30;
+
+% preparing xticks
+% years = (1980:2:2015)';
+years = (1994:2:2022)';
+months = ones(size(years));
+days = ones(size(years));
+dtns = cat(2, years, months, days);
+tickTmStmp = datenum(dtns);
+
+wr = linspace(min(extremesRange), max(extremesRange), 1501);
+
+ciPercentile = 99;
+
+disp('trend only statistics (transformation + eva + backtransformation)');
+[nonStatEvaParams, statTransfData] = tsEvaNonStationary(timeAndSeries, timeWindow, 'transfType', 'trendlinear',... 
+  'ciPercentile', ciPercentile, 'potPercentiles',[97:0.5:99], 'minPeakDistanceInDays', minPeakDistanceInDays);
+disp('  plotting the series');
+aax=max(statTransfData.stdDevSeries);
+bbx=max(statTransfData.nonStatSeries);
+ul=bbx+aax;
+ll=bbx-2*aax;
+rlRange = [ll ul];
+hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData, 'legendLocation', 'northeast', ...
+    'ylabel', 'TWL(m)', 'title', seriesDescr, 'titleFontSize', titleFontSize, 'dateformat', 'yy', 'xtick', tickTmStmp,'Interpreter','none');
+disp('  saving the series plot');
+saveas(hndl{1}, 'seriesTrendLinear.png');    
+
+disp('  plotting the POT and some return levels');
+hndl = tsPlotSeriesPotGPDRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
+saveas(hndl{1}, 'PotAndReturnLevelsLinearTrend.png');    
+
+disp('  plotting the year maxima and some GEV return levels');
+hndl = tsPlotSeriesYearMaxGEVRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
+saveas(hndl{1}, 'YearMaxGEVReturnLevelsLinearTrend.png');    
+
+disp('  plotting and saving the 2D GPD graph');
+hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'TWL(m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
+title('GPD', 'fontsize', titleFontSize);
+% saveas(hndl{1}, [str{jx},'GPD2DTrendLinear.png'], 'png');
+
+%computing and plotting the return levels for a given times
 for lx=1:2
     if lx==1
-        timeIndex = 1000;  % beginning
+        timeIndex = 1000;
+        ttl='GPD return levels for beginning of the series';
     else
-        timeIndex = 240000;  % end
+        timeIndex = 240000;
+        ttl='GPD return levels for end of the series';
     end
-    [rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(
-        nonStatEvaParams, [5, 10, 30, 100], 'timeindex', timeIndex);
-    hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 
-        'ylim', rlRange, 'maxReturnPeriodYears', 200);
+    timeStamps = statTransfData.timeStamps;
+    dtvc = datevec(timeStamps(timeIndex));
+    tmstmpref = datenum(dtvc(1), dtvc(2), 1);
+    [rlevGPD, rlevGPDErr] = tsEvaComputeReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, [5, 10, 30, 100], 'timeindex', timeIndex);
+    hndl = tsEvaPlotReturnLevelsGPDFromAnalysisObj(nonStatEvaParams, timeIndex, 'ylim', rlRange,'maxReturnPeriodYears', 200);
+    % title(['GPD return levels for ' datestr(tmstmpref)]);
+    title(ttl);
+    if lx==1
+        saveas(hndl{1}, 'GPD_ReturnLevels-end.png', 'png');
+    else
+        saveas(hndl{1}, 'GPD_ReturnLevels-beg.png', 'png');
+    end
 end
+    
+disp('plotting and saving stationary series');
+hndl = tsEvaPlotTransfToStatFromAnalysisObj(nonStatEvaParams, statTransfData, 'dateformat', 'yy', 'xtick', tickTmStmp);    
+saveas(hndl{1}, 'statSeries_trendLinear.png', 'png');
 ```
 
 ---

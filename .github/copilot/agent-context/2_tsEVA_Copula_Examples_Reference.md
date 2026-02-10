@@ -129,6 +129,76 @@ monteCarloAnalysis = tsCopulaMontecarlo(copulaAnalysis, ...
                                        'timeIndex','middle');
 ```
 
+### Full code:
+```matlab
+load caseStudy01_data
+
+% find the overlapping part of both data sources; define a 3-hourly time
+% frame
+timeCommon=(max(timeSWH(1),timeRiverDisch(1))):3/24:(min(timeSWH(end),timeRiverDisch(end)));
+
+indexGoodData=find(~isnan(riverineDischarge));
+indexGoodDataW=find(~isnan(SWH));
+
+%interpolate river and SWH data using common time frame
+riverineDischarge_=interp1(timeRiverDisch(indexGoodData),riverineDischarge(indexGoodData),timeCommon);
+timeSeriesRiver=[timeCommon',riverineDischarge_'];
+
+SWH_=interp1(timeSWH(indexGoodDataW),SWH(indexGoodDataW),timeCommon);
+timeSeriesSWH=[timeCommon',SWH_'];
+
+%percentile levels of univariate series (used for transformation)
+ciPercentile = [99,99];  
+
+% peak-over-threshold levels used for sampling of univariate series; it
+% should be a 1-d cell array where each cell can have different size
+potPercentiles=[{95},{99}];   %95 99                           
+
+%Non-stationary time window (in days) used for time-varying joint
+%distribution
+timeWindowJointDist = 365.25*40;   
+%minimum distance (in days) between univariate peaks 
+minDeltaUnivarSampli=[30,30]; %30, 30
+
+ %maximum distance (in days) between multivariate peaks; can either take
+ %one value or has to have a format and size matching
+ %size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in
+ %trivariate case, and so on
+maxDeltaMultivarSampli=45; %45   
+
+%copula family; Gumbel, gaussian and Frank are possible choices
+copulaFamily='gumbel';  
+
+%methodology to perform univariate transformation from non-stationary to
+%stationary
+transfType='trendlinear';
+
+marginalDistributions='gpd';
+samplingOrder=[2,1];
+%
+
+[copulaAnalysis] = tsCopulaExtremes(timeSeriesRiver(:,1), ...
+    [timeSeriesRiver(:,2),timeSeriesSWH(:,2)], ...
+    'minPeakDistanceInDaysMonovarSampling',minDeltaUnivarSampli, ...
+    'maxPeakDistanceInDaysMultivarSampling',maxDeltaMultivarSampli, ...
+    'copulaFamily',copulaFamily,...
+    'transfType',transfType,'timeWindow',timeWindowJointDist,...
+    'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
+    'marginalDistributions',marginalDistributions,'samplingOrder',samplingOrder);
+
+[monteCarloAnalysis] = tsCopulaMontecarlo(copulaAnalysis,...
+    'nResample',1000,'timeIndex','middle');
+
+gofStatistics = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis);
+
+retPerAnalysis = tsCopulaComputeBivarRP(copulaAnalysis, monteCarloAnalysis);
+    
+axxArray = tsCopulaPlotBivariate(copulaAnalysis, monteCarloAnalysis, ...
+    'gofStatistics', gofStatistics, ...
+    'retPerAnalysis', retPerAnalysis, ...
+    'ylbl', {'River discharge (m^3s^{-1})','SWH (m)'});
+```
+
 ---
 
 ## Case Study 02 – Spatial Wave Extremes (Trivariate, GPD)
@@ -159,6 +229,60 @@ peakType = 'allExceedThreshold';
 ```matlab
 mcStats = tsCopulaMontecarlo(copulaAnalysis,'nResample',10000);
 mcPlot  = tsCopulaMontecarlo(copulaAnalysis,'nResample',300);
+```
+
+### Full code:
+```matlab
+%load data
+load caseStudy02_data
+
+%percentile levels of univariate series (used for transformation)
+
+ciPercentile = [99,99,99];     
+
+% peak-over-threshold levels used for sampling of univariate series; it
+% should be a 1-d cell array where each cell can have different size
+potPercentiles=[{99},{99},{99}];  
+
+%Non-stationary time window (in days) used for time-varying joint
+%distribution
+timeWindowNonStat=365*40;
+%minimum distance (in days) between univariate peaks 
+minDeltaUnivarSampli=[0.5,0.5,0.5];
+
+ %maximum distance (in days) between multivariate peaks; can either take
+ %one value or has to have a format and size matching
+ %size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in
+ %trivariate case, and so on
+maxDeltaMultivarSampli=0.5; 
+
+%copula family; can be gaussian or gumbel
+%copulaFamily = 'Gaussian';
+copulaFamily = {'Gumbel'};  
+
+%methodology to perform univariate transformation from non-stationary to
+%stationary
+transfType='trendlinear';
+peakType='allExceedThreshold';
+[copulaAnalysis] = tsCopulaExtremes(timeAndSeries1(:,1), ...
+    [timeAndSeries1(:,2),timeAndSeries2(:,2),timeAndSeries3(:,2)], ...
+    'minPeakDistanceInDaysMonovarSampling',minDeltaUnivarSampli, ...
+    'maxPeakDistanceInDaysMultivarSampling',maxDeltaMultivarSampli, ...
+    'copulaFamily',copulaFamily,...
+    'transfType',transfType,'timeWindow',timeWindowNonStat,...
+    'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
+    'peakType',peakType);
+
+[monteCarloAnalysis1] = tsCopulaMontecarlo(copulaAnalysis,...
+    'nResample',10000,'timeIndex','middle'); % large montecarlo good for statistics
+[monteCarloAnalysis2] = tsCopulaMontecarlo(copulaAnalysis,...
+    'nResample',300,'timeIndex','middle'); % smaller montecarlo good for plotting
+
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis1, 'smoothInd',10);
+
+axxArray = tsCopulaPlotTrivariate(copulaAnalysis, monteCarloAnalysis2, ...
+    'gofStatistics', gofStatistics, ...
+    'varLabels', {'{Loc 1}_{SWH (m)}','{Loc 2}_{SWH (m)}','{Loc 3}_{SWH (m)}'});
 ```
 
 ---
@@ -194,6 +318,66 @@ monteCarloAnalysis = tsCopulaMontecarlo(copulaAnalysis, ...
     'timeIndex','middle', ...
     'nonStationarity','margins');
 ```
+
+### Full code:
+```matlab
+load caseStudy03_data
+
+%percentile levels of univariate series (used for transformation)
+
+ciPercentile = [99,99]; 
+
+% peak-over-threshold levels used for sampling of univariate series; it
+% should be a 1-d cell array where each cell can have different size
+potPercentiles=[{75},{97}]; 
+
+%Non-stationary time window (in days) used for time-varying joint
+%distribution
+timeWindowNonStat=365*35;
+
+%minimum distance (in days) between univariate peaks 
+minDeltaUnivarSampli=[30,30];  
+%maximum distance (in days) between multivariate peaks; can either take
+%one value or has to have a format and size matching
+%size(nchoosek([1:numvar],2),1) where numvar is 2 in bivariate case, 3 in
+%trivariate case, and so on
+maxDeltaMultivarSampli=12*30; %12
+
+%copula family; Gumbel, gaussian and Frank are possible choices
+copulaFamily={'gumbel'};  
+
+%methodology to perform univariate transformation from non-stationary to
+%stationary
+transfType='trendlinear';
+peakType='allExceedThreshold';
+marginalDistributions='gev';
+[copulaAnalysis] = tsCopulaExtremes(timeAndSeries1(:,1), ...
+    [timeAndSeries2(:,2),timeAndSeries1(:,2)], ...
+    'minPeakDistanceInDaysMonovarSampling',minDeltaUnivarSampli, ...
+    'maxPeakDistanceInDaysMultivarSampling',maxDeltaMultivarSampli, ...
+    'copulaFamily',copulaFamily,...
+    'transfType',transfType,'timeWindow',timeWindowNonStat,...
+    'ciPercentile',ciPercentile,'potPercentiles',potPercentiles,...
+    'peakType',peakType, ...
+    'marginalDistributions',marginalDistributions,'smoothInd',10);
+
+% large montecarlo good for statistics computation
+[monteCarloAnalysis1] = tsCopulaMontecarlo(copulaAnalysis,...
+    'nResample',10000,'timeIndex','middle','nonStationarity','margins');
+% small montecarlo good for plotting
+[monteCarloAnalysis2] = tsCopulaMontecarlo(copulaAnalysis,...
+    'nResample',1000,'timeIndex','middle','nonStationarity','margins');
+
+[gofStatistics] = tsCopulaGOFNonStat(copulaAnalysis, monteCarloAnalysis1, 'smoothInd',10);
+
+[retPerAnalysis] = tsCopulaComputeBivarRP(copulaAnalysis, monteCarloAnalysis1);
+
+axxArray = tsCopulaPlotBivariate(copulaAnalysis, monteCarloAnalysis2, ...
+    'gofStatistics', gofStatistics, ...
+    'retPerAnalysis', retPerAnalysis, ...
+    'ylbl', {'- SPEI','Temp. °K'},'smoothInd',10,'rpPlot');
+```
+
 
 ---
 

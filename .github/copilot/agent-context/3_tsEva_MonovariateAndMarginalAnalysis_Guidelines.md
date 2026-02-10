@@ -415,6 +415,12 @@ Seasonal transformations (seasonal, seasonalCiPercentile) should be used only wh
 
 
 
+## Other considerations
+If you are asked to plot the time series, the POT and some GPD return levels (or the time series, the annual maxima and some GEV return levels), this is a typical plot to visualize the results and see if they make sense. You don't need to do this from scratch, there are the functions tsPlotSeriesPotGPDRetLevFromAnalysisObj and tsPlotSeriesYearMaxGEVRetLevFromAnalysisObj that do it for you.
+
+
+
+
 
 ---
 

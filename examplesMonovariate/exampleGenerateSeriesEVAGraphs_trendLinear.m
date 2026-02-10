@@ -60,9 +60,13 @@ hndl = tsEvaPlotSeriesTrendStdDevFromAnalyisObj(nonStatEvaParams, statTransfData
 disp('  saving the series plot');
 saveas(hndl{1}, 'seriesTrendLinear.png');    
 
-disp('  plotting the POT and some return levels');
+disp('  plotting the POT and some GPD return levels');
 hndl = tsPlotSeriesPotGPDRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
 saveas(hndl{1}, 'PotAndReturnLevelsLinearTrend.png');    
+
+disp('  plotting the year maxima and some GEV return levels');
+hndl = tsPlotSeriesYearMaxGEVRetLevFromAnalysisObj( nonStatEvaParams, statTransfData);
+saveas(hndl{1}, 'YearMaxGEVReturnLevelsLinearTrend.png');    
 
 disp('  plotting and saving the 2D GPD graph');
 hndl = tsEvaPlotGPDImageScFromAnalysisObj(wr, nonStatEvaParams, statTransfData, 'ylabel', 'TWL(m)', 'dateformat', 'yy', 'xtick', tickTmStmp);
