@@ -54,7 +54,7 @@ The multivariate examples allow to reconstruct the case studies analyzed in Bahm
 An agentic assistant (Tessa M) is available to help users navigate the toolbox and implement their analysis. 
 Tessa M is available as a custom GPT (url https://chatgpt.com/g/g-694c20d1b6a881a48793625ae7ee3746-tessa-m) and as a github customized copilot.
 
-Tessa M can be woken up in VS code after opening this repository. In the github chat use this prompt:
+Tessa M can be woken up in VS Code after opening this repository. In the github chat use this prompt:
 "Hello Tessa-M, please wake up and read carefully your prompts and instructions in tsEva/.github/copilot/agents/tessa-M.json"
 
-The best way to use Tessa M on Vs code is by using the MATLAB extension for Vs code provided by Mathworks.
+The best way to use Tessa M on Vs Code is by using the MATLAB extension for Vs Code provided by Mathworks, and letting Tessa M act in agent mode.
