@@ -18,6 +18,43 @@ All examples implement the Transformed-Stationary (TS) approach:
 
 ---
 
+## Quick Function Index
+
+### Core Analysis Functions
+- `tsCopulaExtremes()` - Main copula analysis (margins + dependence + event pairing)
+- `tsCopulaMontecarlo()` - Monte Carlo simulation of joint extremes
+- `tsCopulaGOFNonStat()` - Goodness-of-fit testing for copula model
+- `tsCopulaComputeBivarRP()` - Compute bivariate return periods (OR/AND)
+- `tsCopulaComputeandPlotBivarRP()` - Compute and plot bivariate return periods
+
+### Plotting Functions
+- `tsCopulaPlotBivariate()` - Comprehensive bivariate diagnostic plots (scatter, marginals, GOF, return period)
+- `tsCopulaPlotTrivariate()` - Comprehensive trivariate diagnostic plots (scatter matrix, marginals, GOF)
+- `tsCopulaPlotTrivariateWithMap()` - Trivariate plots with spatial map overlay
+- `tsCopulaPlotJointReturnPeriod()` - Joint return period contour plot
+- `tsCopulaPeakExtrPlotSctrBivar()` - Peak extremes scatter plot (bivariate)
+
+### Advanced/Specialized Functions
+- `tsCopulaFit()` - Low-level copula fitting (use `tsCopulaExtremes` instead in most cases)
+- `tsCopulaRnd()` - Generate random samples from fitted copula
+- `tsCopulaCdfFromSamples()` - Empirical CDF from samples
+- `tsCopulaSampleJointPeaksMultiVariatePruning()` - Advanced event pairing with pruning
+
+### Year-Extremes Functions (GEV margins)
+- `tsCopulaYearExtrFit()` - Fit copula to annual extremes
+- `tsCopulaYearExtrRnd()` - Generate samples from year-extremes copula
+- `tsCopulaYearExtrDistribution()` - Year-extremes joint distribution
+- `tsCopulaYearExtrGetMltvrtRetPeriod()` - Multivariate return period for annual extremes
+- `tsCopulaYearExtrPlotSctrBivar()` - Bivariate scatter (annual extremes)
+- `tsCopulaYearExtrPlotSctrTrivar()` - Trivariate scatter (annual extremes)
+- `tsCopulaYearExtrPlotJdistTrivar()` - Joint distribution plot (annual extremes, trivariate)
+
+### Helper Functions
+- `tsCopulaGetFamilyId()` - Get numeric ID from copula family name
+- `tsCopulaGetFamilyFromId()` - Get copula family name from numeric ID
+
+---
+
 ## Common Copula Workflow
 
 ### 1. Copula analysis object

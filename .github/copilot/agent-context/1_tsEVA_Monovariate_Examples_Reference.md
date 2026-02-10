@@ -4,6 +4,29 @@ This document contains all example scripts for monovariate extreme value analysi
 
 ---
 
+## Quick Function Index
+
+### Analysis Functions
+- `tsEvaStationary()` - Stationary EVA (GEV/GPD) on time series
+- `tsEvaNonStationary()` - Non-stationary EVA with transformation
+- `tsEvaComputeReturnLevelsGEVFromAnalysisObj()` - Compute GEV return levels
+- `tsEvaComputeReturnLevelsGPDFromAnalysisObj()` - Compute GPD return levels
+- `tsEvaGetReturnPeriodOfLevelGEV()` - Get return period for specific GEV level
+- `tsEvaGetReturnPeriodOfLevelGPD()` - Get return period for specific GPD level
+
+### Plotting Functions
+- `tsEvaPlotReturnLevelsGEVFromAnalysisObj()` - Plot GEV return levels
+- `tsEvaPlotReturnLevelsGPDFromAnalysisObj()` - Plot GPD return levels
+- `tsEvaPlotSeriesTrendStdDevFromAnalysisObj()` - Plot series with trend/CI
+- `tsEvaPlotGEVImageScFromAnalysisObj()` - 2D time-varying GEV distribution
+- `tsEvaPlotGPDImageScFromAnalysisObj()` - 2D time-varying GPD distribution
+- `tsEvaPlotGEV3DFromAnalysisObj()` - 3D GEV visualization
+- `tsEvaPlotTransfToStatFromAnalysisObj()` - Plot transformed stationary series
+- `tsPlotSeriesPotGPDRetLevFromAnalysisObj()` - Series + POT + return levels (diagnostic)
+- `tsPlotSeriesYearMaxGEVRetLevFromAnalysisObj()` - Series + annual maxima + return levels (diagnostic)
+
+---
+
 ## Example 1: Stationary EVA
 
 **File:** `exampleEVAStationary.m`
