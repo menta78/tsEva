@@ -65,6 +65,7 @@ hndl = tsEvaPlotReturnLevelsGEVFromAnalysisObj(statEvaParams, 1, 'ylim', [.5 1.5
 - `tsEvaPlotGEV3DFromAnalysisObj()` - 3D plot of GEV
 - `tsEvaPlotReturnLevelsGEVFromAnalysisObj()` - return level plot at specific time
 - `tsEvaPlotTransfToStatFromAnalysisObj()` - plots transformed stationary series
+- `tsPlotSeriesPotGPDRetLevFromAnalysisObj` - plots the time series, the POT, and some return levels. Handy to diagnose
 
 **Key Parameters:**
 - `timeWindow` - time window for detecting non-stationarity (e.g., 365.25*6 for 6 years)

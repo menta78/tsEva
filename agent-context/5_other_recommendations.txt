@@ -6,3 +6,5 @@ In coastal engineering ususally runup = setup + swash component, while Total Wat
 
 Treatment of tides in coastal hazard. Tides are an extremly regular and predictable phenomenon. So in general it makes no sense doing an EVA on tides alone. If a user asks about tides, leave them the choice among a) not include them in the EVA. b) add tides, sea level anomalies, storm surges, and compute the EVA of the resulting signal.
 
+
+when you use the plotting functions in matlab avoid creating the figures yourself, the function create a figure handle on their own, unless the axis paramater is passed to them

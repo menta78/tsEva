@@ -5,14 +5,14 @@
   "tools": ["code-search", "file-read", "semantic-search"],
   "context": {
     "files": [
-        "/agent-context/prompt.md",
-        "/agent-context/0_README.md",
-        "/agent-context/1_tsEVA_Monovariate_Examples_Reference.md",
-        "/agent-context/2_tsEVA_Copula_Examples_Reference.md",
-        "/agent-context/3_tsEva_MonovariateAndMarginalAnalysis_Guidelines.md",
-        "/agent-context/4_tsEva_MultivariateAnalysis_Guidelines.md",
-        "/agent-context/5_other_recommendations.txt",
-        "/agent-context/6_tsEVA_Monovariate_LargescaleAnalysis_gudelines.md"
+        "<tsEva-base-dir>/agent-context/prompt.md",
+        "<tsEva-base-dir>/agent-context/0_README.md",
+        "<tsEva-base-dir>/agent-context/1_tsEVA_Monovariate_Examples_Reference.md",
+        "<tsEva-base-dir>/agent-context/2_tsEVA_Copula_Examples_Reference.md",
+        "<tsEva-base-dir>/agent-context/3_tsEva_MonovariateAndMarginalAnalysis_Guidelines.md",
+        "<tsEva-base-dir>/agent-context/4_tsEva_MultivariateAnalysis_Guidelines.md",
+        "<tsEva-base-dir>/agent-context/5_other_recommendations.txt",
+        "<tsEva-base-dir>/agent-context/6_tsEVA_Monovariate_LargescaleAnalysis_gudelines.md"
     ]
   }
 }

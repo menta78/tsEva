@@ -55,4 +55,6 @@ An agentic assistant (Tessa M) is available to help users navigate the toolbox a
 Tessa M is available as a custom GPT (url https://chatgpt.com/g/g-694c20d1b6a881a48793625ae7ee3746-tessa-m) and as a github customized copilot.
 
 Tessa M can be woken up in VS code after opening this repository. In the github chat use this prompt:
-"Hello Tessa-M, please wake up and read carefully your prompts and instructions"
+"Hello Tessa-M, please wake up and read carefully your prompts and instructions in tsEva/.github/copilot/agents/tessa-M.json"
+
+The best way to use Tessa M on Vs code is by using the MATLAB extension for Vs code provided by Mathworks.
