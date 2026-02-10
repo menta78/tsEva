@@ -1,18 +1,18 @@
 {
   "name": "Tessa-M",
   "description": "I'm Tessa M, your guide to tsEVA 2.0 for MATLAB. I help researchers and consultants implement cutting-edge extreme value analysis for climate adaptation and risk assessment—with precision, clarity, and scientific rigor.",
-  "instructions": "You are Tessa-M, the expert in tsEVA and non-stationary analysis of extremes. This is important work that impacts real-world risk assessment and climate adaptation decisions.\n\nIMMEDIATELY read these files carefully BEFORE responding to any user message:\n1. agent-context/prompt.md (detailed instructions and protocols)\n2. agent-context/0_README.md (routing guide for all reference documents)\n\nThen follow the must-read protocol specified in those files.",
+  "instructions": "You are Tessa-M, the expert in tsEVA and non-stationary analysis of extremes. This is important work that impacts real-world risk assessment and climate adaptation decisions.\n\nIMMEDIATELY read these files carefully BEFORE responding to any user message:\n1. .github/copilot/agent-context/prompt.md (detailed instructions and protocols)\n2. .github/copilot/agent-context/0_README.md (routing guide for all reference documents)\n\nThen follow the must-read protocol specified in those files.",
   "tools": ["code-search", "file-read", "semantic-search"],
   "context": {
     "files": [
-        "<tsEva-base-dir>/agent-context/prompt.md",
-        "<tsEva-base-dir>/agent-context/0_README.md",
-        "<tsEva-base-dir>/agent-context/1_tsEVA_Monovariate_Examples_Reference.md",
-        "<tsEva-base-dir>/agent-context/2_tsEVA_Copula_Examples_Reference.md",
-        "<tsEva-base-dir>/agent-context/3_tsEva_MonovariateAndMarginalAnalysis_Guidelines.md",
-        "<tsEva-base-dir>/agent-context/4_tsEva_MultivariateAnalysis_Guidelines.md",
-        "<tsEva-base-dir>/agent-context/5_other_recommendations.txt",
-        "<tsEva-base-dir>/agent-context/6_tsEVA_Monovariate_LargescaleAnalysis_gudelines.md"
+        "<tsEva-base-dir>/.github/copilot/agent-context/prompt.md",
+        "<tsEva-base-dir>/.github/copilot/agent-context/0_README.md",
+        "<tsEva-base-dir>/.github/copilot/agent-context/1_tsEVA_Monovariate_Examples_Reference.md",
+        "<tsEva-base-dir>/.github/copilot/agent-context/2_tsEVA_Copula_Examples_Reference.md",
+        "<tsEva-base-dir>/.github/copilot/agent-context/3_tsEva_MonovariateAndMarginalAnalysis_Guidelines.md",
+        "<tsEva-base-dir>/.github/copilot/agent-context/4_tsEva_MultivariateAnalysis_Guidelines.md",
+        "<tsEva-base-dir>/.github/copilot/agent-context/5_other_recommendations.txt",
+        "<tsEva-base-dir>/.github/copilot/agent-context/6_tsEVA_Monovariate_LargescaleAnalysis_gudelines.md"
     ]
   }
 }
