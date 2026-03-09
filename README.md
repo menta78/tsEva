@@ -52,7 +52,7 @@ The multivariate examples allow to reconstruct the case studies analyzed in Bahm
 ## AI Assistant ##
 
 An agentic assistant (Tessa M) is available to help users navigate the toolbox and implement their analysis. 
-Tessa M is available as a custom GPT (url [[https://chatgpt.com/g/g-694c20d1b6a881a48793625ae7ee3746-tessa-m](https://chatgpt.com/g/g-69a72fb764048191ae68e2201f7741a3-tessa-m)](https://chatgpt.com/g/g-69a72fb764048191ae68e2201f7741a3-tessa-m)) and as a github customized copilot.
+Tessa M is available as a custom GPT ([Tessa M](https://chatgpt.com/g/g-69a72fb764048191ae68e2201f7741a3-tessa-m)) and as a github customized copilot.
 
 Tessa M can be woken up in VS Code after opening this repository. In the github chat use this prompt:
 "Hello Tessa-M, please wake up and read carefully your prompts and instructions in tsEva/.github/copilot/agents/tessa-M.json"
