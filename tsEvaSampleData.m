@@ -3,7 +3,7 @@ function pointData = tsEvaSampleData(ms, varargin)
 
   args.meanEventsPerYear = 5;
   %args.pcts = [50 70 85:2:99 99.1:0.1:99.9 99.91:0.01:99.99];
-  args.potPercentiles = [50 70 85:2:97];
+  args.potPercentiles = [97:0.5:99];
   args = tsEasyParseNamedArgs(varargin, args);
   meanEventsPerYear = args.meanEventsPerYear;
   potPercentiles = args.potPercentiles;
