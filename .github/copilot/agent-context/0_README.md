@@ -18,9 +18,11 @@ You don’t need to pre-sample extremes outside tsEVA (e.g., manual POT/BM prepr
 ### Primary “API truth” (open first when coding)
 1) `1_tsEVA_Monovariate_Examples_Reference.md`
 - Canonical univariate examples + function call patterns (what exists, how to call it).
+- The **Quick Function Index** lists the monovariate functions covered by this documentation pack.
 
 2) `2_tsEVA_Copula_Examples_Reference.md`
 - Canonical copula / multivariate examples + function call patterns.
+- The **Quick Function Index** lists the copula/multivariate functions covered by this documentation pack.
 
 ### Method guidance (open when choosing parameters / interpreting)
 3) `3_tsEva_MonovariateAndMarginalAnalysis_Guidelines.md`
